@@ -130,17 +130,15 @@ func main() {
 
 ## Project layout
 
-```
-crates/ontographia-core/      COM, Intent, AST, emitters
-crates/ontographia-adapters/  Multi-format ontology parsers
-crates/ontographia-schema/    Neo4j schema DDL + offline catalog diff
-crates/ontographia-ffi/       C ABI for Go and other languages
-bindings/python/              PyO3 bindings
-bindings/go/                  cgo wrapper
-schemas/                      COM and native ontology JSON Schemas
-examples/                     Sample ontologies and intents
-skills/                       Agent Skill templates
-```
+| Directory | Contents |
+|-----------|----------|
+| [crates/](crates/README.md) | Rust engine: core, adapters, schema, FFI |
+| [bindings/](bindings/README.md) | Python and Go bindings |
+| [examples/](examples/README.md) | Sample ontologies, Neo4j seed, demos |
+| [schemas/](schemas/README.md) | COM and native ontology JSON Schemas |
+| [scripts/](scripts/README.md) | Neo4j setup, CI tests, LiteLLM helpers |
+| [skills/](skills/README.md) | Agent Skill templates |
+| [docs/](docs/) | Tutorials ([architecture](docs/architecture.md), [Neo4j walkthrough](docs/end-to-end-neo4j.md), [LiteLLM local](docs/litellm-local.md)) |
 
 ## License
 
