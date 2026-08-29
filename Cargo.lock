@@ -109,6 +109,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ontographia-schema"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "ontographia-adapters",
+ "ontographia-core",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "oxilangtag"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"

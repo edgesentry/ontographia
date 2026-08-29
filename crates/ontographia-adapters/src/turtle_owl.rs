@@ -129,6 +129,7 @@ impl OntologyAdapter for TurtleOwlAdapter {
                     owner_class,
                     datatype: Datatype::String,
                     required: false,
+                    unique: false,
                 })
             })
             .collect();

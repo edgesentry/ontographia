@@ -26,6 +26,8 @@ Ontology → Adapter → COM → validate(Intent) → QueryAst → Emitter → C
 | Need | Canonical doc |
 |------|----------------|
 | Project overview, quick start | [README.md](README.md) |
+| Architecture (pipeline, COM, Intent, AST, emitters) | [docs/architecture.md](docs/architecture.md) |
+| Graph schema DDL + offline catalog diff | [docs/architecture.md](docs/architecture.md) § Graph schema governance, [`crates/ontographia-schema/`](crates/ontographia-schema/) |
 | Neo4j setup, seed data, query execution walkthrough | [docs/end-to-end-neo4j.md](docs/end-to-end-neo4j.md) |
 | LLM / agent workflow for Intent extraction | [skills/ontographia-cypher-builder/SKILL.md](skills/ontographia-cypher-builder/SKILL.md) |
 | LiteLLM local setup (OpenAI, Gemini, Cursor) | [docs/litellm-local.md](docs/litellm-local.md) |
@@ -39,6 +41,7 @@ If content exists in one of the above, **link to it** instead of copying tables,
 ```
 crates/ontographia-core/       COM, Intent, validate, QueryAst, emitters, Engine
 crates/ontographia-adapters/   Ontology adapters + AdapterRegistry
+crates/ontographia-schema/     COM → Neo4j schema DDL + offline catalog diff
 crates/ontographia-ffi/        C ABI for Go / other languages
 bindings/python/               PyO3 module (`ontographia.Engine`)
 bindings/go/                   cgo wrapper
@@ -57,6 +60,7 @@ skills/                        Agent Skill templates
 | Intent validation | `crates/ontographia-core/src/validate.rs` |
 | Cypher 25 emission | `crates/ontographia-core/src/emit/cypher25.rs` |
 | Add ontology format | `crates/ontographia-adapters/src/` + register in `registry.rs` |
+| Graph schema / constraints from COM | `crates/ontographia-schema/src/` (`from_com`, `emit`, `diff`) |
 | Python API | `bindings/python/src/lib.rs` |
 
 ## Standard agent workflows
@@ -107,6 +111,7 @@ Sample domain (same semantics, different syntax): `examples/manufacturing.*`.
 cargo test --workspace
 ./scripts/start_neo4j.sh --seed
 cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.native.yaml
+cargo run -p ontographia-schema --example emit_constraints -- examples/manufacturing.native.yaml
 uv sync --group dev && uv run maturin develop --release   # Python bindings
 cargo build --release -p ontographia-ffi && cd bindings/go && go test ./...  # Go bindings
 python examples/run_neo4j_demo.py --ontology examples/manufacturing.native.yaml
@@ -126,7 +131,7 @@ When changing emitters or validation, run the full workspace test suite.
 
 - Implementing LLM API calls inside the Rust/Python core (Intent extraction stays in the app/agent layer).
 - RDF reification / full OWL reasoning.
-- Neo4j schema migration tooling (use Cypher seed scripts or external tools).
+- Neo4j live introspection or migration execution (`ontographia-schema` covers offline DDL + catalog diff only).
 - Duplicating tutorial content into new markdown files.
 
 ## License
