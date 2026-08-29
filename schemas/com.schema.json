@@ -59,7 +59,8 @@
         "datatype": {
           "enum": ["string", "integer", "float", "boolean", "date", "datetime", "iri"]
         },
-        "required": { "type": "boolean" }
+        "required": { "type": "boolean" },
+        "unique": { "type": "boolean", "default": false }
       }
     },
     "Constraint": {

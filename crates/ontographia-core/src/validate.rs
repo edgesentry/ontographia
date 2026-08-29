@@ -248,6 +248,7 @@ mod tests {
                     owner_class: "Person".into(),
                     datatype: Datatype::String,
                     required: true,
+                    unique: false,
                 },
                 PropertyDef {
                     name: "age".into(),
@@ -255,6 +256,7 @@ mod tests {
                     owner_class: "Person".into(),
                     datatype: Datatype::Integer,
                     required: false,
+                    unique: false,
                 },
             ],
             constraints: vec![],

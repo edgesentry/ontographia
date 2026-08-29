@@ -1,0 +1,20 @@
+{
+  "labels": [
+    "Product",
+    "Part",
+    "Supplier",
+    "Plant",
+    "Line",
+    "Lot",
+    "DefectType"
+  ],
+  "relationship_types": [
+    "has_part",
+    "has_sub_part",
+    "supplied_by",
+    "located_at",
+    "produced_on",
+    "contains_part",
+    "has_defect"
+  ]
+}

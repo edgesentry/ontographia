@@ -1,0 +1,26 @@
+[package]
+name = "ontographia-schema"
+description = "COM-derived Neo4j graph schema, constraint DDL, and offline catalog diff for Ontographia"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+ontographia-core = { path = "../ontographia-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+indexmap = { workspace = true }
+
+[dev-dependencies]
+ontographia-adapters = { path = "../ontographia-adapters" }
+
+[[test]]
+name = "integration"
+path = "tests/integration.rs"
+
+[[example]]
+name = "emit_constraints"
+path = "examples/emit_constraints.rs"

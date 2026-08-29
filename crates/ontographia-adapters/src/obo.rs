@@ -52,6 +52,7 @@ impl OntologyAdapter for OboAdapter {
                     owner_class: class_name.clone(),
                     datatype: Datatype::String,
                     required: true,
+                    unique: false,
                 });
                 for (rel_type, target) in rels {
                     relationships.push(RelDef {

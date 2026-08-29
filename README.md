@@ -15,12 +15,10 @@ Ontographia is a multi-ontology deterministic Cypher query generation engine. It
 ## Architecture
 
 ```
-Ontology (TTL/YAML/JSON-LD/LinkML/...)
-    → Adapter → COM
-    → Schema Generator → LLM Intent JSON
-    → Validator → QueryAst Builder → Cypher25Emitter
-    → CYPHER 25 query + params
+Ontology → Adapter → COM → validate(Intent) → QueryAst → Emitter → CYPHER 25 + params
 ```
+
+Intent JSON is produced outside the core (LLM or hand-authored), constrained by `intent_json_schema()`. Full pipeline, COM, validation rules, AST, emitters, and bindings: **[docs/architecture.md](docs/architecture.md)**.
 
 ## Supported ontology formats
 
@@ -135,6 +133,7 @@ func main() {
 ```
 crates/ontographia-core/      COM, Intent, AST, emitters
 crates/ontographia-adapters/  Multi-format ontology parsers
+crates/ontographia-schema/    Neo4j schema DDL + offline catalog diff
 crates/ontographia-ffi/       C ABI for Go and other languages
 bindings/python/              PyO3 bindings
 bindings/go/                  cgo wrapper
