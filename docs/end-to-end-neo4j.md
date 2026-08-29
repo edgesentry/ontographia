@@ -288,6 +288,48 @@ for f in examples/manufacturing.native.yaml \
 done
 ```
 
+## 7. Local LLM E2E (not run in CI)
+
+CI uses deterministic mock Intent fixtures (`scripts/neo4j_integration_test.py`). For a **real LLM** on your machine, use [`examples/run_llm_e2e.py`](../examples/run_llm_e2e.py):
+
+```bash
+./scripts/start_neo4j.sh --seed
+uv sync --group dev && uv run maturin develop --release
+
+# Offline demo (fixture LLM, no API key):
+uv run python examples/run_llm_e2e.py \
+  --question "List suppliers for parts in product SKU SPX-100" \
+  --execute --password ontographia
+
+# Any OpenAI-compatible endpoint (OpenAI, Ollama, vLLM, LiteLLM proxy, …):
+export ONTOGRAPHIA_LLM_BACKEND=openai
+export OPENAI_API_KEY=sk-...
+# Ollama example:
+# export OPENAI_BASE_URL=http://localhost:11434/v1
+# export OPENAI_MODEL=llama3.1
+uv run python examples/run_llm_e2e.py \
+  --question "Which plant hosts production Line-1?" \
+  --execute --password ontographia
+```
+
+Pipeline:
+
+```
+natural language → IntentExtractor (mock | openai-compatible) → Intent JSON
+    → Engine.build() → Cypher 25 + params → Neo4j
+```
+
+Extractor implementations live in [`examples/llm/`](../examples/llm/). Add a new backend by implementing the `IntentExtractor` protocol in `extractors.py` — the Ontographia core stays LLM-agnostic.
+
+**LiteLLM (OpenAI + Gemini + Cursor via proxy):** see [docs/litellm-local.md](../docs/litellm-local.md).
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `ONTOGRAPHIA_LLM_BACKEND` | `mock` | `mock` or `openai` |
+| `OPENAI_API_KEY` | — | Required for `openai` backend |
+| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | Any `/v1/chat/completions` endpoint |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Model name for the endpoint |
+
 ## Troubleshooting
 
 | Symptom | Likely cause |
