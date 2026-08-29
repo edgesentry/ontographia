@@ -27,8 +27,12 @@ Ontology → Adapter → COM → validate(Intent) → QueryAst → Emitter → C
 |------|----------------|
 | Project overview, quick start | [README.md](README.md) |
 | Directory index (crates, bindings, examples, …) | [crates/](crates/README.md), [bindings/](bindings/README.md), [examples/](examples/README.md), [schemas/](schemas/README.md), [scripts/](scripts/README.md), [skills/](skills/README.md) |
+| Architecture (pipeline, COM, Intent, AST, emitters) | [docs/architecture.md](docs/architecture.md) |
+| Graph schema DDL + offline catalog diff | [docs/architecture.md](docs/architecture.md) § Graph schema governance, [`crates/ontographia-schema/`](crates/ontographia-schema/) |
+| Ontology ↔ Neo4j alignment, responsibilities, `schema.json` | [docs/ontology-graph-alignment.md](docs/ontology-graph-alignment.md) |
 | Neo4j setup, seed data, query execution walkthrough | [docs/end-to-end-neo4j.md](docs/end-to-end-neo4j.md) |
 | LLM / agent workflow for Intent extraction | [skills/ontographia-cypher-builder/SKILL.md](skills/ontographia-cypher-builder/SKILL.md) |
+| LiteLLM local setup (OpenAI, Gemini, Cursor) | [docs/litellm-local.md](docs/litellm-local.md) |
 | COM JSON Schema | [schemas/com.schema.json](schemas/com.schema.json) |
 | Native ontology YAML Schema | [schemas/native_ontology.schema.json](schemas/native_ontology.schema.json) |
 
@@ -38,11 +42,11 @@ If content exists in one of the above, **link to it** instead of copying tables,
 
 | Path | Index |
 |------|-------|
-| [crates/](crates/README.md) | `ontographia-core`, `ontographia-adapters`, `ontographia-ffi` |
+| [crates/](crates/README.md) | `ontographia-core`, `ontographia-adapters`, `ontographia-schema`, `ontographia-ffi` |
 | [bindings/](bindings/README.md) | Python (PyO3), Go (cgo) |
 | [examples/](examples/README.md) | Sample ontologies, Neo4j seed, demo scripts |
 | [schemas/](schemas/README.md) | COM and native ontology JSON Schemas |
-| [scripts/](scripts/README.md) | Neo4j, CI tests |
+| [scripts/](scripts/README.md) | Neo4j, CI tests, LiteLLM helpers |
 | [skills/](skills/README.md) | Agent Skill templates |
 | [docs/](docs/) | Human/agent tutorials (not duplicated here) |
 
@@ -55,6 +59,7 @@ If content exists in one of the above, **link to it** instead of copying tables,
 | Intent validation | `crates/ontographia-core/src/validate.rs` |
 | Cypher 25 emission | `crates/ontographia-core/src/emit/cypher25.rs` |
 | Add ontology format | `crates/ontographia-adapters/src/` + register in `registry.rs` |
+| Graph schema / constraints from COM | `crates/ontographia-schema/src/` (`from_com`, `emit`, `diff`) |
 | Python API | `bindings/python/src/lib.rs` |
 
 ## Standard agent workflows
@@ -105,10 +110,12 @@ Sample domain (same semantics, different syntax): `examples/manufacturing.*`.
 cargo test --workspace
 ./scripts/start_neo4j.sh --seed
 cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.native.yaml
+cargo run -p ontographia-schema --example emit_constraints -- examples/manufacturing.native.yaml
 uv sync --group dev && uv run maturin develop --release   # Python bindings
 cargo build --release -p ontographia-ffi && cd bindings/go && go test ./...  # Go bindings
 python examples/run_neo4j_demo.py --ontology examples/manufacturing.native.yaml
 python scripts/neo4j_integration_test.py   # Neo4j e2e (mock LLM Intent -> Cypher -> execute)
+python examples/run_llm_e2e.py ...         # local-only LLM e2e (see docs/end-to-end-neo4j.md §7)
 ```
 
 ## Testing expectations
@@ -123,7 +130,7 @@ When changing emitters or validation, run the full workspace test suite.
 
 - Implementing LLM API calls inside the Rust/Python core (Intent extraction stays in the app/agent layer).
 - RDF reification / full OWL reasoning.
-- Neo4j schema migration tooling (use Cypher seed scripts or external tools).
+- Neo4j live introspection or migration execution (`ontographia-schema` covers offline DDL + catalog diff only).
 - Duplicating tutorial content into new markdown files.
 
 ## License

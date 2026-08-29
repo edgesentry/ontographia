@@ -46,6 +46,8 @@ struct NativeProp {
     datatype: Option<String>,
     #[serde(default)]
     required: bool,
+    #[serde(default)]
+    unique: bool,
 }
 
 pub struct NativeYamlAdapter;
@@ -106,6 +108,7 @@ impl OntologyAdapter for NativeYamlAdapter {
                     owner_class: p.owner_class,
                     datatype: parse_datatype(p.datatype.as_deref()),
                     required: p.required,
+                    unique: p.unique,
                 })
                 .collect(),
             constraints: vec![],

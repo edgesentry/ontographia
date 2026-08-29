@@ -15,12 +15,10 @@ Ontographia is a multi-ontology deterministic Cypher query generation engine. It
 ## Architecture
 
 ```
-Ontology (TTL/YAML/JSON-LD/LinkML/...)
-    → Adapter → COM
-    → Schema Generator → LLM Intent JSON
-    → Validator → QueryAst Builder → Cypher25Emitter
-    → CYPHER 25 query + params
+Ontology → Adapter → COM → validate(Intent) → QueryAst → Emitter → CYPHER 25 + params
 ```
+
+Intent JSON is produced outside the core (LLM or hand-authored), constrained by `intent_json_schema()`. Full pipeline, COM, validation rules, AST, emitters, and bindings: **[docs/architecture.md](docs/architecture.md)**.
 
 ## Supported ontology formats
 
@@ -134,13 +132,13 @@ func main() {
 
 | Directory | Contents |
 |-----------|----------|
-| [crates/](crates/README.md) | Rust engine: core, adapters, FFI |
+| [crates/](crates/README.md) | Rust engine: core, adapters, schema, FFI |
 | [bindings/](bindings/README.md) | Python and Go bindings |
 | [examples/](examples/README.md) | Sample ontologies, Neo4j seed, demos |
 | [schemas/](schemas/README.md) | COM and native ontology JSON Schemas |
-| [scripts/](scripts/README.md) | Neo4j setup, CI tests |
+| [scripts/](scripts/README.md) | Neo4j setup, CI tests, LiteLLM helpers |
 | [skills/](skills/README.md) | Agent Skill templates |
-| [docs/](docs/) | Tutorials ([Neo4j walkthrough](docs/end-to-end-neo4j.md)) |
+| [docs/](docs/) | Tutorials ([architecture](docs/architecture.md), [Neo4j walkthrough](docs/end-to-end-neo4j.md), [LiteLLM local](docs/litellm-local.md)) |
 
 ## License
 

@@ -55,6 +55,7 @@ properties:
     owner_class: Product
     datatype: string
     required: true
+    unique: true
   - name: name
     owner_class: Product
     datatype: string
@@ -62,6 +63,7 @@ properties:
     owner_class: Part
     datatype: string
     required: true
+    unique: true
   - name: lead_time_days
     owner_class: Part
     datatype: integer
@@ -72,6 +74,7 @@ properties:
     owner_class: Supplier
     datatype: string
     required: true
+    unique: true
   - name: tier
     owner_class: Supplier
     datatype: integer
@@ -93,6 +96,7 @@ properties:
     owner_class: Lot
     datatype: string
     required: true
+    unique: true
   - name: quantity
     owner_class: Lot
     datatype: integer

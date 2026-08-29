@@ -1,0 +1,93 @@
+{
+  "labels": {
+    "Product": {
+      "properties": {
+        "sku": "string",
+        "name": "string"
+      },
+      "unique_properties": [
+        "sku"
+      ]
+    },
+    "Part": {
+      "properties": {
+        "part_number": "string",
+        "lead_time_days": "integer",
+        "name": "string"
+      },
+      "unique_properties": [
+        "part_number"
+      ]
+    },
+    "Supplier": {
+      "properties": {
+        "name": "string",
+        "tier": "integer",
+        "country": "string"
+      },
+      "unique_properties": [
+        "name"
+      ]
+    },
+    "Plant": {
+      "properties": {
+        "name": "string",
+        "region": "string"
+      },
+      "unique_properties": []
+    },
+    "Line": {
+      "properties": {
+        "name": "string"
+      },
+      "unique_properties": []
+    },
+    "Lot": {
+      "properties": {
+        "lot_id": "string",
+        "quantity": "integer",
+        "status": "string"
+      },
+      "unique_properties": [
+        "lot_id"
+      ]
+    },
+    "DefectType": {
+      "properties": {
+        "code": "string",
+        "description": "string"
+      },
+      "unique_properties": []
+    }
+  },
+  "relationship_types": {
+    "has_part": {
+      "from_class": "Product",
+      "to_class": "Part"
+    },
+    "has_sub_part": {
+      "from_class": "Part",
+      "to_class": "Part"
+    },
+    "supplied_by": {
+      "from_class": "Part",
+      "to_class": "Supplier"
+    },
+    "located_at": {
+      "from_class": "Line",
+      "to_class": "Plant"
+    },
+    "produced_on": {
+      "from_class": "Lot",
+      "to_class": "Line"
+    },
+    "contains_part": {
+      "from_class": "Lot",
+      "to_class": "Part"
+    },
+    "has_defect": {
+      "from_class": "Lot",
+      "to_class": "DefectType"
+    }
+  }
+}

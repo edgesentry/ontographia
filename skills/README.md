@@ -9,4 +9,5 @@
 ## Related
 
 - Neo4j execution walkthrough: [docs/end-to-end-neo4j.md](../docs/end-to-end-neo4j.md)
+- Local LLM + LiteLLM E2E: [docs/litellm-local.md](../docs/litellm-local.md), [examples/run_llm_e2e.py](../examples/run_llm_e2e.py)
 - Golden rules for agents: [AGENTS.md](../AGENTS.md)

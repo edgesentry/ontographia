@@ -93,6 +93,7 @@ impl OntologyAdapter for LinkMlAdapter {
                                 owner_class: name.clone(),
                                 datatype: linkml_range_to_datatype(range),
                                 required: slot.required.unwrap_or(false),
+                                unique: false,
                             });
                         }
                     }

@@ -4,6 +4,8 @@
 Simulates the agent pipeline without calling an LLM:
   ontology schema -> (mock) Intent JSON -> Engine.build() -> Neo4j driver
 
+For a real LLM locally, use examples/run_llm_e2e.py instead (not run in CI).
+
 Usage:
   uv sync --group dev && uv run maturin develop --release
   ./scripts/start_neo4j.sh --seed
@@ -25,64 +27,13 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_ONTOLOGY = ROOT / "examples/manufacturing.native.yaml"
-SEED_FILE = ROOT / "examples/neo4j/seed.cypher"
+EXAMPLES = ROOT / "examples"
+DEFAULT_ONTOLOGY = EXAMPLES / "manufacturing.native.yaml"
+SEED_FILE = EXAMPLES / "neo4j/seed.cypher"
 
-# Fixture Intent JSON — stands in for LLM structured output constrained by intent_json_schema()
-MOCK_LLM_INTENTS: dict[str, dict[str, Any]] = {
-    "List suppliers for parts in product SKU SPX-100": {
-        "start": {"class": "Product", "alias": "product"},
-        "traverse": [
-            {
-                "relationship": "has_part",
-                "direction": "out",
-                "to": {"class": "Part", "alias": "part"},
-            },
-            {
-                "relationship": "supplied_by",
-                "direction": "out",
-                "to": {"class": "Supplier", "alias": "supplier"},
-            },
-        ],
-        "filter": [
-            {"alias": "product", "property": "sku", "op": "eq", "value": "SPX-100"}
-        ],
-        "return": [
-            {"alias": "supplier", "property": "name", "as_name": "supplier_name"}
-        ],
-        "limit": 20,
-    },
-    "Which defect codes affect quarantined lots?": {
-        "start": {"class": "Lot", "alias": "lot"},
-        "traverse": [
-            {
-                "relationship": "has_defect",
-                "direction": "out",
-                "to": {"class": "DefectType", "alias": "defect"},
-            }
-        ],
-        "filter": [
-            {"alias": "lot", "property": "status", "op": "eq", "value": "quarantine"}
-        ],
-        "return": [
-            {"alias": "defect", "property": "code", "as_name": "defect_code"}
-        ],
-        "limit": 20,
-    },
-    "Which plant hosts production Line-1?": {
-        "start": {"class": "Line", "alias": "line"},
-        "traverse": [
-            {
-                "relationship": "located_at",
-                "direction": "out",
-                "to": {"class": "Plant", "alias": "plant"},
-            }
-        ],
-        "filter": [{"alias": "line", "property": "name", "op": "eq", "value": "Line-1"}],
-        "return": [{"alias": "plant", "property": "name", "as_name": "plant_name"}],
-        "limit": 20,
-    },
-}
+sys.path.insert(0, str(EXAMPLES))
+
+from llm.extractors import MockIntentExtractor  # noqa: E402
 
 
 @dataclass
@@ -122,16 +73,6 @@ CASES = [
 ]
 
 
-def mock_llm_extract_intent(user_question: str, intent_json_schema: dict[str, Any]) -> dict[str, Any]:
-    """Return deterministic Intent JSON as if an LLM had filled structured output."""
-    del intent_json_schema  # production path passes schema to the LLM API
-    try:
-        return MOCK_LLM_INTENTS[user_question]
-    except KeyError as exc:
-        known = ", ".join(f'"{q}"' for q in MOCK_LLM_INTENTS)
-        raise ValueError(f"no mock LLM fixture for question: {user_question!r} (known: {known})") from exc
-
-
 def parse_cypher25_seed(path: Path) -> list[str]:
     blocks: list[str] = []
     current: list[str] = []
@@ -157,9 +98,9 @@ def load_seed(driver: Any, path: Path) -> None:
             session.run(statement)
 
 
-def run_case(engine: Any, driver: Any, case: IntegrationCase) -> None:
+def run_case(engine: Any, driver: Any, case: IntegrationCase, extractor: MockIntentExtractor) -> None:
     schema = engine.intent_json_schema()
-    intent = mock_llm_extract_intent(case.user_question, schema)
+    intent = extractor.extract(case.user_question, schema)
     built = engine.build(intent, dialect="cypher25")
 
     if not built["query"].startswith("CYPHER 25"):
@@ -227,10 +168,11 @@ def main() -> int:
         load_seed(driver, SEED_FILE)
 
     engine = ontographia.Engine.load(str(DEFAULT_ONTOLOGY))
+    extractor = MockIntentExtractor()
     print(f"running {len(CASES)} integration case(s) against {cfg.uri}")
     try:
         for case in CASES:
-            run_case(engine, driver, case)
+            run_case(engine, driver, case, extractor)
     finally:
         driver.close()
 

@@ -19,4 +19,5 @@ Demo: [`go/cmd/demo/main.go`](go/cmd/demo/main.go)
 ## Canonical docs
 
 - Python/Go usage in Neo4j tutorial: [docs/end-to-end-neo4j.md](../docs/end-to-end-neo4j.md)
+- Local LLM E2E (Python only): [examples/run_llm_e2e.py](../examples/run_llm_e2e.py), [docs/litellm-local.md](../docs/litellm-local.md)
 - Agent rules: [AGENTS.md](../AGENTS.md)
