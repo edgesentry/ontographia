@@ -1,4 +1,4 @@
-use ontographia_core::com::{CanonicalOntology, Constraint, ConstraintKind, SourceMetadata};
+use ontographia_core::com::{CanonicalOntology, Constraint, ConstraintKind};
 use ontographia_core::error::Result;
 
 use crate::registry::OntologyAdapter;

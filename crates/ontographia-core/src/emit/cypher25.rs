@@ -166,7 +166,7 @@ fn render_returns(returns: &[ReturnNode]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::ast::{FilterNode, OrderByNode, PatternNode};
+    use crate::ast::{FilterNode, PatternNode};
     use crate::intent::{AggregateFn, FilterOp};
 
     #[test]
