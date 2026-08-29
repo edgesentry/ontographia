@@ -26,6 +26,7 @@ Ontology → Adapter → COM → validate(Intent) → QueryAst → Emitter → C
 | Need | Canonical doc |
 |------|----------------|
 | Project overview, quick start | [README.md](README.md) |
+| Directory index (crates, bindings, examples, …) | [crates/](crates/README.md), [bindings/](bindings/README.md), [examples/](examples/README.md), [schemas/](schemas/README.md), [scripts/](scripts/README.md), [skills/](skills/README.md) |
 | Neo4j setup, seed data, query execution walkthrough | [docs/end-to-end-neo4j.md](docs/end-to-end-neo4j.md) |
 | LLM / agent workflow for Intent extraction | [skills/ontographia-cypher-builder/SKILL.md](skills/ontographia-cypher-builder/SKILL.md) |
 | LiteLLM local setup (OpenAI, Gemini, Cursor) | [docs/litellm-local.md](docs/litellm-local.md) |
@@ -36,17 +37,15 @@ If content exists in one of the above, **link to it** instead of copying tables,
 
 ## Repository map
 
-```
-crates/ontographia-core/       COM, Intent, validate, QueryAst, emitters, Engine
-crates/ontographia-adapters/   Ontology adapters + AdapterRegistry
-crates/ontographia-ffi/        C ABI for Go / other languages
-bindings/python/               PyO3 module (`ontographia.Engine`)
-bindings/go/                   cgo wrapper
-examples/                      Sample ontologies + neo4j seed + demo scripts
-schemas/                       JSON Schemas (spec reference)
-docs/                          Human/agent tutorials (not duplicated here)
-skills/                        Agent Skill templates
-```
+| Path | Index |
+|------|-------|
+| [crates/](crates/README.md) | `ontographia-core`, `ontographia-adapters`, `ontographia-ffi` |
+| [bindings/](bindings/README.md) | Python (PyO3), Go (cgo) |
+| [examples/](examples/README.md) | Sample ontologies, Neo4j seed, demo scripts |
+| [schemas/](schemas/README.md) | COM and native ontology JSON Schemas |
+| [scripts/](scripts/README.md) | Neo4j, CI tests |
+| [skills/](skills/README.md) | Agent Skill templates |
+| [docs/](docs/) | Human/agent tutorials (not duplicated here) |
 
 ### Key entry points (code)
 
