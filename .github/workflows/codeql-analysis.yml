@@ -1,5 +1,10 @@
-# Explicit CodeQL workflow (replaces GitHub "Default setup" for PR alert diffs).
-# After merging: Settings → Code security → Code scanning → disable Default setup.
+# Repo-managed CodeQL (replaces GitHub "Default setup").
+#
+# REQUIRED once before this workflow can upload results:
+#   Settings → Code security and analysis → Code scanning → CodeQL analysis
+#   → Default setup → Disable
+#
+# Default setup and this workflow cannot both be active (SARIF upload conflict).
 name: CodeQL
 
 on:
@@ -20,7 +25,6 @@ jobs:
     permissions:
       contents: read
       security-events: write
-      packages: read
       actions: read
     strategy:
       fail-fast: false
@@ -28,10 +32,10 @@ jobs:
         include:
           - language: actions
             build-mode: none
-          - language: rust
-            build-mode: manual
           - language: python
             build-mode: none
+          - language: rust
+            build-mode: autobuild
           - language: go
             build-mode: manual
 
@@ -39,27 +43,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
-
-      - name: Setup Rust
-        if: matrix.language == 'rust' || matrix.language == 'go'
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Build Rust workspace
-        if: matrix.language == 'rust'
-        run: cargo build --workspace
-
       - name: Setup Go
         if: matrix.language == 'go'
         uses: actions/setup-go@v7
         with:
           go-version: "1.22"
 
-      - name: Build Go test binaries
+      - name: Setup Rust
+        if: matrix.language == 'rust' || matrix.language == 'go'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Autobuild
+        if: matrix.build-mode == 'autobuild'
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Build Go (cgo)
         if: matrix.language == 'go'
         env:
           CGO_ENABLED: "1"
