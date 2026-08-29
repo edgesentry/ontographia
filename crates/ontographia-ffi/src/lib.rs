@@ -5,8 +5,14 @@ use ontographia_adapters::load_ontology;
 use ontographia_core::emit::Dialect;
 use ontographia_core::engine::Engine;
 
+/// Build Cypher from ontology bytes and Intent JSON.
+///
+/// # Safety
+/// `ontology_bytes` must point to `ontology_len` valid bytes.
+/// `intent_json` and non-null `dialect` / `ontology_path_hint` must be valid NUL-terminated UTF-8 C strings.
+/// The returned pointer must be freed with `ontographia_free_string`.
 #[no_mangle]
-pub extern "C" fn ontographia_build_cypher_from_json(
+pub unsafe extern "C" fn ontographia_build_cypher_from_json(
     ontology_bytes: *const u8,
     ontology_len: usize,
     ontology_path_hint: *const c_char,
@@ -67,8 +73,12 @@ pub extern "C" fn ontographia_build_cypher_from_json(
     }
 }
 
+/// Free a string returned by `ontographia_build_cypher_from_json`.
+///
+/// # Safety
+/// `s` must be a pointer previously returned by `ontographia_build_cypher_from_json`, or null.
 #[no_mangle]
-pub extern "C" fn ontographia_free_string(s: *mut c_char) {
+pub unsafe extern "C" fn ontographia_free_string(s: *mut c_char) {
     if !s.is_null() {
         unsafe {
             let _ = CString::from_raw(s);

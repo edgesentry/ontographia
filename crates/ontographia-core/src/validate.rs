@@ -49,7 +49,7 @@ pub fn build_ast(_ontology: &CanonicalOntology, validated: &ValidatedIntent) -> 
     let returns: Vec<ReturnNode> = intent
         .r#return
         .iter()
-        .map(|r| map_return_item(r))
+        .map(map_return_item)
         .collect();
 
     let order_by = intent.order_by.as_ref().map(|o| crate::ast::OrderByNode {

@@ -1,11 +1,12 @@
 use ontographia_adapters::load_ontology;
-use ontographia_core::com::CanonicalOntology;
 use ontographia_core::emit::Dialect;
 use ontographia_core::engine::Engine;
 use ontographia_core::intent::Intent;
+use pyo3::conversion::IntoPyObject;
 use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
+use pyo3::types::{PyDict, PyList};
+use pyo3::BoundObject;
 
 #[pyclass]
 struct PyEngine {
@@ -25,6 +26,7 @@ impl PyEngine {
     }
 
     #[staticmethod]
+    #[pyo3(signature = (data, path_hint=None))]
     fn from_bytes(data: &[u8], path_hint: Option<&str>) -> PyResult<Self> {
         let ontology = load_ontology(data, path_hint)
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
@@ -48,7 +50,7 @@ impl PyEngine {
             .inner
             .build(intent, dialect)
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
-        let dict = PyDict::new_bound(py);
+        let dict = PyDict::new(py);
         dict.set_item("query", emitted.query)?;
         dict.set_item("params", json_to_py(py, &serde_json::to_value(&emitted.params).unwrap())?)?;
         Ok(dict.into())
@@ -100,26 +102,46 @@ fn py_to_json(value: &Bound<'_, PyAny>) -> PyResult<serde_json::Value> {
 fn json_to_py(py: Python<'_>, value: &serde_json::Value) -> PyResult<PyObject> {
     match value {
         serde_json::Value::Null => Ok(py.None()),
-        serde_json::Value::Bool(b) => Ok(b.to_object(py)),
+        serde_json::Value::Bool(b) => Ok(b
+            .into_pyobject(py)
+            .map_err(PyErr::from)?
+            .into_any()
+            .unbind()),
         serde_json::Value::Number(n) => {
             if let Some(i) = n.as_i64() {
-                Ok(i.to_object(py))
+                Ok(i
+                    .into_pyobject(py)
+                    .map_err(PyErr::from)?
+                    .into_any()
+                    .unbind())
             } else if let Some(f) = n.as_f64() {
-                Ok(f.to_object(py))
+                Ok(f
+                    .into_pyobject(py)
+                    .map_err(PyErr::from)?
+                    .into_any()
+                    .unbind())
             } else {
-                Ok(n.to_string().to_object(py))
+                Ok(n.to_string()
+                    .into_pyobject(py)
+                    .map_err(PyErr::from)?
+                    .into_any()
+                    .unbind())
             }
         }
-        serde_json::Value::String(s) => Ok(s.to_object(py)),
+        serde_json::Value::String(s) => Ok(s
+            .into_pyobject(py)
+            .map_err(PyErr::from)?
+            .into_any()
+            .unbind()),
         serde_json::Value::Array(arr) => {
-            let list = pyo3::types::PyList::empty_bound(py);
+            let list = PyList::empty(py);
             for item in arr {
                 list.append(json_to_py(py, item)?)?;
             }
             Ok(list.into())
         }
         serde_json::Value::Object(map) => {
-            let dict = PyDict::new_bound(py);
+            let dict = PyDict::new(py);
             for (k, v) in map {
                 dict.set_item(k, json_to_py(py, v)?)?;
             }
