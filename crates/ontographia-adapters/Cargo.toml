@@ -16,7 +16,7 @@ thiserror = { workspace = true }
 indexmap = { workspace = true }
 rio_turtle = "0.8"
 rio_api = "0.8"
-oxiri = "0.2"
+oxiri = "0.3"
 
 [dev-dependencies]
 

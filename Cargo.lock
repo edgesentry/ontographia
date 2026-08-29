@@ -108,7 +108,7 @@ version = "0.1.0"
 dependencies = [
  "indexmap",
  "ontographia-core",
- "oxiri",
+ "oxiri 0.3.1",
  "rio_api",
  "rio_turtle",
  "serde",
@@ -152,6 +152,15 @@ name = "oxiri"
 version = "0.2.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "54b4ed3a7192fa19f5f48f99871f2755047fabefd7f222f12a1df1773796a102"
+
+[[package]]
+name = "oxiri"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b6bd0ef560f078e41ce2ebf370cce217e7fb2c3695ffa87541151c9de94e83a"
+dependencies = [
+ "memchr",
+]
 
 [[package]]
 name = "portable-atomic"
@@ -253,7 +262,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a3f3dc0af61ab4b8e03bbe987dffeadd35eb7233c6e38314679da3a382428838"
 dependencies = [
  "oxilangtag",
- "oxiri",
+ "oxiri 0.2.11",
  "rio_api",
 ]
 
