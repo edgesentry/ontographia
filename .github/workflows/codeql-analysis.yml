@@ -12,6 +12,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
   schedule:
     - cron: "30 5 * * 1"
 
@@ -35,7 +36,7 @@ jobs:
           - language: python
             build-mode: none
           - language: rust
-            build-mode: autobuild
+            build-mode: none
           - language: go
             build-mode: manual
 
@@ -53,15 +54,13 @@ jobs:
         if: matrix.language == 'rust' || matrix.language == 'go'
         uses: dtolnay/rust-toolchain@stable
 
+      # Rust uses build-mode none (rust-analyzer); cargo/rustup must be on PATH.
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
-
-      - name: Autobuild
-        if: matrix.build-mode == 'autobuild'
-        uses: github/codeql-action/autobuild@v3
 
       - name: Build Go (cgo)
         if: matrix.language == 'go'
