@@ -1,7 +1,7 @@
 package ontographia
 
 /*
-#cgo LDFLAGS: -L${SRCDIR}/../../../target/release -lontographia_ffi
+#cgo LDFLAGS: -L${SRCDIR}/../../../target/release -lontographia_ffi -Wl,-rpath,${SRCDIR}/../../../target/release
 #include <stdlib.h>
 
 extern char* ontographia_build_cypher_from_json(

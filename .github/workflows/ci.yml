@@ -80,4 +80,5 @@ jobs:
         working-directory: bindings/go
         env:
           CGO_ENABLED: "1"
+          LD_LIBRARY_PATH: ${{ github.workspace }}/target/release
         run: go test -v ./...

@@ -87,6 +87,7 @@ Requires Go 1.22+ and a built FFI library.
 ```bash
 cargo build --release -p ontographia-ffi
 cd bindings/go
+# Linux: export LD_LIBRARY_PATH=../../target/release  # if the linker cannot find libontographia_ffi.so
 go test ./...
 go run ./cmd/demo
 ```
