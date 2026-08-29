@@ -107,6 +107,7 @@ cargo test --workspace
 ./scripts/start_neo4j.sh --seed
 cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.native.yaml
 uv sync --group dev && uv run maturin develop --release   # Python bindings
+cargo build --release -p ontographia-ffi && cd bindings/go && go test ./...  # Go bindings
 python examples/run_neo4j_demo.py --ontology examples/manufacturing.native.yaml
 python scripts/neo4j_integration_test.py   # Neo4j e2e (mock LLM Intent -> Cypher -> execute)
 ```

@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   rust:
     runs-on: ubuntu-latest
@@ -61,3 +64,21 @@ jobs:
           NEO4J_PASSWORD: ontographia
           NEO4J_LOAD_SEED: "1"
         run: uv run python scripts/neo4j_integration_test.py
+
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: build FFI library
+        run: cargo build --release -p ontographia-ffi
+      - name: go test
+        working-directory: bindings/go
+        env:
+          CGO_ENABLED: "1"
+          LD_LIBRARY_PATH: ${{ github.workspace }}/target/release
+        run: go test -v ./...
