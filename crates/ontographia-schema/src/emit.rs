@@ -1,5 +1,10 @@
 use crate::model::GraphSchema;
 
+/// Serialize the derived graph schema as pretty-printed JSON.
+pub fn emit_schema_json(schema: &GraphSchema) -> crate::error::Result<String> {
+    Ok(serde_json::to_string_pretty(schema)?)
+}
+
 /// Emit Neo4j Cypher 25 `CREATE CONSTRAINT` statements for all `unique` properties in the schema.
 pub fn emit_cypher25_constraints(schema: &GraphSchema) -> String {
     let mut statements = Vec::new();
@@ -69,5 +74,24 @@ mod tests {
         let cypher = emit_cypher25_constraints(&schema);
         assert!(cypher.contains("CREATE CONSTRAINT product_sku IF NOT EXISTS"));
         assert!(cypher.contains("FOR (n:Product) REQUIRE n.sku IS UNIQUE"));
+    }
+
+    #[test]
+    fn emits_schema_json() {
+        let mut labels = IndexMap::new();
+        labels.insert(
+            "Product".into(),
+            LabelSchema {
+                properties: IndexMap::from([("sku".into(), Datatype::String)]),
+                unique_properties: vec!["sku".into()],
+            },
+        );
+        let schema = GraphSchema {
+            labels,
+            relationship_types: IndexMap::new(),
+        };
+        let json = emit_schema_json(&schema).unwrap();
+        assert!(json.contains("\"Product\""));
+        assert!(json.contains("\"sku\""));
     }
 }

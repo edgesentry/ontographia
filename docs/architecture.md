@@ -206,6 +206,8 @@ cargo run -p ontographia-schema --example emit_constraints -- examples/manufactu
 
 Mark business-key properties with `unique: true` in native ontology YAML (see [`examples/manufacturing.native.yaml`](../examples/manufacturing.native.yaml)).
 
+**Roles and guarantees (ontology ↔ Neo4j ↔ executable queries):** [ontology-graph-alignment.md](ontology-graph-alignment.md)
+
 ## What is intentionally outside the core
 
 | Concern | Where it lives |
@@ -229,5 +231,6 @@ Mark business-key properties with `unique: true` in native ontology YAML (see [`
 ## Related docs
 
 - Neo4j walkthrough (seed data, execute queries): [end-to-end-neo4j.md](end-to-end-neo4j.md)
+- Ontology ↔ graph alignment, who owns what, `schema.json` usage: [ontology-graph-alignment.md](ontology-graph-alignment.md)
 - Agent golden rules and entry points: [AGENTS.md](../AGENTS.md)
 - COM / native ontology JSON Schemas: [schemas/](../schemas/)
