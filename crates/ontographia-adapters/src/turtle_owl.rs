@@ -37,7 +37,7 @@ impl OntologyAdapter for TurtleOwlAdapter {
     fn parse(source: &[u8]) -> Result<CanonicalOntology> {
         let mut parser = TurtleParser::new(source, None);
 
-        let mut prefixes: IndexMap<String, String> = IndexMap::new();
+        let prefixes: IndexMap<String, String> = IndexMap::new();
         let mut classes: IndexMap<String, ClassDef> = IndexMap::new();
         let mut object_props: IndexMap<String, (Option<String>, Option<String>)> = IndexMap::new();
         let mut datatype_props: IndexMap<String, Vec<String>> = IndexMap::new();

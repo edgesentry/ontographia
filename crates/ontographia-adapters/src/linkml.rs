@@ -8,6 +8,7 @@ use serde::Deserialize;
 use crate::registry::OntologyAdapter;
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct LinkMlSchema {
     #[serde(default)]
     id: Option<String>,
@@ -33,6 +34,7 @@ struct LinkMlClass {
 }
 
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)]
 struct LinkMlSlot {
     #[serde(default)]
     range: Option<String>,

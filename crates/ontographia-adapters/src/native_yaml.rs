@@ -2,7 +2,7 @@ use indexmap::IndexMap;
 use ontographia_core::com::{
     CanonicalOntology, ClassDef, Datatype, PropertyDef, RelDef, RelDirection, SourceMetadata,
 };
-use ontographia_core::error::{OntographiaError, Result};
+use ontographia_core::error::Result;
 use serde::Deserialize;
 
 use crate::registry::OntologyAdapter;
