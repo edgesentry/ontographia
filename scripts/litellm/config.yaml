@@ -1,0 +1,37 @@
+# LiteLLM proxy — OpenAI, Gemini, and Cursor-adjacent models for local Ontographia E2E.
+#
+# Public model aliases (use as OPENAI_MODEL when calling http://127.0.0.1:4000/v1):
+#   ontographia-openai   → openai/gpt-4o-mini
+#   ontographia-gemini   → gemini/${GEMINI_MODEL} (default: gemini-3.7-flash)
+#   ontographia-cursor   → anthropic/claude-sonnet-4-20250514 (typical Cursor stack via LiteLLM)
+#
+# Cursor IDE routes through LiteLLM at /cursor (see docs/litellm-local.md).
+# Cursor Cloud Agents use CURSOR_API_KEY pass-through at /cursor/v0/*.
+
+model_list:
+  - model_name: ontographia-openai
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+  - model_name: ontographia-gemini
+    litellm_params:
+      model: os.environ/GEMINI_LITELLM_MODEL
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: ontographia-cursor
+    litellm_params:
+      model: anthropic/claude-sonnet-4-20250514
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # Distinct public name for Cursor IDE custom model picker (avoids built-in name collisions).
+  - model_name: litellm-claude-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-4-20250514
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+litellm_settings:
+  drop_params: true
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

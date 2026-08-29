@@ -28,6 +28,7 @@ Ontology → Adapter → COM → validate(Intent) → QueryAst → Emitter → C
 | Project overview, quick start | [README.md](README.md) |
 | Neo4j setup, seed data, query execution walkthrough | [docs/end-to-end-neo4j.md](docs/end-to-end-neo4j.md) |
 | LLM / agent workflow for Intent extraction | [skills/ontographia-cypher-builder/SKILL.md](skills/ontographia-cypher-builder/SKILL.md) |
+| LiteLLM local setup (OpenAI, Gemini, Cursor) | [docs/litellm-local.md](docs/litellm-local.md) |
 | COM JSON Schema | [schemas/com.schema.json](schemas/com.schema.json) |
 | Native ontology YAML Schema | [schemas/native_ontology.schema.json](schemas/native_ontology.schema.json) |
 
@@ -110,6 +111,7 @@ uv sync --group dev && uv run maturin develop --release   # Python bindings
 cargo build --release -p ontographia-ffi && cd bindings/go && go test ./...  # Go bindings
 python examples/run_neo4j_demo.py --ontology examples/manufacturing.native.yaml
 python scripts/neo4j_integration_test.py   # Neo4j e2e (mock LLM Intent -> Cypher -> execute)
+python examples/run_llm_e2e.py ...         # local-only LLM e2e (see docs/end-to-end-neo4j.md §7)
 ```
 
 ## Testing expectations
