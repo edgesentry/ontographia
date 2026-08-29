@@ -73,7 +73,7 @@ class OpenAICompatibleExtractor:
             },
             {
                 "role": "user",
-                "content": build_correction_message(previous_intent, error),
+                "content": build_correction_message(user_question, previous_intent, error),
             },
         ]
         return self._chat(messages, intent_json_schema)

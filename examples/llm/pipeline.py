@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from llm.repair import repair_intent
 from llm.semantic_validate import semantic_validate_intent
 
-DEFAULT_MAX_RETRIES = 3
+DEFAULT_MAX_RETRIES = 5
 
 
 def extract_validated_intent(
@@ -43,6 +44,8 @@ def extract_validated_intent(
                 previous_intent=intent or {},
                 error=last_error,
             )
+
+        intent = repair_intent(user_question, intent)
 
         try:
             semantic_validate_intent(user_question, intent)

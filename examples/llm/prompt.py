@@ -104,13 +104,18 @@ def build_initial_user_message(
     return "\n\n".join(parts)
 
 
-def build_correction_message(previous_intent: dict[str, Any], error: str) -> str:
+def build_correction_message(
+    user_question: str,
+    previous_intent: dict[str, Any],
+    error: str,
+) -> str:
+    example = pick_example_intent(user_question)
     return (
         "Your previous Intent JSON failed validation.\n"
         f"Error: {error}\n\n"
         f"Previous JSON:\n{json.dumps(previous_intent, indent=2)}\n\n"
-        "Return a corrected Intent JSON only. Ensure:\n"
-        "- traverse defines every return alias that is not start.alias\n"
-        "- filter[] includes every specific entity named in the question (SKU, line name, lot_id, status)\n"
-        "- each return item with property also has as_name"
+        f"Reference example ({example_label(user_question)}):\n"
+        f"{json.dumps(example, indent=2)}\n\n"
+        "Return a corrected Intent JSON only. Copy the structure from the reference "
+        "example when the question matches the same pattern."
     )
