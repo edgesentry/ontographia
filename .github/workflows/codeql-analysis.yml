@@ -1,0 +1,75 @@
+# Explicit CodeQL workflow (replaces GitHub "Default setup" for PR alert diffs).
+# After merging: Settings → Code security → Code scanning → disable Default setup.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "30 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      packages: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+            build-mode: none
+          - language: rust
+            build-mode: manual
+          - language: python
+            build-mode: none
+          - language: go
+            build-mode: manual
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Setup Rust
+        if: matrix.language == 'rust' || matrix.language == 'go'
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Rust workspace
+        if: matrix.language == 'rust'
+        run: cargo build --workspace
+
+      - name: Setup Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v7
+        with:
+          go-version: "1.22"
+
+      - name: Build Go test binaries
+        if: matrix.language == 'go'
+        env:
+          CGO_ENABLED: "1"
+          LD_LIBRARY_PATH: ${{ github.workspace }}/target/release
+        run: |
+          cargo build --release -p ontographia-ffi
+          cd bindings/go
+          go test -c ./...
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
