@@ -35,13 +35,13 @@ impl PyEngine {
         })
     }
 
-    fn intent_json_schema(&self, py: Python<'_>) -> PyResult<PyObject> {
+    fn intent_json_schema(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         let schema = self.inner.intent_json_schema();
         json_to_py(py, &schema)
     }
 
     #[pyo3(signature = (intent, dialect=None))]
-    fn build(&self, py: Python<'_>, intent: &Bound<'_, PyAny>, dialect: Option<&str>) -> PyResult<PyObject> {
+    fn build(&self, py: Python<'_>, intent: &Bound<'_, PyAny>, dialect: Option<&str>) -> PyResult<Py<PyAny>> {
         let intent_json = py_to_json(intent)?;
         let intent: Intent = serde_json::from_value(intent_json)
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
@@ -53,10 +53,10 @@ impl PyEngine {
         let dict = PyDict::new(py);
         dict.set_item("query", emitted.query)?;
         dict.set_item("params", json_to_py(py, &serde_json::to_value(&emitted.params).unwrap())?)?;
-        Ok(dict.into())
+        Ok(dict.into_any().unbind())
     }
 
-    fn ontology_json(&self, py: Python<'_>) -> PyResult<PyObject> {
+    fn ontology_json(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         let value = serde_json::to_value(self.inner.ontology())
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
         json_to_py(py, &value)
@@ -84,7 +84,7 @@ fn py_to_json(value: &Bound<'_, PyAny>) -> PyResult<serde_json::Value> {
     if let Ok(b) = value.extract::<bool>() {
         return Ok(serde_json::json!(b));
     }
-    if let Ok(dict) = value.downcast::<PyDict>() {
+    if let Ok(dict) = value.cast::<PyDict>() {
         let mut map = serde_json::Map::new();
         for (k, v) in dict.iter() {
             let key: String = k.extract()?;
@@ -99,7 +99,7 @@ fn py_to_json(value: &Bound<'_, PyAny>) -> PyResult<serde_json::Value> {
     Err(PyValueError::new_err("unsupported Python type for intent"))
 }
 
-fn json_to_py(py: Python<'_>, value: &serde_json::Value) -> PyResult<PyObject> {
+fn json_to_py(py: Python<'_>, value: &serde_json::Value) -> PyResult<Py<PyAny>> {
     match value {
         serde_json::Value::Null => Ok(py.None()),
         serde_json::Value::Bool(b) => Ok(b
@@ -138,14 +138,14 @@ fn json_to_py(py: Python<'_>, value: &serde_json::Value) -> PyResult<PyObject> {
             for item in arr {
                 list.append(json_to_py(py, item)?)?;
             }
-            Ok(list.into())
+            Ok(list.into_any().unbind())
         }
         serde_json::Value::Object(map) => {
             let dict = PyDict::new(py);
             for (k, v) in map {
                 dict.set_item(k, json_to_py(py, v)?)?;
             }
-            Ok(dict.into())
+            Ok(dict.into_any().unbind())
         }
     }
 }
