@@ -1,0 +1,78 @@
+# Repo-managed CodeQL (replaces GitHub "Default setup").
+#
+# REQUIRED once before this workflow can upload results:
+#   Settings → Code security and analysis → Code scanning → CodeQL analysis
+#   → Default setup → Disable
+#
+# Default setup and this workflow cannot both be active (SARIF upload conflict).
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "30 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+            build-mode: none
+          - language: python
+            build-mode: none
+          - language: rust
+            build-mode: none
+          - language: go
+            build-mode: manual
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        if: matrix.language == 'go'
+        uses: actions/setup-go@v7
+        with:
+          go-version: "1.22"
+
+      - name: Setup Rust
+        if: matrix.language == 'rust' || matrix.language == 'go'
+        uses: dtolnay/rust-toolchain@stable
+
+      # Rust uses build-mode none (rust-analyzer); cargo/rustup must be on PATH.
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Build Go (cgo)
+        if: matrix.language == 'go'
+        env:
+          CGO_ENABLED: "1"
+          LD_LIBRARY_PATH: ${{ github.workspace }}/target/release
+        run: |
+          cargo build --release -p ontographia-ffi
+          cd bindings/go
+          go test -c ./...
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
