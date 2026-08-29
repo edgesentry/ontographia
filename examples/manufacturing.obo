@@ -1,0 +1,47 @@
+format-version: 1.2
+data-version: manufacturing/2024
+
+[Term]
+id: MFG:0000001
+name: Product
+def: "Finished good in a manufacturing BOM." []
+
+[Term]
+id: MFG:0000002
+name: Part
+def: "Component or sub-assembly." []
+
+[Term]
+id: MFG:0000003
+name: Supplier
+def: "Tiered supply-chain partner." []
+
+[Term]
+id: MFG:0000004
+name: Plant
+def: "Manufacturing site (ISA-95 Site)." []
+
+[Term]
+id: MFG:0000005
+name: Line
+def: "Production line." []
+
+[Term]
+id: MFG:0000006
+name: Lot
+def: "Production lot for traceability." []
+
+[Typedef]
+id: has_part
+name: has_part
+is_a: relationship ! relationship
+
+[Typedef]
+id: supplied_by
+name: supplied_by
+is_a: relationship ! relationship
+
+[Typedef]
+id: produced_on
+name: produced_on
+is_a: relationship ! relationship

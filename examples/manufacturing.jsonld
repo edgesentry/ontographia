@@ -1,0 +1,137 @@
+{
+  "@context": {
+    "ex": "http://example.org/ontographia/manufacturing#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
+  },
+  "@graph": [
+    { "@id": "ex:Product", "@type": "owl:Class" },
+    { "@id": "ex:Part", "@type": "owl:Class" },
+    { "@id": "ex:Supplier", "@type": "owl:Class" },
+    { "@id": "ex:Plant", "@type": "owl:Class" },
+    { "@id": "ex:Line", "@type": "owl:Class" },
+    { "@id": "ex:Lot", "@type": "owl:Class" },
+    { "@id": "ex:DefectType", "@type": "owl:Class" },
+    {
+      "@id": "ex:has_part",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": { "@id": "ex:Product" },
+      "rdfs:range": { "@id": "ex:Part" }
+    },
+    {
+      "@id": "ex:has_sub_part",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": { "@id": "ex:Part" },
+      "rdfs:range": { "@id": "ex:Part" }
+    },
+    {
+      "@id": "ex:supplied_by",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": { "@id": "ex:Part" },
+      "rdfs:range": { "@id": "ex:Supplier" }
+    },
+    {
+      "@id": "ex:located_at",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": { "@id": "ex:Line" },
+      "rdfs:range": { "@id": "ex:Plant" }
+    },
+    {
+      "@id": "ex:produced_on",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": { "@id": "ex:Lot" },
+      "rdfs:range": { "@id": "ex:Line" }
+    },
+    {
+      "@id": "ex:contains_part",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": { "@id": "ex:Lot" },
+      "rdfs:range": { "@id": "ex:Part" }
+    },
+    {
+      "@id": "ex:has_defect",
+      "@type": "owl:ObjectProperty",
+      "rdfs:domain": { "@id": "ex:Lot" },
+      "rdfs:range": { "@id": "ex:DefectType" }
+    },
+    {
+      "@id": "ex:sku",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": { "@id": "ex:Product" },
+      "rdfs:range": { "@id": "xsd:string" }
+    },
+    {
+      "@id": "ex:name",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": [
+        { "@id": "ex:Product" },
+        { "@id": "ex:Part" },
+        { "@id": "ex:Supplier" },
+        { "@id": "ex:Plant" },
+        { "@id": "ex:Line" }
+      ],
+      "rdfs:range": { "@id": "xsd:string" }
+    },
+    {
+      "@id": "ex:part_number",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": { "@id": "ex:Part" },
+      "rdfs:range": { "@id": "xsd:string" }
+    },
+    {
+      "@id": "ex:lead_time_days",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": { "@id": "ex:Part" },
+      "rdfs:range": { "@id": "xsd:integer" }
+    },
+    {
+      "@id": "ex:tier",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": { "@id": "ex:Supplier" },
+      "rdfs:range": { "@id": "xsd:integer" }
+    },
+    {
+      "@id": "ex:country",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": { "@id": "ex:Supplier" },
+      "rdfs:range": { "@id": "xsd:string" }
+    },
+    {
+      "@id": "ex:region",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": { "@id": "ex:Plant" },
+      "rdfs:range": { "@id": "xsd:string" }
+    },
+    {
+      "@id": "ex:lot_id",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": { "@id": "ex:Lot" },
+      "rdfs:range": { "@id": "xsd:string" }
+    },
+    {
+      "@id": "ex:quantity",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": { "@id": "ex:Lot" },
+      "rdfs:range": { "@id": "xsd:integer" }
+    },
+    {
+      "@id": "ex:status",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": { "@id": "ex:Lot" },
+      "rdfs:range": { "@id": "xsd:string" }
+    },
+    {
+      "@id": "ex:code",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": { "@id": "ex:DefectType" },
+      "rdfs:range": { "@id": "xsd:string" }
+    },
+    {
+      "@id": "ex:description",
+      "@type": "owl:DatatypeProperty",
+      "rdfs:domain": { "@id": "ex:DefectType" },
+      "rdfs:range": { "@id": "xsd:string" }
+    }
+  ]
+}

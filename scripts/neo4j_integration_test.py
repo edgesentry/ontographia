@@ -1,0 +1,242 @@
+#!/usr/bin/env python3
+"""Neo4j integration test: mock LLM Intent -> Ontographia Cypher 25 -> execute.
+
+Simulates the agent pipeline without calling an LLM:
+  ontology schema -> (mock) Intent JSON -> Engine.build() -> Neo4j driver
+
+Usage:
+  uv sync --group dev && uv run maturin develop --release
+  ./scripts/start_neo4j.sh --seed
+  python scripts/neo4j_integration_test.py
+
+Environment:
+  NEO4J_URI        default: bolt://localhost:7687
+  NEO4J_USER       default: neo4j
+  NEO4J_PASSWORD   default: ontographia
+  NEO4J_LOAD_SEED  default: 1 (load examples/neo4j/seed.cypher before tests)
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_ONTOLOGY = ROOT / "examples/manufacturing.native.yaml"
+SEED_FILE = ROOT / "examples/neo4j/seed.cypher"
+
+# Fixture Intent JSON — stands in for LLM structured output constrained by intent_json_schema()
+MOCK_LLM_INTENTS: dict[str, dict[str, Any]] = {
+    "List suppliers for parts in product SKU SPX-100": {
+        "start": {"class": "Product", "alias": "product"},
+        "traverse": [
+            {
+                "relationship": "has_part",
+                "direction": "out",
+                "to": {"class": "Part", "alias": "part"},
+            },
+            {
+                "relationship": "supplied_by",
+                "direction": "out",
+                "to": {"class": "Supplier", "alias": "supplier"},
+            },
+        ],
+        "filter": [
+            {"alias": "product", "property": "sku", "op": "eq", "value": "SPX-100"}
+        ],
+        "return": [
+            {"alias": "supplier", "property": "name", "as_name": "supplier_name"}
+        ],
+        "limit": 20,
+    },
+    "Which defect codes affect quarantined lots?": {
+        "start": {"class": "Lot", "alias": "lot"},
+        "traverse": [
+            {
+                "relationship": "has_defect",
+                "direction": "out",
+                "to": {"class": "DefectType", "alias": "defect"},
+            }
+        ],
+        "filter": [
+            {"alias": "lot", "property": "status", "op": "eq", "value": "quarantine"}
+        ],
+        "return": [
+            {"alias": "defect", "property": "code", "as_name": "defect_code"}
+        ],
+        "limit": 20,
+    },
+    "Which plant hosts production Line-1?": {
+        "start": {"class": "Line", "alias": "line"},
+        "traverse": [
+            {
+                "relationship": "located_at",
+                "direction": "out",
+                "to": {"class": "Plant", "alias": "plant"},
+            }
+        ],
+        "filter": [{"alias": "line", "property": "name", "op": "eq", "value": "Line-1"}],
+        "return": [{"alias": "plant", "property": "name", "as_name": "plant_name"}],
+        "limit": 20,
+    },
+}
+
+
+@dataclass
+class Neo4jConfig:
+    uri: str
+    user: str
+    password: str
+    load_seed: bool
+
+
+@dataclass
+class IntegrationCase:
+    name: str
+    user_question: str
+    expected_rows: list[dict[str, Any]]
+
+
+CASES = [
+    IntegrationCase(
+        name="bom_suppliers",
+        user_question="List suppliers for parts in product SKU SPX-100",
+        expected_rows=[
+            {"supplier_name": "FormTech"},
+            {"supplier_name": "MikroMotors"},
+        ],
+    ),
+    IntegrationCase(
+        name="quarantine_defects",
+        user_question="Which defect codes affect quarantined lots?",
+        expected_rows=[{"defect_code": "SURFACE_SCRATCH"}],
+    ),
+    IntegrationCase(
+        name="line_plant",
+        user_question="Which plant hosts production Line-1?",
+        expected_rows=[{"plant_name": "Nagoya Plant"}],
+    ),
+]
+
+
+def mock_llm_extract_intent(user_question: str, intent_json_schema: dict[str, Any]) -> dict[str, Any]:
+    """Return deterministic Intent JSON as if an LLM had filled structured output."""
+    del intent_json_schema  # production path passes schema to the LLM API
+    try:
+        return MOCK_LLM_INTENTS[user_question]
+    except KeyError as exc:
+        known = ", ".join(f'"{q}"' for q in MOCK_LLM_INTENTS)
+        raise ValueError(f"no mock LLM fixture for question: {user_question!r} (known: {known})") from exc
+
+
+def parse_cypher25_seed(path: Path) -> list[str]:
+    blocks: list[str] = []
+    current: list[str] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped.startswith("//") or not stripped:
+            continue
+        if stripped.upper() == "CYPHER 25":
+            if current:
+                blocks.append("\n".join(current).strip())
+                current = []
+            continue
+        current.append(line)
+    if current:
+        blocks.append("\n".join(current).strip())
+    return [block for block in blocks if block]
+
+
+def load_seed(driver: Any, path: Path) -> None:
+    statements = parse_cypher25_seed(path)
+    with driver.session() as session:
+        for statement in statements:
+            session.run(statement)
+
+
+def run_case(engine: Any, driver: Any, case: IntegrationCase) -> None:
+    schema = engine.intent_json_schema()
+    intent = mock_llm_extract_intent(case.user_question, schema)
+    built = engine.build(intent, dialect="cypher25")
+
+    if not built["query"].startswith("CYPHER 25"):
+        raise AssertionError(f"{case.name}: expected CYPHER 25 query, got {built['query']!r}")
+
+    with driver.session() as session:
+        rows = session.run(built["query"], built["params"]).data()
+
+    normalized = sorted(rows, key=lambda row: tuple(sorted(row.items())))
+    expected = sorted(case.expected_rows, key=lambda row: tuple(sorted(row.items())))
+    if normalized != expected:
+        raise AssertionError(
+            f"{case.name}: unexpected rows\n"
+            f"  query : {built['query']}\n"
+            f"  params: {built['params']}\n"
+            f"  got   : {rows}\n"
+            f"  want  : {case.expected_rows}"
+        )
+
+    print(f"ok  {case.name}")
+
+
+def config_from_env() -> Neo4jConfig:
+    return Neo4jConfig(
+        uri=os.environ.get("NEO4J_URI", "bolt://localhost:7687"),
+        user=os.environ.get("NEO4J_USER", "neo4j"),
+        password=os.environ.get("NEO4J_PASSWORD", "ontographia"),
+        load_seed=os.environ.get("NEO4J_LOAD_SEED", "1") not in {"0", "false", "no"},
+    )
+
+
+def main() -> int:
+    try:
+        import ontographia
+        from neo4j import GraphDatabase
+    except ImportError:
+        print(
+            "requires ontographia and neo4j packages:\n"
+            "  uv sync --group dev && uv run maturin develop --release",
+            file=sys.stderr,
+        )
+        return 1
+
+    cfg = config_from_env()
+    if not DEFAULT_ONTOLOGY.is_file():
+        print(f"ontology not found: {DEFAULT_ONTOLOGY}", file=sys.stderr)
+        return 1
+
+    try:
+        driver = GraphDatabase.driver(cfg.uri, auth=(cfg.user, cfg.password))
+        driver.verify_connectivity()
+    except Exception as exc:  # noqa: BLE001 - surface driver errors to the user
+        print(
+            f"cannot connect to Neo4j at {cfg.uri}: {exc}\n"
+            "Start and seed with: ./scripts/start_neo4j.sh --seed",
+            file=sys.stderr,
+        )
+        return 1
+
+    if cfg.load_seed:
+        if not SEED_FILE.is_file():
+            print(f"seed file not found: {SEED_FILE}", file=sys.stderr)
+            return 1
+        print(f"loading seed from {SEED_FILE.relative_to(ROOT)}")
+        load_seed(driver, SEED_FILE)
+
+    engine = ontographia.Engine.load(str(DEFAULT_ONTOLOGY))
+    print(f"running {len(CASES)} integration case(s) against {cfg.uri}")
+    try:
+        for case in CASES:
+            run_case(engine, driver, case)
+    finally:
+        driver.close()
+
+    print("neo4j integration: ok")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,18 @@
+[package]
+name = "ontographia"
+description = "Python bindings for Ontographia — multi-ontology deterministic Cypher builder"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lib]
+name = "ontographia"
+crate-type = ["cdylib"]
+
+[dependencies]
+ontographia-core = { path = "../../crates/ontographia-core" }
+ontographia-adapters = { path = "../../crates/ontographia-adapters" }
+pyo3 = { version = "0.23", features = ["extension-module"] }
+serde_json = { workspace = true }

@@ -1,0 +1,123 @@
+# Manufacturing ontology slice — IOF Core / SAREF4INMA / ISA-95 inspired (OWL/Turtle)
+@prefix ex: <http://example.org/ontographia/manufacturing#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+ex:Product a owl:Class ;
+    rdfs:label "Product" ;
+    rdfs:comment "Finished good" .
+
+ex:Part a owl:Class ;
+    rdfs:label "Part" ;
+    rdfs:comment "BOM component or sub-assembly" .
+
+ex:Supplier a owl:Class ;
+    rdfs:label "Supplier" .
+
+ex:Plant a owl:Class ;
+    rdfs:label "Plant" ;
+    rdfs:comment "ISA-95 Site" .
+
+ex:Line a owl:Class ;
+    rdfs:label "Line" ;
+    rdfs:comment "ISA-95 production line" .
+
+ex:Lot a owl:Class ;
+    rdfs:label "Lot" ;
+    rdfs:comment "Traceability batch" .
+
+ex:DefectType a owl:Class ;
+    rdfs:label "DefectType" .
+
+ex:has_part a owl:ObjectProperty ;
+    rdfs:domain ex:Product ;
+    rdfs:range ex:Part .
+
+ex:has_sub_part a owl:ObjectProperty ;
+    rdfs:domain ex:Part ;
+    rdfs:range ex:Part .
+
+ex:supplied_by a owl:ObjectProperty ;
+    rdfs:domain ex:Part ;
+    rdfs:range ex:Supplier .
+
+ex:located_at a owl:ObjectProperty ;
+    rdfs:domain ex:Line ;
+    rdfs:range ex:Plant .
+
+ex:produced_on a owl:ObjectProperty ;
+    rdfs:domain ex:Lot ;
+    rdfs:range ex:Line .
+
+ex:contains_part a owl:ObjectProperty ;
+    rdfs:domain ex:Lot ;
+    rdfs:range ex:Part .
+
+ex:has_defect a owl:ObjectProperty ;
+    rdfs:domain ex:Lot ;
+    rdfs:range ex:DefectType .
+
+ex:sku a owl:DatatypeProperty ;
+    rdfs:domain ex:Product ;
+    rdfs:range xsd:string .
+
+ex:part_number a owl:DatatypeProperty ;
+    rdfs:domain ex:Part ;
+    rdfs:range xsd:string .
+
+ex:lead_time_days a owl:DatatypeProperty ;
+    rdfs:domain ex:Part ;
+    rdfs:range xsd:integer .
+
+ex:tier a owl:DatatypeProperty ;
+    rdfs:domain ex:Supplier ;
+    rdfs:range xsd:integer .
+
+ex:lot_id a owl:DatatypeProperty ;
+    rdfs:domain ex:Lot ;
+    rdfs:range xsd:string .
+
+ex:status a owl:DatatypeProperty ;
+    rdfs:domain ex:Lot ;
+    rdfs:range xsd:string .
+
+ex:code a owl:DatatypeProperty ;
+    rdfs:domain ex:DefectType ;
+    rdfs:range xsd:string .
+
+ex:name a owl:DatatypeProperty ;
+    rdfs:domain ex:Product ;
+    rdfs:range xsd:string .
+
+ex:name a owl:DatatypeProperty ;
+    rdfs:domain ex:Part ;
+    rdfs:range xsd:string .
+
+ex:name a owl:DatatypeProperty ;
+    rdfs:domain ex:Supplier ;
+    rdfs:range xsd:string .
+
+ex:name a owl:DatatypeProperty ;
+    rdfs:domain ex:Plant ;
+    rdfs:range xsd:string .
+
+ex:name a owl:DatatypeProperty ;
+    rdfs:domain ex:Line ;
+    rdfs:range xsd:string .
+
+ex:country a owl:DatatypeProperty ;
+    rdfs:domain ex:Supplier ;
+    rdfs:range xsd:string .
+
+ex:region a owl:DatatypeProperty ;
+    rdfs:domain ex:Plant ;
+    rdfs:range xsd:string .
+
+ex:quantity a owl:DatatypeProperty ;
+    rdfs:domain ex:Lot ;
+    rdfs:range xsd:integer .
+
+ex:description a owl:DatatypeProperty ;
+    rdfs:domain ex:DefectType ;
+    rdfs:range xsd:string .

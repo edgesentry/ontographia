@@ -1,0 +1,99 @@
+id: https://example.org/ontographia/manufacturing
+name: manufacturing
+linkml_version: 1.7.0
+description: >-
+  Manufacturing domain slice — ISA-95 site/line, BOM, lot traceability,
+  tiered suppliers (IOF Core / SAREF4INMA aligned).
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  ex: http://example.org/ontographia/manufacturing#
+
+default_range: string
+
+classes:
+  Product:
+    description: Finished good
+    slots:
+      - sku
+      - name
+      - has_part
+  Part:
+    description: BOM component
+    slots:
+      - part_number
+      - name
+      - lead_time_days
+      - has_sub_part
+      - supplied_by
+  Supplier:
+    slots:
+      - name
+      - tier
+      - country
+  Plant:
+    description: ISA-95 Site
+    slots:
+      - name
+      - region
+  Line:
+    description: Production line
+    slots:
+      - name
+      - located_at
+  Lot:
+    description: Traceability batch
+    slots:
+      - lot_id
+      - quantity
+      - status
+      - produced_on
+      - contains_part
+      - has_defect
+  DefectType:
+    slots:
+      - code
+      - description
+
+slots:
+  sku:
+    range: string
+    required: true
+  part_number:
+    range: string
+    required: true
+  name:
+    range: string
+  lead_time_days:
+    range: integer
+  tier:
+    range: integer
+  country:
+    range: string
+  region:
+    range: string
+  lot_id:
+    range: string
+    required: true
+  quantity:
+    range: integer
+  status:
+    range: string
+  code:
+    range: string
+  description:
+    range: string
+  has_part:
+    range: Part
+  has_sub_part:
+    range: Part
+  supplied_by:
+    range: Supplier
+  located_at:
+    range: Plant
+  produced_on:
+    range: Line
+  contains_part:
+    range: Part
+  has_defect:
+    range: DefectType

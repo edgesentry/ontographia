@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ontographia.dev/schemas/com.schema.json",
+  "title": "Canonical Ontology Model",
+  "type": "object",
+  "required": ["classes", "relationships", "properties"],
+  "properties": {
+    "classes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/ClassDef" }
+    },
+    "relationships": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/RelDef" }
+    },
+    "properties": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/PropertyDef" }
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Constraint" }
+    },
+    "namespaces": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "source": { "$ref": "#/$defs/SourceMetadata" }
+  },
+  "$defs": {
+    "ClassDef": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "iri": { "type": "string" },
+        "super_classes": { "type": "array", "items": { "type": "string" } },
+        "description": { "type": "string" }
+      }
+    },
+    "RelDef": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "iri": { "type": "string" },
+        "from_class": { "type": "string" },
+        "to_class": { "type": "string" },
+        "direction": { "enum": ["out", "in", "both"] }
+      }
+    },
+    "PropertyDef": {
+      "type": "object",
+      "required": ["name", "owner_class", "datatype"],
+      "properties": {
+        "name": { "type": "string" },
+        "iri": { "type": "string" },
+        "owner_class": { "type": "string" },
+        "datatype": {
+          "enum": ["string", "integer", "float", "boolean", "date", "datetime", "iri"]
+        },
+        "required": { "type": "boolean" }
+      }
+    },
+    "Constraint": {
+      "type": "object",
+      "required": ["kind", "target_class"],
+      "properties": {
+        "kind": {
+          "enum": ["min_count", "max_count", "datatype", "pattern", "in"]
+        },
+        "target_class": { "type": "string" },
+        "property": { "type": "string" },
+        "value": {}
+      }
+    },
+    "SourceMetadata": {
+      "type": "object",
+      "properties": {
+        "format": { "type": "string" },
+        "uri": { "type": "string" },
+        "version": { "type": "string" }
+      }
+    }
+  }
+}

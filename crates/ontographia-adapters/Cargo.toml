@@ -1,0 +1,29 @@
+[package]
+name = "ontographia-adapters"
+description = "Multi-format ontology adapters for Ontographia"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+ontographia-core = { path = "../ontographia-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }
+indexmap = { workspace = true }
+rio_turtle = "0.8"
+rio_api = "0.8"
+oxiri = "0.2"
+
+[dev-dependencies]
+
+[[test]]
+name = "integration"
+path = "tests/integration.rs"
+
+[[example]]
+name = "intent_to_cypher"
+path = "../../examples/intent_to_cypher.rs"

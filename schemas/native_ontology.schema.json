@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ontographia.dev/schemas/native_ontology.schema.json",
+  "title": "Ontographia Native Ontology",
+  "type": "object",
+  "required": ["classes"],
+  "properties": {
+    "namespaces": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "classes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "super_classes": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "from_class": { "type": "string" },
+          "to_class": { "type": "string" },
+          "direction": { "enum": ["out", "in", "both"] }
+        }
+      }
+    },
+    "properties": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "owner_class"],
+        "properties": {
+          "name": { "type": "string" },
+          "owner_class": { "type": "string" },
+          "datatype": {
+            "enum": ["string", "integer", "float", "boolean", "date", "datetime", "iri"]
+          },
+          "required": { "type": "boolean", "default": false }
+        }
+      }
+    }
+  }
+}

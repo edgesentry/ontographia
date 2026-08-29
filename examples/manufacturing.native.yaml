@@ -1,0 +1,108 @@
+# Ontographia native ontology — manufacturing domain (ISA-95 inspired)
+# BOM + site/line + lot traceability + supplier risk
+
+namespaces:
+  ex: http://example.org/ontographia/manufacturing#
+
+classes:
+  - name: Product
+    description: Finished good (ISA-95 material produced)
+  - name: Part
+    description: Component or sub-assembly in a BOM
+  - name: Supplier
+    description: Tiered supplier in the supply chain
+  - name: Plant
+    description: Manufacturing site (ISA-95 Site)
+  - name: Line
+    description: Production line (ISA-95 Area / Work Center)
+  - name: Lot
+    description: Production lot for traceability
+  - name: DefectType
+    description: Quality defect classification
+
+relationships:
+  - name: has_part
+    from_class: Product
+    to_class: Part
+    direction: out
+  - name: has_sub_part
+    from_class: Part
+    to_class: Part
+    direction: out
+  - name: supplied_by
+    from_class: Part
+    to_class: Supplier
+    direction: out
+  - name: located_at
+    from_class: Line
+    to_class: Plant
+    direction: out
+  - name: produced_on
+    from_class: Lot
+    to_class: Line
+    direction: out
+  - name: contains_part
+    from_class: Lot
+    to_class: Part
+    direction: out
+  - name: has_defect
+    from_class: Lot
+    to_class: DefectType
+    direction: out
+
+properties:
+  - name: sku
+    owner_class: Product
+    datatype: string
+    required: true
+  - name: name
+    owner_class: Product
+    datatype: string
+  - name: part_number
+    owner_class: Part
+    datatype: string
+    required: true
+  - name: lead_time_days
+    owner_class: Part
+    datatype: integer
+  - name: name
+    owner_class: Part
+    datatype: string
+  - name: name
+    owner_class: Supplier
+    datatype: string
+    required: true
+  - name: tier
+    owner_class: Supplier
+    datatype: integer
+  - name: country
+    owner_class: Supplier
+    datatype: string
+  - name: name
+    owner_class: Plant
+    datatype: string
+    required: true
+  - name: region
+    owner_class: Plant
+    datatype: string
+  - name: name
+    owner_class: Line
+    datatype: string
+    required: true
+  - name: lot_id
+    owner_class: Lot
+    datatype: string
+    required: true
+  - name: quantity
+    owner_class: Lot
+    datatype: integer
+  - name: status
+    owner_class: Lot
+    datatype: string
+  - name: code
+    owner_class: DefectType
+    datatype: string
+    required: true
+  - name: description
+    owner_class: DefectType
+    datatype: string
