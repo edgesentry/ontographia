@@ -80,6 +80,49 @@ print(result["query"])
 print(result["params"])
 ```
 
+## Quick start (Go)
+
+Requires Go 1.22+ and a built FFI library.
+
+```bash
+cargo build --release -p ontographia-ffi
+cd bindings/go
+go test ./...
+go run ./cmd/demo
+```
+
+```go
+package main
+
+import (
+	"fmt"
+	"path/filepath"
+
+	"github.com/yohei1126/ontographia/bindings/go/ontographia"
+)
+
+func main() {
+	ontology := filepath.Join("examples", "manufacturing.native.yaml")
+	intent := `{
+		"start": {"class": "Product", "alias": "product"},
+		"traverse": [
+			{"relationship": "has_part", "direction": "out", "to": {"class": "Part", "alias": "part"}},
+			{"relationship": "supplied_by", "direction": "out", "to": {"class": "Supplier", "alias": "supplier"}}
+		],
+		"filter": [{"alias": "product", "property": "sku", "op": "eq", "value": "SPX-100"}],
+		"return": [{"alias": "supplier", "property": "name", "as_name": "supplier_name"}],
+		"limit": 20
+	}`
+
+	result, err := ontographia.BuildCypherFromFiles(ontology, intent, "cypher25")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(result.Query)
+	fmt.Println(result.Params)
+}
+```
+
 ## Dialects
 
 - `cypher25` (default) — Neo4j Cypher 25 with `FILTER` clause

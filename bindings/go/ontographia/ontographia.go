@@ -1,7 +1,7 @@
-package main
+package ontographia
 
 /*
-#cgo LDFLAGS: -L${SRCDIR}/../../target/release -lontographia_ffi
+#cgo LDFLAGS: -L${SRCDIR}/../../../target/release -lontographia_ffi
 #include <stdlib.h>
 
 extern char* ontographia_build_cypher_from_json(
@@ -63,24 +63,4 @@ func BuildCypherFromFiles(ontologyPath, intentJSON, dialect string) (BuildResult
 		return result, fmt.Errorf("%s", result.Error)
 	}
 	return result, nil
-}
-
-func main() {
-	intent := `{
-		"start": {"class": "Product", "alias": "product"},
-		"traverse": [
-			{"relationship": "has_part", "direction": "out", "to": {"class": "Part", "alias": "part"}},
-			{"relationship": "supplied_by", "direction": "out", "to": {"class": "Supplier", "alias": "supplier"}}
-		],
-		"filter": [{"alias": "product", "property": "sku", "op": "eq", "value": "SPX-100"}],
-		"return": [{"alias": "supplier", "property": "name", "as_name": "supplier_name"}],
-		"limit": 20
-	}`
-
-	result, err := BuildCypherFromFiles("../../examples/manufacturing.native.yaml", intent, "cypher25")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(result.Query)
-	fmt.Println(result.Params)
 }
