@@ -1,13 +1,9 @@
 # One-shot release: preflight (release check) → tag + GitHub Release → build & upload.
-# See docs/release.md
+# Version is read from Cargo.toml on main. See docs/release.md
 name: Release
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: "Version to release (must match Cargo.toml on main), e.g. 0.1.1"
-        required: true
 
 permissions:
   contents: write
@@ -15,20 +11,42 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  RELEASE_TAG: v${{ inputs.version }}
 
 jobs:
+  resolve-version:
+    name: Resolve version from Cargo.toml
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release_tag: ${{ steps.version.outputs.release_tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Read workspace version
+        id: version
+        run: |
+          VERSION="$(bash scripts/workspace-version.sh)"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "release_tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Releasing v${VERSION} from Cargo.toml"
+
   preflight:
+    needs: resolve-version
     uses: ./.github/workflows/preflight-release.yml
     with:
-      version: ${{ inputs.version }}
+      version: ${{ needs.resolve-version.outputs.version }}
 
   create-release:
     name: Create tag and GitHub Release
-    needs: preflight
+    needs: [resolve-version, preflight]
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -47,8 +65,10 @@ jobs:
 
   verify:
     name: Claim version and verify tag
-    needs: create-release
+    needs: [resolve-version, create-release]
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -68,8 +88,10 @@ jobs:
 
   build-cli:
     name: CLI (${{ matrix.artifact }})
-    needs: verify
+    needs: [resolve-version, verify]
     runs-on: ${{ matrix.os }}
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     strategy:
       fail-fast: false
       matrix:
@@ -114,8 +136,10 @@ jobs:
 
   build-ffi:
     name: FFI (${{ matrix.artifact }})
-    needs: verify
+    needs: [resolve-version, verify]
     runs-on: ${{ matrix.os }}
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     strategy:
       fail-fast: false
       matrix:
@@ -159,8 +183,10 @@ jobs:
 
   build-wheels:
     name: Python wheels (${{ matrix.python-version }})
-    needs: verify
+    needs: [resolve-version, verify]
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     strategy:
       fail-fast: false
       matrix:
@@ -188,8 +214,10 @@ jobs:
 
   upload-assets:
     name: Upload GitHub Release assets
-    needs: [build-cli, build-ffi, build-wheels]
+    needs: [resolve-version, build-cli, build-ffi, build-wheels]
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -208,8 +236,10 @@ jobs:
 
   tag-go-module:
     name: Tag Go module
-    needs: verify
+    needs: [resolve-version, verify]
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -231,10 +261,11 @@ jobs:
 
   publish-crates:
     name: Publish Rust crates
-    needs: verify
+    needs: [resolve-version, verify]
     runs-on: ubuntu-latest
     if: vars.PUBLISH_TO_REGISTRIES == 'true'
     env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
       CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
     steps:
       - uses: actions/checkout@v7

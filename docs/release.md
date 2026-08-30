@@ -21,9 +21,9 @@ flowchart LR
 1. Merge feature work to `main` and confirm [CI](https://github.com/edgesentry/ontographia/actions/workflows/ci.yml) passes.
 2. Bump the workspace version on `main` (see [Version bumps](#version-bumps)) — **no local git tag**.
 3. **(Recommended)** Run **[Release check](https://github.com/edgesentry/ontographia/actions/workflows/release-check.yml)** — dry-run only; no tag or release is created.
-4. Run **[Release](https://github.com/edgesentry/ontographia/actions/workflows/release.yml)** — runs the **same preflight** again, then creates `vX.Y.Z`, the GitHub Release, and uploads artifacts.
+4. Run **[Release](https://github.com/edgesentry/ontographia/actions/workflows/release.yml)** — reads `[workspace.package] version` from `Cargo.toml`, runs preflight, then creates `vX.Y.Z`, the GitHub Release, and uploads artifacts.
 
-Both workflows call the shared [`preflight-release.yml`](https://github.com/edgesentry/ontographia/blob/main/.github/workflows/preflight-release.yml) reusable workflow (backed by `scripts/preflight-release.sh`).
+Both workflows call the shared [`preflight-release.yml`](https://github.com/edgesentry/ontographia/blob/main/.github/workflows/preflight-release.yml) reusable workflow (backed by `scripts/preflight-release.sh`). **No version input** — bump `Cargo.toml` on `main` first.
 
 **Immutable tags:** preflight fails if `vX.Y.Z`, `release-processed/vX.Y.Z`, or `bindings/go/vX.Y.Z` already exists on the remote. After a successful Release start, `release-processed/vX.Y.Z` is claimed; the same version cannot be re-released — bump the version in `Cargo.toml`.
 
@@ -33,19 +33,17 @@ Both workflows call the shared [`preflight-release.yml`](https://github.com/edge
 
 1. Open **Actions → Release check**.
 2. Click **Run workflow** (branch `main`).
-3. Enter **version** without the `v` prefix (e.g. `0.1.1`).
-4. Confirm the run passes (tests, `cargo publish --dry-run`, wheel build).
+3. Confirm the run passes (version from `Cargo.toml`, tests, `cargo publish --dry-run`, wheel build).
 
 No tag or GitHub Release is created.
 
 ### Release (publish)
 
-1. Open **Actions → Release**.
-2. Click **Run workflow** (branch `main`).
-3. Enter the same **version** (e.g. `0.1.1`) — must match `Cargo.toml`.
-4. Click **Run workflow**.
+1. Bump `[workspace.package] version` in `Cargo.toml` on `main` (see [Version bumps](#version-bumps)).
+2. Open **Actions → Release**.
+3. Click **Run workflow** (branch `main`) — no version field; the workflow reads `Cargo.toml`.
 
-Preflight runs again on the runner, then the workflow creates the tag, GitHub Release, and uploads assets.
+Preflight runs on the runner, then the workflow creates `vX.Y.Z`, the GitHub Release, and uploads assets.
 
 ## Option B — CLI
 
@@ -54,9 +52,9 @@ Requires [GitHub CLI](https://cli.github.com/) (`gh`) authenticated with `repo` 
 ### Release check only
 
 ```bash
-bash scripts/preflight-release.sh 0.1.1
+bash scripts/preflight-release.sh
 # or trigger the Release check workflow:
-gh workflow run "Release check" --ref main -f version=0.1.1
+gh workflow run "Release check" --ref main
 ```
 
 ### Full release
@@ -67,32 +65,33 @@ scripts/bump-version.sh 0.1.1 --commit
 git push origin main
 
 # 2. (Recommended) dry-run
-bash scripts/preflight-release.sh 0.1.1
-# or: gh workflow run "Release check" --ref main -f version=0.1.1
+bash scripts/preflight-release.sh
+# or: gh workflow run "Release check" --ref main
 
 # 3. Preflight locally + trigger Release workflow
-scripts/trigger-release.sh 0.1.1
+scripts/trigger-release.sh
 
 # 4. Watch the run
 gh run watch --workflow Release
 ```
 
-`trigger-release.sh` runs `preflight-release.sh` locally, then `gh workflow run Release`. The Release workflow still runs preflight on the runner.
+`trigger-release.sh` reads `Cargo.toml`, runs `preflight-release.sh`, then `gh workflow run Release`. The Release workflow still runs preflight on the runner.
 
 ### Preflight steps (shared by Release check and Release)
 
 ```bash
-bash scripts/verify-release-version.sh v0.1.1
-bash scripts/verify-tag-not-exists.sh v0.1.1
+VERSION="$(bash scripts/workspace-version.sh)"
+bash scripts/verify-release-version.sh "v${VERSION}"
+bash scripts/verify-tag-not-exists.sh "v${VERSION}"
 bash scripts/release-check.sh
 ```
 
-(`preflight-release.sh` runs all three.)
+(`preflight-release.sh` runs all three using the workspace version.)
 
 ### Trigger Release only (skip local preflight)
 
 ```bash
-gh workflow run Release --ref main -f version=0.1.1
+gh workflow run Release --ref main
 ```
 
 ## Version bumps

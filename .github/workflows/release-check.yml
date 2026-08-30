@@ -1,13 +1,9 @@
 # Dry-run the release pipeline (preflight only — no tag or GitHub Release created).
-# Runs the same checks as the first stage of Release. See docs/release.md
+# Version is read from Cargo.toml on main. See docs/release.md
 name: Release check
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: "Expected version (e.g. 0.1.1) — must match Cargo.toml on main"
-        required: true
 
 permissions:
   contents: read
@@ -15,5 +11,3 @@ permissions:
 jobs:
   preflight:
     uses: ./.github/workflows/preflight-release.yml
-    with:
-      version: ${{ inputs.version }}

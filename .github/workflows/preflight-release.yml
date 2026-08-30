@@ -6,9 +6,10 @@ on:
   workflow_call:
     inputs:
       version:
-        description: "Version to validate (must match Cargo.toml on main), e.g. 0.1.1"
-        required: true
+        description: "Version to validate (defaults to Cargo.toml workspace version when empty)"
+        required: false
         type: string
+        default: ""
 
 permissions:
   contents: read
@@ -33,4 +34,9 @@ jobs:
           enable-cache: true
 
       - name: Run preflight (version, tag availability, release check)
-        run: bash scripts/preflight-release.sh "${{ inputs.version }}"
+        run: |
+          if [[ -n "${{ inputs.version }}" ]]; then
+            bash scripts/preflight-release.sh "${{ inputs.version }}"
+          else
+            bash scripts/preflight-release.sh
+          fi
