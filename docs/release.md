@@ -124,6 +124,14 @@ The release workflow rejects versions that do not match `Cargo.toml` (`scripts/v
 
 Without registry settings, the workflow still uploads **GitHub Release assets**.
 
+### Re-running a failed Release
+
+If a Release run fails partway through (for example after `ontographia-core` was already published, or after the Go module tag was pushed), fix the workflow or bump the version as needed, then **Run workflow** again on the same `Cargo.toml` version:
+
+- **crates.io:** publish jobs skip crates that already exist at the workspace version.
+- **Go:** the workflow fails fast if `bindings/go/vX.Y.Z` already exists — do not delete that tag; bump the version instead.
+- **GitHub Release assets:** the upload step overwrites release files when re-run succeeds.
+
 ## Install after release
 
 ### CLI (GitHub Release or crates.io)
