@@ -29,7 +29,7 @@ Pre-built libraries are attached to [GitHub Releases](https://github.com/edgesen
 ## Module import
 
 ```bash
-go get github.com/edgesentry/ontographia/bindings/go@v0.1.0
+go get github.com/edgesentry/ontographia/bindings/go@v0.1.1
 ```
 
 From a git checkout:
