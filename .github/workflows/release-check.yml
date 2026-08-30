@@ -23,9 +23,13 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: main
+          fetch-depth: 0
 
       - name: Verify version matches Cargo.toml
         run: bash scripts/verify-release-version.sh "v${{ inputs.version }}"
+
+      - name: Ensure tag does not already exist
+        run: bash scripts/verify-tag-not-exists.sh "v${{ inputs.version }}"
 
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2

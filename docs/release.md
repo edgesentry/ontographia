@@ -52,6 +52,8 @@ scripts/bump-version.sh 0.1.1 --commit
 
 The release workflow rejects tags that do not match the workspace version (`scripts/verify-release-version.sh`).
 
+**Immutable tags:** a version must not be re-released. `Release check` fails if `vX.Y.Z`, `release-processed/vX.Y.Z`, or `bindings/go/vX.Y.Z` already exists on the remote. The `Release` workflow claims `release-processed/vX.Y.Z` immediately and fails on any re-run or duplicate publish.
+
 Local pre-flight (same checks as the Release check workflow):
 
 ```bash

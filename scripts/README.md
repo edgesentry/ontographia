@@ -40,5 +40,8 @@ Full setup: [docs/litellm-local.md](../docs/litellm-local.md)
 | [`bump-version.sh`](bump-version.sh) | Bump workspace version; optional commit (tag via GitHub Releases UI) |
 | [`release-check.sh`](release-check.sh) | Local pre-release validation (tests, publish dry-run, wheel build) |
 | [`verify-release-version.sh`](verify-release-version.sh) | Ensure `vX.Y.Z` tag matches `Cargo.toml` |
+| [`verify-tag-not-exists.sh`](verify-tag-not-exists.sh) | Fail if `vX.Y.Z` (or related sentinels) already exists on origin |
+| [`verify-release-not-processed.sh`](verify-release-not-processed.sh) | Fail if a release version was already claimed or has assets |
+| [`claim-release-processed.sh`](claim-release-processed.sh) | Push `release-processed/vX.Y.Z` sentinel at release start |
 
 See [docs/release.md](../docs/release.md).
