@@ -15,13 +15,21 @@ flowchart LR
 ```
 
 1. Merge feature work to `main` and confirm [CI](https://github.com/edgesentry/ontographia/actions/workflows/ci.yml) passes.
-2. Bump versions if needed (see [Version bumps](#version-bumps)).
-3. Create an **annotated tag on `main`**:
+2. Bump the workspace version (see [Version bumps](#version-bumps)).
+3. Push the bump commit to `main`, then tag:
 
    ```bash
    git checkout main && git pull
-   git tag -a v0.1.0 -m "Release v0.1.0"
-   git push origin v0.1.0
+   scripts/bump-version.sh 0.2.0 --commit --tag --push
+   ```
+
+   Or bump and tag in separate steps:
+
+   ```bash
+   scripts/bump-version.sh 0.2.0 --commit
+   git push origin main
+   git tag -a v0.2.0 -m "Release v0.2.0"
+   git push origin v0.2.0
    ```
 
 4. The [Release workflow](../.github/workflows/release.yml) runs on `v*` tags:
@@ -34,20 +42,23 @@ flowchart LR
 
 ## Version bumps
 
-Keep these in sync for a given release:
+**Single source of truth:** root `Cargo.toml` → `[workspace.package] version`.
 
-| Component | File |
-|-----------|------|
-| Rust workspace | `Cargo.toml` → `[workspace.package] version` |
-| Python | `pyproject.toml` → `project.version` |
-| Go | No file version; use tag `bindings/go/vX.Y.Z` (see below) |
+| Component | Where version lives |
+|-----------|---------------------|
+| Rust (all crates) | `version.workspace = true` → workspace version |
+| Python wheel | `pyproject.toml` `dynamic = ["version"]` → `bindings/python/Cargo.toml` via maturin |
+| Go | No file; `bindings/go/vX.Y.Z` tag created by the release workflow |
 
 ```bash
-# example for 0.2.0
-sed -i '' 's/^version = "0.1.0"/version = "0.2.0"/' Cargo.toml
-sed -i '' 's/^version = "0.1.0"/version = "0.2.0"/' pyproject.toml
-cargo test --workspace
+# preview: updates Cargo.toml only
+scripts/bump-version.sh 0.2.0
+
+# bump + test + commit + tag + push (on main)
+scripts/bump-version.sh 0.2.0 --commit --tag --push
 ```
+
+The release workflow rejects tags that do not match the workspace version (`scripts/verify-release-version.sh`).
 
 ## GitHub secrets (optional registry publish)
 
