@@ -1,5 +1,5 @@
-# Dry-run the release pipeline (preflight only — no tag or GitHub Release created).
-# Version is read from Cargo.toml on main. See docs/release.md
+# Manual dry-run only (workflow_dispatch). Never runs on push to main.
+# Same validation as Release preflight; no tag or GitHub Release created. See docs/release.md
 name: Release check
 
 on:

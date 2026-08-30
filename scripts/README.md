@@ -37,7 +37,7 @@ Full setup: [docs/litellm-local.md](../docs/litellm-local.md)
 | Script | Purpose |
 |--------|---------|
 | [`workspace-version.sh`](workspace-version.sh) | Print `[workspace.package] version` from `Cargo.toml` |
-| [`bump-version.sh`](bump-version.sh) | Bump workspace version; optional commit |
+| [`bump-version.sh`](bump-version.sh) | Bump workspace version; optional commit (release via Release workflow, not git tag push) |
 | [`preflight-release.sh`](preflight-release.sh) | Version + tag checks and full `release-check.sh` (Release check & Release preflight) |
 | [`trigger-release.sh`](trigger-release.sh) | Read `Cargo.toml` version, preflight, then `gh workflow run Release` |
 | [`release-check.sh`](release-check.sh) | Tests, publish dry-run, wheel build (called by preflight) |

@@ -1,5 +1,5 @@
-# One-shot release: preflight (release check) → tag + GitHub Release → build & upload.
-# Version is read from Cargo.toml on main. See docs/release.md
+# Manual release only (workflow_dispatch). Never runs on push to main or release events.
+# Preflight → tag + GitHub Release → build & upload. Version from Cargo.toml. See docs/release.md
 name: Release
 
 on:
