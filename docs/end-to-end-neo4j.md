@@ -62,11 +62,11 @@ graph LR
 
 | Format | File |
 |--------|------|
-| Native YAML (LinkML-style internal) | [`manufacturing.native.yaml`](../examples/manufacturing.native.yaml) |
-| Turtle / OWL (IOF-inspired) | [`manufacturing.owl.ttl`](../examples/manufacturing.owl.ttl) |
-| JSON-LD | [`manufacturing.jsonld`](../examples/manufacturing.jsonld) |
-| LinkML | [`manufacturing.linkml.yaml`](../examples/manufacturing.linkml.yaml) |
-| OBO (taxonomy-style classes) | [`manufacturing.obo`](../examples/manufacturing.obo) |
+| Native YAML (LinkML-style internal) | [`manufacturing.native.yaml`](https://github.com/edgesentry/ontographia/blob/main/examples/manufacturing.native.yaml) |
+| Turtle / OWL (IOF-inspired) | [`manufacturing.owl.ttl`](https://github.com/edgesentry/ontographia/blob/main/examples/manufacturing.owl.ttl) |
+| JSON-LD | [`manufacturing.jsonld`](https://github.com/edgesentry/ontographia/blob/main/examples/manufacturing.jsonld) |
+| LinkML | [`manufacturing.linkml.yaml`](https://github.com/edgesentry/ontographia/blob/main/examples/manufacturing.linkml.yaml) |
+| OBO (taxonomy-style classes) | [`manufacturing.obo`](https://github.com/edgesentry/ontographia/blob/main/examples/manufacturing.obo) |
 
 ## 1. Start Neo4j
 
@@ -89,7 +89,7 @@ docker run -d --name neo4j \
 
 ## 2. Load seed data
 
-[`examples/neo4j/seed.cypher`](../examples/neo4j/seed.cypher) creates:
+[`examples/neo4j/seed.cypher`](https://github.com/edgesentry/ontographia/blob/main/examples/neo4j/seed.cypher) creates:
 
 1. **Constraints** — uniqueness on `Product.sku`, `Part.part_number`, `Lot.lot_id`, `Supplier.name`
 2. **BOM** — `SPX-100` → drive unit + housing; drive → motor (`has_sub_part`); flattened `has_part` to motor for traceability queries
@@ -290,7 +290,7 @@ done
 
 ## 7. Local LLM E2E (not run in CI)
 
-CI uses deterministic mock Intent fixtures (`scripts/neo4j_integration_test.py`). For a **real LLM** on your machine, use [`examples/run_llm_e2e.py`](../examples/run_llm_e2e.py):
+CI uses deterministic mock Intent fixtures (`scripts/neo4j_integration_test.py`). For a **real LLM** on your machine, use [`examples/run_llm_e2e.py`](https://github.com/edgesentry/ontographia/blob/main/examples/run_llm_e2e.py):
 
 ```bash
 ./scripts/start_neo4j.sh --seed
@@ -319,9 +319,9 @@ natural language → IntentExtractor (mock | openai-compatible) → Intent JSON
     → Engine.build() → Cypher 25 + params → Neo4j
 ```
 
-Extractor implementations live in [`examples/llm/`](../examples/llm/). Add a new backend by implementing the `IntentExtractor` protocol in `extractors.py` — the Ontographia core stays LLM-agnostic.
+Extractor implementations live in [`examples/llm/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/). Add a new backend by implementing the `IntentExtractor` protocol in `extractors.py` — the Ontographia core stays LLM-agnostic.
 
-**LiteLLM (OpenAI + Gemini + Cursor via proxy):** see [docs/litellm-local.md](../docs/litellm-local.md).
+**LiteLLM (OpenAI + Gemini + Cursor via proxy):** see [litellm-local.md](litellm-local.md).
 
 | Variable | Default | Purpose |
 |----------|---------|---------|

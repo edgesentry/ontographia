@@ -1,30 +1,15 @@
 # crates/
 
-Rust workspace — engine core, ontology adapters, and C FFI.
+Rust workspace — engine core, ontology adapters, schema tooling, FFI, and CLI.
 
-| Crate | Role |
+**Canonical guide:** [docs/rust.md](../docs/rust.md) · **Architecture:** [docs/architecture.md](../docs/architecture.md)
+
+| Crate | Path |
 |-------|------|
-| [`ontographia-core/`](ontographia-core/) | COM, Intent, validation, QueryAst, emitters, `Engine` |
-| [`ontographia-adapters/`](ontographia-adapters/) | Multi-format ontology parsers → COM |
-| [`ontographia-schema/`](ontographia-schema/) | COM → Neo4j schema DDL + offline catalog diff |
-| [`ontographia-ffi/`](ontographia-ffi/) | C ABI consumed by Go and other language bindings |
+| `ontographia-core` | [`ontographia-core/`](ontographia-core/) |
+| `ontographia-adapters` | [`ontographia-adapters/`](ontographia-adapters/) |
+| `ontographia-schema` | [`ontographia-schema/`](ontographia-schema/) |
+| `ontographia-ffi` | [`ontographia-ffi/`](ontographia-ffi/) |
+| `ontographia-cli` | [`ontographia-cli/`](ontographia-cli/) |
 
-## Where to start
-
-| Task | Entry point |
-|------|-------------|
-| Build a query | [`ontographia-core/src/engine.rs`](ontographia-core/src/engine.rs) |
-| Validate Intent | [`ontographia-core/src/validate.rs`](ontographia-core/src/validate.rs) |
-| Emit Cypher 25 | [`ontographia-core/src/emit/cypher25.rs`](ontographia-core/src/emit/cypher25.rs) |
-| COM types | [`ontographia-core/src/com/mod.rs`](ontographia-core/src/com/mod.rs) |
-| Load ontology (auto-detect) | [`ontographia-adapters/src/lib.rs`](ontographia-adapters/src/lib.rs), [`registry.rs`](ontographia-adapters/src/registry.rs) |
-| Add a format | New module under [`ontographia-adapters/src/`](ontographia-adapters/src/) + register in `registry.rs` |
-| Graph schema / constraints | [`ontographia-schema/src/`](ontographia-schema/src/) (`from_com`, `emit`, `diff`) |
-| E2E adapter tests | [`ontographia-adapters/tests/integration.rs`](ontographia-adapters/tests/integration.rs) |
-
-## Canonical docs
-
-- Agent workflows (extend core, add adapters): [AGENTS.md](../AGENTS.md)
-- COM / Intent JSON Schemas: [schemas/](../schemas/)
-- Graph schema governance: [docs/architecture.md](../docs/architecture.md), [docs/ontology-graph-alignment.md](../docs/ontology-graph-alignment.md)
-- Tutorial & Neo4j walkthrough: [docs/end-to-end-neo4j.md](../docs/end-to-end-neo4j.md)
+Integration tests: [`ontographia-adapters/tests/integration.rs`](ontographia-adapters/tests/integration.rs), [`ontographia-integration-tests/`](ontographia-integration-tests/) (unpublished).

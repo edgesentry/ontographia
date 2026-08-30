@@ -1,5 +1,6 @@
 /target/
 /dist/
+/site/
 /.venv/
 *.egg-info/
 __pycache__/

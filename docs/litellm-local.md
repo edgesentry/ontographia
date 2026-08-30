@@ -118,12 +118,12 @@ For the Cursor Cloud Agents API (`/v0/agents`), set `CURSOR_API_KEY` in `.env`. 
 
 | File | Purpose |
 |------|---------|
-| [`scripts/litellm/config.yaml`](../scripts/litellm/config.yaml) | Model aliases and upstream routing |
-| [`scripts/litellm/env.example`](../scripts/litellm/env.example) | Environment template (copy to `.env`) |
-| [`scripts/litellm/start.sh`](../scripts/litellm/start.sh) | Start proxy (uv or `--docker`) |
-| [`scripts/litellm/use-provider.sh`](../scripts/litellm/use-provider.sh) | `source` to set `OPENAI_*` for a provider |
-| [`scripts/litellm/run-e2e.sh`](../scripts/litellm/run-e2e.sh) | One-shot E2E through LiteLLM |
-| [`scripts/litellm/healthcheck.sh`](../scripts/litellm/healthcheck.sh) | Proxy liveness + model list |
+| [`scripts/litellm/config.yaml`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/config.yaml) | Model aliases and upstream routing |
+| [`scripts/litellm/env.example`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/env.example) | Environment template (copy to `.env`) |
+| [`scripts/litellm/start.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/start.sh) | Start proxy (uv or `--docker`) |
+| [`scripts/litellm/use-provider.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/use-provider.sh) | `source` to set `OPENAI_*` for a provider |
+| [`scripts/litellm/run-e2e.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/run-e2e.sh) | One-shot E2E through LiteLLM |
+| [`scripts/litellm/healthcheck.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/healthcheck.sh) | Proxy liveness + model list |
 
 ### Model aliases (`config.yaml`)
 
@@ -150,4 +150,4 @@ Edit `config.yaml` to change models or add aliases. Restart the proxy after chan
 ## See also
 
 - [end-to-end-neo4j.md §7](end-to-end-neo4j.md#7-local-llm-e2e-not-run-in-ci) — generic LLM E2E without LiteLLM
-- [skills/ontographia-cypher-builder/SKILL.md](../skills/ontographia-cypher-builder/SKILL.md) — Intent JSON rules for agents
+- [skills/ontographia-cypher-builder/SKILL.md](https://github.com/edgesentry/ontographia/blob/main/skills/ontographia-cypher-builder/SKILL.md) — Intent JSON rules for agents
