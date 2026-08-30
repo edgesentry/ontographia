@@ -13,11 +13,14 @@ cargo test --workspace
 echo "==> CLI smoke test"
 bash scripts/cli_smoke_test.sh
 
-echo "==> cargo publish dry-run (all publishable crates)"
-for pkg in ontographia-core ontographia-adapters ontographia-schema ontographia-cli; do
+echo "==> cargo publish dry-run (publishable library crates)"
+for pkg in ontographia-core ontographia-adapters ontographia-schema; do
   echo "--- $pkg"
   cargo publish -p "$pkg" --dry-run --allow-dirty
 done
+
+echo "==> CLI release build (depends on workspace crates; validated via build, not publish dry-run)"
+cargo build --release -p ontographia-cli
 
 echo "==> maturin wheel build"
 if command -v uv >/dev/null 2>&1; then

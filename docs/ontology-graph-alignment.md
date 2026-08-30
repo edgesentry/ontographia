@@ -64,7 +64,7 @@ Ontology file (.native.yaml, TTL, …)
 Regenerate schema artifacts when the ontology changes:
 
 ```bash
-cargo run -p ontographia-schema --example emit_constraints -- examples/manufacturing.native.yaml \
+ontographia schema examples/manufacturing.native.yaml \
   --out examples/neo4j/constraints.cypher \
   --json-out examples/neo4j/schema.json
 ```
