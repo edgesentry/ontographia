@@ -37,8 +37,10 @@ Full setup: [docs/litellm-local.md](../docs/litellm-local.md)
 | Script | Purpose |
 |--------|---------|
 | [`workspace-version.sh`](workspace-version.sh) | Print `[workspace.package] version` from `Cargo.toml` |
-| [`bump-version.sh`](bump-version.sh) | Bump workspace version; optional commit (tag via GitHub Releases UI) |
-| [`release-check.sh`](release-check.sh) | Local pre-release validation (tests, publish dry-run, wheel build) |
+| [`bump-version.sh`](bump-version.sh) | Bump workspace version; optional commit (release via Release workflow, not git tag push) |
+| [`preflight-release.sh`](preflight-release.sh) | Version + tag checks and full `release-check.sh` (Release check & Release preflight) |
+| [`trigger-release.sh`](trigger-release.sh) | Read `Cargo.toml` version, preflight, then `gh workflow run Release` |
+| [`release-check.sh`](release-check.sh) | Tests, publish dry-run, wheel build (called by preflight) |
 | [`verify-release-version.sh`](verify-release-version.sh) | Ensure `vX.Y.Z` tag matches `Cargo.toml` |
 | [`verify-tag-not-exists.sh`](verify-tag-not-exists.sh) | Fail if `vX.Y.Z` (or related sentinels) already exists on origin |
 | [`verify-release-not-processed.sh`](verify-release-not-processed.sh) | Fail if a release version was already claimed or has assets |

@@ -1,10 +1,9 @@
-# Triggered when a GitHub Release is published (tag created via Releases UI).
-# Run "Release check" workflow first. See docs/release.md
+# Manual release only (workflow_dispatch). Never runs on push to main or release events.
+# Preflight → tag + GitHub Release → build & upload. Version from Cargo.toml. See docs/release.md
 name: Release
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -12,16 +11,68 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  RELEASE_TAG: ${{ github.event.release.tag_name }}
 
 jobs:
-  verify:
-    name: Verify on tagged commit
+  resolve-version:
+    name: Resolve version from Cargo.toml
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      release_tag: ${{ steps.version.outputs.release_tag }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: main
+          fetch-depth: 0
+
+      - name: Read workspace version
+        id: version
+        run: |
+          VERSION="$(bash scripts/workspace-version.sh)"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "release_tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Releasing v${VERSION} from Cargo.toml"
+
+  preflight:
+    needs: resolve-version
+    uses: ./.github/workflows/preflight-release.yml
+    with:
+      version: ${{ needs.resolve-version.outputs.version }}
+
+  create-release:
+    name: Create tag and GitHub Release
+    needs: [resolve-version, preflight]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Create tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA="$(git rev-parse HEAD)"
+          gh release create "${{ env.RELEASE_TAG }}" \
+            --target "$SHA" \
+            --title "${{ env.RELEASE_TAG }}" \
+            --generate-notes
+
+  verify:
+    name: Claim version and verify tag
+    needs: [resolve-version, create-release]
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
 
       - name: Refuse re-release of immutable tag
@@ -34,17 +85,13 @@ jobs:
 
       - name: Verify tag matches workspace version
         run: bash scripts/verify-release-version.sh "${{ env.RELEASE_TAG }}"
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: cargo test
-        run: cargo test --workspace
-      - name: CLI smoke test
-        run: bash scripts/cli_smoke_test.sh
 
   build-cli:
     name: CLI (${{ matrix.artifact }})
-    needs: verify
+    needs: [resolve-version, verify]
     runs-on: ${{ matrix.os }}
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     strategy:
       fail-fast: false
       matrix:
@@ -61,7 +108,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -89,8 +136,10 @@ jobs:
 
   build-ffi:
     name: FFI (${{ matrix.artifact }})
-    needs: verify
+    needs: [resolve-version, verify]
     runs-on: ${{ matrix.os }}
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     strategy:
       fail-fast: false
       matrix:
@@ -110,7 +159,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -134,8 +183,10 @@ jobs:
 
   build-wheels:
     name: Python wheels (${{ matrix.python-version }})
-    needs: verify
+    needs: [resolve-version, verify]
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     strategy:
       fail-fast: false
       matrix:
@@ -143,7 +194,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-python@v5
         with:
@@ -163,8 +214,10 @@ jobs:
 
   upload-assets:
     name: Upload GitHub Release assets
-    needs: [build-cli, build-ffi, build-wheels]
+    needs: [resolve-version, build-cli, build-ffi, build-wheels]
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -174,21 +227,23 @@ jobs:
         run: |
           mkdir -p release-files
           find dist -type f \( -name '*.tar.gz' -o -name '*.whl' \) -exec cp {} release-files/ \;
-      - name: Upload to existing release
+      - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.release.tag_name }}
+          tag_name: ${{ env.RELEASE_TAG }}
           files: release-files/*
           overwrite_files: true
 
   tag-go-module:
     name: Tag Go module
-    needs: verify
+    needs: [resolve-version, verify]
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
       - name: Push bindings/go tag
         env:
@@ -206,15 +261,16 @@ jobs:
 
   publish-crates:
     name: Publish Rust crates
-    needs: verify
+    needs: [resolve-version, verify]
     runs-on: ubuntu-latest
     if: vars.PUBLISH_TO_REGISTRIES == 'true'
     env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
       CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
       - name: Publish ontographia-core
         run: cargo publish -p ontographia-core --allow-dirty
