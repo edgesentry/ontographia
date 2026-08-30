@@ -167,7 +167,7 @@ pip install ontographia
 go get github.com/edgesentry/ontographia/bindings/go@v0.1.1
 ```
 
-Download the matching `libontographia_ffi-*` archive from GitHub Releases for cgo linking.
+Download the matching `libontographia_ffi-*` archive from GitHub Releases for cgo linking (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`).
 
 The release workflow creates `bindings/go/vX.Y.Z` automatically.
 
@@ -176,7 +176,7 @@ The release workflow creates `bindings/go/vX.Y.Z` automatically.
 | Artifact | Contents |
 |----------|----------|
 | `ontographia-{version}-{target}.tar.gz` | `ontographia` CLI binary |
-| `libontographia_ffi-{version}-{target}.tar.gz` | Shared library for Go/cgo |
+| `libontographia_ffi-{version}-{target}.tar.gz` | Shared library for Go/cgo (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`) |
 | `ontographia-{version}-*.whl` | Python package |
 
 ## Related
