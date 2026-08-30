@@ -54,12 +54,12 @@ At runtime the public entry point is `Engine::build()`:
 
 | Crate | Responsibility |
 |-------|----------------|
-| [`ontographia-adapters`](../crates/ontographia-adapters/) | Format detection, `OntologyAdapter` implementations, `load_ontology()` |
-| [`ontographia-core`](../crates/ontographia-core/) | COM, Intent types, validation, QueryAst, emitters, `Engine` |
-| [`ontographia-schema`](../crates/ontographia-schema/) | COM → expected Neo4j graph schema, constraint DDL, offline catalog diff |
-| [`ontographia-ffi`](../crates/ontographia-ffi/) | Stable C ABI for non-Rust callers |
-| [`bindings/python`](../bindings/python/) | PyO3 wrapper around `Engine` |
-| [`bindings/go`](../bindings/go/) | cgo wrapper over `ontographia-ffi` |
+| [`ontographia-adapters`](https://github.com/edgesentry/ontographia/tree/main/crates/ontographia-adapters/) | Format detection, `OntologyAdapter` implementations, `load_ontology()` |
+| [`ontographia-core`](https://github.com/edgesentry/ontographia/tree/main/crates/ontographia-core/) | COM, Intent types, validation, QueryAst, emitters, `Engine` |
+| [`ontographia-schema`](https://github.com/edgesentry/ontographia/tree/main/crates/ontographia-schema/) | COM → expected Neo4j graph schema, constraint DDL, offline catalog diff |
+| [`ontographia-ffi`](https://github.com/edgesentry/ontographia/tree/main/crates/ontographia-ffi/) | Stable C ABI for non-Rust callers |
+| [`bindings/python`](https://github.com/edgesentry/ontographia/tree/main/bindings/python/) | PyO3 wrapper around `Engine` |
+| [`bindings/go`](https://github.com/edgesentry/ontographia/tree/main/bindings/go/) | cgo wrapper over `ontographia-ffi` |
 
 ## Stage 1 — Ontology ingestion
 
@@ -84,7 +84,7 @@ Adapters **must** map their source format into COM. There is no alternate intern
 
 ### Canonical Ontology Model (COM)
 
-COM is the shared intermediate representation for all formats. JSON Schema: [`schemas/com.schema.json`](../schemas/com.schema.json).
+COM is the shared intermediate representation for all formats. JSON Schema: [`schemas/com.schema.json`](https://github.com/edgesentry/ontographia/blob/main/schemas/com.schema.json).
 
 | COM section | Purpose |
 |-------------|---------|
@@ -110,7 +110,7 @@ pub fn intent_json_schema(ontology: &CanonicalOntology) -> serde_json::Value {
 }
 ```
 
-Intent extraction (LLM prompts, retries, repair) lives in the **application layer** — see [skills/ontographia-cypher-builder/SKILL.md](../skills/ontographia-cypher-builder/SKILL.md) and [docs/end-to-end-neo4j.md](end-to-end-neo4j.md). The core only defines the shape and validates instances.
+Intent extraction (LLM prompts, retries, repair) lives in the **application layer** — see [skills/ontographia-cypher-builder/SKILL.md](https://github.com/edgesentry/ontographia/blob/main/skills/ontographia-cypher-builder/SKILL.md) and [Neo4j walkthrough](end-to-end-neo4j.md). The core only defines the shape and validates instances.
 
 ### Intent structure
 
@@ -123,7 +123,7 @@ Intent extraction (LLM prompts, retries, repair) lives in the **application laye
 | `order_by`, `limit`, `skip` | Result shaping |
 | `optional` | When true, `OPTIONAL MATCH` instead of `MATCH` |
 
-Types: [`crates/ontographia-core/src/intent.rs`](../crates/ontographia-core/src/intent.rs)
+Types: [`crates/ontographia-core/src/intent.rs`](https://github.com/edgesentry/ontographia/blob/main/crates/ontographia-core/src/intent.rs)
 
 ## Stage 3 — Validation
 
@@ -137,7 +137,7 @@ Types: [`crates/ontographia-core/src/intent.rs`](../crates/ontographia-core/src/
 
 On success, filter literal values are copied into `ValidatedIntent.params` as `param_0`, `param_1`, … — never embedded in query strings.
 
-Implementation: [`crates/ontographia-core/src/validate.rs`](../crates/ontographia-core/src/validate.rs)
+Implementation: [`crates/ontographia-core/src/validate.rs`](https://github.com/edgesentry/ontographia/blob/main/crates/ontographia-core/src/validate.rs)
 
 ## Stage 4 — QueryAst
 
@@ -150,7 +150,7 @@ Implementation: [`crates/ontographia-core/src/validate.rs`](../crates/ontographi
 
 The AST is intentionally close to Cypher/GQL structure but **not** a string template. Emitters own syntax details (`FILTER` vs `WHERE`, `CYPHER 25` prefix, etc.).
 
-Types: [`crates/ontographia-core/src/ast/mod.rs`](../crates/ontographia-core/src/ast/mod.rs)
+Types: [`crates/ontographia-core/src/ast/mod.rs`](https://github.com/edgesentry/ontographia/blob/main/crates/ontographia-core/src/ast/mod.rs)
 
 ## Stage 5 — Emission
 
@@ -164,23 +164,19 @@ Types: [`crates/ontographia-core/src/ast/mod.rs`](../crates/ontographia-core/src
 
 Output is always `EmittedQuery { query, params }`. Filter values appear only in `params`; the query string contains `$param_N` placeholders.
 
-Implementation: [`crates/ontographia-core/src/emit/`](../crates/ontographia-core/src/emit/)
+Implementation: [`crates/ontographia-core/src/emit/`](https://github.com/edgesentry/ontographia/tree/main/crates/ontographia-core/src/emit/)
 
 ## Bindings
 
-Bindings call the same `Engine` API; they do not fork validation or emission.
+Bindings call the same `Engine` API; they do not fork validation or emission. Usage guides:
 
-| Language | Mechanism | Typical use |
-|----------|-----------|-------------|
-| Rust | Direct `Engine::new(load_ontology(...))` | Libraries, examples, tests |
-| Python | PyO3 `Engine.load()` / `build()` | Demos, Neo4j scripts, LLM E2E |
-| Go | C FFI `ontographia_build_cypher_from_json` | Backend services |
-
-See [bindings/README.md](../bindings/README.md).
+- [Rust](rust.md) — direct `Engine` API and CLI
+- [Python](python.md) — PyO3 `Engine.load()` / `build()`
+- [Go](go.md) — C FFI via `ontographia-ffi`
 
 ## Graph schema governance (`ontographia-schema`)
 
-Ontographia **core** validates Intent against COM; it does **not** verify that a live Neo4j database matches the ontology. That boundary is handled by [`ontographia-schema`](../crates/ontographia-schema/):
+Ontographia **core** validates Intent against COM; it does **not** verify that a live Neo4j database matches the ontology. That boundary is handled by [`ontographia-schema`](https://github.com/edgesentry/ontographia/tree/main/crates/ontographia-schema/):
 
 ```
 COM → GraphSchema::from_com()
@@ -192,7 +188,7 @@ COM → GraphSchema::from_com()
 |-----|---------|
 | `GraphSchema::from_com` | Derive expected node labels, relationship types, and `unique` properties from COM |
 | `emit_cypher25_constraints` | Generate `CREATE CONSTRAINT … IF NOT EXISTS` for properties marked `unique: true` in the ontology |
-| `GraphSnapshot` | Offline JSON catalog (`labels`, `relationship_types`) — e.g. [`examples/neo4j/catalog.snapshot.json`](../examples/neo4j/catalog.snapshot.json) |
+| `GraphSnapshot` | Offline JSON catalog (`labels`, `relationship_types`) — e.g. [`examples/neo4j/catalog.snapshot.json`](https://github.com/edgesentry/ontographia/blob/main/examples/neo4j/catalog.snapshot.json) |
 | `diff` | Report schema drift between COM-derived expectations and a snapshot |
 
 CLI example:
@@ -202,9 +198,9 @@ ontographia schema examples/manufacturing.native.yaml
 ontographia schema examples/manufacturing.native.yaml --snapshot examples/neo4j/catalog.snapshot.json
 ```
 
-**Out of scope (v1):** Neo4j live introspection, data seed generation, automatic migration execution. Seed data remains in [`examples/neo4j/seed.cypher`](../examples/neo4j/seed.cypher); generated constraints are tested for semantic equivalence.
+**Out of scope (v1):** Neo4j live introspection, data seed generation, automatic migration execution. Seed data remains in [`examples/neo4j/seed.cypher`](https://github.com/edgesentry/ontographia/blob/main/examples/neo4j/seed.cypher); generated constraints are tested for semantic equivalence.
 
-Mark business-key properties with `unique: true` in native ontology YAML (see [`examples/manufacturing.native.yaml`](../examples/manufacturing.native.yaml)).
+Mark business-key properties with `unique: true` in native ontology YAML (see [`examples/manufacturing.native.yaml`](https://github.com/edgesentry/ontographia/blob/main/examples/manufacturing.native.yaml)).
 
 **Roles and guarantees (ontology ↔ Neo4j ↔ executable queries):** [ontology-graph-alignment.md](ontology-graph-alignment.md)
 
@@ -215,8 +211,8 @@ Mark business-key properties with `unique: true` in native ontology YAML (see [`
 | LLM API calls | App layer (`examples/`, agent skills) |
 | Neo4j driver / execution | `examples/run_neo4j_demo.py`, user applications |
 | RDF reasoning / OWL entailment | Out of scope — adapters extract asserted schema only |
-| Ontology ↔ Neo4j catalog alignment | [`ontographia-schema`](../crates/ontographia-schema/) (offline diff + constraint DDL) |
-| Graph data seeding | [`examples/neo4j/seed.cypher`](../examples/neo4j/seed.cypher) |
+| Ontology ↔ Neo4j catalog alignment | [`ontographia-schema`](https://github.com/edgesentry/ontographia/tree/main/crates/ontographia-schema/) (offline diff + constraint DDL) |
+| Graph data seeding | [`examples/neo4j/seed.cypher`](https://github.com/edgesentry/ontographia/blob/main/examples/neo4j/seed.cypher) |
 
 ## Extension points
 
@@ -230,7 +226,7 @@ Mark business-key properties with `unique: true` in native ontology YAML (see [`
 
 ## Related docs
 
-- Neo4j walkthrough (seed data, execute queries): [end-to-end-neo4j.md](end-to-end-neo4j.md)
-- Ontology ↔ graph alignment, who owns what, `schema.json` usage: [ontology-graph-alignment.md](ontology-graph-alignment.md)
-- Agent golden rules and entry points: [AGENTS.md](../AGENTS.md)
-- COM / native ontology JSON Schemas: [schemas/](../schemas/)
+- Neo4j walkthrough: [end-to-end-neo4j.md](end-to-end-neo4j.md)
+- Ontology ↔ graph alignment: [ontology-graph-alignment.md](ontology-graph-alignment.md)
+- Agent routing: [AGENTS.md](https://github.com/edgesentry/ontographia/blob/main/AGENTS.md)
+- COM / native ontology JSON Schemas: [repository-layout.md](repository-layout.md#schemas)

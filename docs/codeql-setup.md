@@ -1,6 +1,6 @@
 # CodeQL setup
 
-Ontographia uses a **repo-managed** workflow: [`.github/workflows/codeql-analysis.yml`](../.github/workflows/codeql-analysis.yml).
+Ontographia uses a **repo-managed** workflow: [`.github/workflows/codeql-analysis.yml`](https://github.com/edgesentry/ontographia/blob/main/github/workflows/codeql-analysis.yml).
 
 ## Disable GitHub Default setup (required)
 
@@ -21,7 +21,7 @@ Languages scanned by the workflow: `actions`, `python`, `rust` (`build-mode: non
 
 ## "Advanced setup requested but no analysis uploaded for default branch"
 
-This appears when **Default setup is disabled** but `main` has not yet received a successful run from [`.github/workflows/codeql-analysis.yml`](../.github/workflows/codeql-analysis.yml).
+This appears when **Default setup is disabled** but `main` has not yet received a successful run from [`.github/workflows/codeql-analysis.yml`](https://github.com/edgesentry/ontographia/blob/main/github/workflows/codeql-analysis.yml).
 
 1. Merge the CodeQL workflow PR (or ensure the file exists on `main`).
 2. Push to `main` or run **Actions → CodeQL → Run workflow** on `main`.
@@ -32,4 +32,4 @@ Until step 2 completes, the Code scanning settings page will show that warning e
 ## Related
 
 - [architecture.md](architecture.md) — project overview
-- CI: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
+- CI: [`.github/workflows/ci.yml`](https://github.com/edgesentry/ontographia/blob/main/github/workflows/ci.yml)

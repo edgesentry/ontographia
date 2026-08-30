@@ -26,7 +26,7 @@ flowchart LR
    - **Choose a tag:** `v0.1.1` (create new tag on `main`)
    - Add release notes (optional)
    - **Publish release** (not draft-only if you want the pipeline to run)
-5. [Release workflow](../.github/workflows/release.yml) runs on `release: published`:
+5. [Release workflow](https://github.com/edgesentry/ontographia/blob/main/github/workflows/release.yml) runs on `release: published`:
    - Verifies tag matches `Cargo.toml`
    - Builds CLI / FFI / wheels
    - Uploads assets to the GitHub Release you just created
@@ -124,4 +124,4 @@ The release workflow creates `bindings/go/vX.Y.Z` automatically when the GitHub 
 ## Related
 
 - [architecture.md](architecture.md)
-- [AGENTS.md](../AGENTS.md)
+- [AGENTS.md](https://github.com/edgesentry/ontographia/blob/main/AGENTS.md)

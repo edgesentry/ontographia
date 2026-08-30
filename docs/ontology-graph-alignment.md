@@ -54,10 +54,10 @@ Ontology file (.native.yaml, TTL, …)
 | Artifact | Produced by | Used for |
 |----------|-------------|----------|
 | Ontology source | Domain / data modeling | Source of truth; COM input |
-| [`schema.json`](../examples/neo4j/schema.json) | `emit_schema_json` / `emit_constraints` `--json-out` | Expected labels, properties, rel types + domain/range |
-| [`constraints.cypher`](../examples/neo4j/constraints.cypher) | `emit_cypher25_constraints` / `--out` | Neo4j UNIQUE constraints (`unique: true` in ontology) |
-| [`catalog.snapshot.json`](../examples/neo4j/catalog.snapshot.json) | Manual export or future introspection | Observed Neo4j labels / relationship types |
-| [`seed.cypher`](../examples/neo4j/seed.cypher) | Hand-authored (demo) | Sample L4 data |
+| [`schema.json`](https://github.com/edgesentry/ontographia/blob/main/examples/neo4j/schema.json) | `emit_schema_json` / `emit_constraints` `--json-out` | Expected labels, properties, rel types + domain/range |
+| [`constraints.cypher`](https://github.com/edgesentry/ontographia/blob/main/examples/neo4j/constraints.cypher) | `emit_cypher25_constraints` / `--out` | Neo4j UNIQUE constraints (`unique: true` in ontology) |
+| [`catalog.snapshot.json`](https://github.com/edgesentry/ontographia/blob/main/examples/neo4j/catalog.snapshot.json) | Manual export or future introspection | Observed Neo4j labels / relationship types |
+| [`seed.cypher`](https://github.com/edgesentry/ontographia/blob/main/examples/neo4j/seed.cypher) | Hand-authored (demo) | Sample L4 data |
 | Intent JSON | LLM / app / user | Query generation input |
 | Generated `{ query, params }` | `Engine.build()` | Neo4j driver execution |
 
@@ -171,7 +171,7 @@ def validate_edge(rel_type: str, from_label: str, to_label: str) -> None:
         raise ValueError(f"{rel_type} expects to {rel['to_class']}, got {to_label}")
 ```
 
-For catalog-level checks (L2), use the lighter [`catalog.snapshot.json`](../examples/neo4j/catalog.snapshot.json) or `diff` in `ontographia-schema`.
+For catalog-level checks (L2), use the lighter [`catalog.snapshot.json`](https://github.com/edgesentry/ontographia/blob/main/examples/neo4j/catalog.snapshot.json) or `diff` in `ontographia-schema`.
 
 ## `schema.json` vs `catalog.snapshot.json`
 
@@ -195,4 +195,4 @@ Generate both from the same ontology; compare snapshot to reality, `schema.json`
 
 - [architecture.md](architecture.md) — § Graph schema governance
 - [end-to-end-neo4j.md](end-to-end-neo4j.md) — demo seed and query execution
-- [`crates/ontographia-schema/`](../crates/ontographia-schema/) — `from_com`, `emit`, `diff`
+- [`crates/ontographia-schema/`](https://github.com/edgesentry/ontographia/tree/main/crates/ontographia-schema/) — `from_com`, `emit`, `diff`
