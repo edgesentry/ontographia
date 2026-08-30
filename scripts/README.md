@@ -31,3 +31,13 @@ Local-only LLM proxy for OpenAI / Gemini / Anthropic. **Not run in CI.**
 | [`litellm/env.example`](litellm/env.example) | Env template (copy to `.env`) |
 
 Full setup: [docs/litellm-local.md](../docs/litellm-local.md)
+
+## Release
+
+| Script | Purpose |
+|--------|---------|
+| [`workspace-version.sh`](workspace-version.sh) | Print `[workspace.package] version` from `Cargo.toml` |
+| [`bump-version.sh`](bump-version.sh) | Bump workspace version; optional commit / tag / push |
+| [`verify-release-version.sh`](verify-release-version.sh) | Ensure `vX.Y.Z` tag matches `Cargo.toml` |
+
+See [docs/release.md](../docs/release.md).

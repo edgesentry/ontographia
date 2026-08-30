@@ -19,6 +19,8 @@ jobs:
         run: cargo test --workspace
       - name: cargo clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: CLI smoke test
+        run: bash scripts/cli_smoke_test.sh
 
   python:
     runs-on: ubuntu-latest

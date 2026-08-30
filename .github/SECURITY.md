@@ -17,7 +17,7 @@ Ontographia is pre-1.0. Security fixes are applied to the latest release on the 
 Report security issues privately using one of these channels:
 
 1. **GitHub Security Advisories (preferred):**  
-   [Report a vulnerability](https://github.com/yohei1126/ontographia/security/advisories/new)
+   [Report a vulnerability](https://github.com/edgesentry/ontographia/security/advisories/new)
 2. **Email:** Contact the repository owner via GitHub profile private communication if advisories are unavailable.
 
 Include as much detail as possible:

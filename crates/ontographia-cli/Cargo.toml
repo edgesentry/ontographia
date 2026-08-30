@@ -1,0 +1,22 @@
+[package]
+name = "ontographia-cli"
+description = "Command-line interface for Ontographia (Intent → Cypher, schema DDL)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+readme = "../../README.md"
+keywords = ["neo4j", "cypher", "ontology", "graph", "cli"]
+categories = ["command-line-utilities", "database"]
+
+[[bin]]
+name = "ontographia"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4", features = ["derive"] }
+ontographia-adapters = { path = "../ontographia-adapters" }
+ontographia-core = { path = "../ontographia-core" }
+ontographia-schema = { path = "../ontographia-schema" }
+serde_json = { workspace = true }

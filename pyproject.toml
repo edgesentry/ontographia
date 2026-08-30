@@ -5,17 +5,27 @@ build-backend = "maturin"
 [project]
 name = "ontographia"
 description = "Multi-ontology deterministic Cypher 25 query builder"
-version = "0.1.0"
+dynamic = ["version"]
 readme = "README.md"
 license = { text = "Apache-2.0" }
-requires-python = ">=3.13"
+requires-python = ">=3.11"
+authors = [{ name = "Ontographia Contributors" }]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Rust",
 ]
+keywords = ["neo4j", "cypher", "ontology", "graph", "rdf"]
+
+[project.urls]
+Homepage = "https://github.com/edgesentry/ontographia"
+Repository = "https://github.com/edgesentry/ontographia"
+Documentation = "https://github.com/edgesentry/ontographia/blob/main/docs/architecture.md"
 
 [dependency-groups]
 dev = [

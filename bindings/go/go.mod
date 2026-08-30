@@ -1,3 +1,3 @@
-module github.com/yohei1126/ontographia/bindings/go
+module github.com/edgesentry/ontographia/bindings/go
 
 go 1.22
