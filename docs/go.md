@@ -24,7 +24,21 @@ export LD_LIBRARY_PATH="$(pwd)/target/release"
 export DYLD_LIBRARY_PATH="$(pwd)/target/release"
 ```
 
-Pre-built libraries are attached to [GitHub Releases](https://github.com/edgesentry/ontographia/releases) for tagged versions.
+Pre-built libraries are attached to [GitHub Releases](https://github.com/edgesentry/ontographia/releases) for tagged versions:
+
+| Archive | Platform |
+|---------|----------|
+| `libontographia_ffi-{version}-linux-x86_64.tar.gz` | Linux x86_64 |
+| `libontographia_ffi-{version}-linux-arm64.tar.gz` | Linux arm64 (aarch64) |
+| `libontographia_ffi-{version}-macos-arm64.tar.gz` | macOS Apple Silicon |
+| `libontographia_ffi-{version}-windows-x86_64.tar.gz` | Windows x86_64 |
+
+Extract the archive and point the dynamic linker at the directory containing `libontographia_ffi.so` (or `.dylib` / `.dll`):
+
+```bash
+# Linux (x86_64 or arm64)
+export LD_LIBRARY_PATH=/path/to/extracted/libontographia_ffi-*/ 
+```
 
 ## Module import
 

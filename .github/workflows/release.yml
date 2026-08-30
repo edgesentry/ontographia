@@ -148,6 +148,10 @@ jobs:
             target: x86_64-unknown-linux-gnu
             artifact: linux-x86_64
             lib: libontographia_ffi.so
+          - os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            artifact: linux-arm64
+            lib: libontographia_ffi.so
           - os: macos-latest
             target: aarch64-apple-darwin
             artifact: macos-arm64
