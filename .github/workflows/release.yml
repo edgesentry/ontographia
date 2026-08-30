@@ -119,12 +119,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
-      - uses: PyO3/maturin-action@v1
+      - uses: actions/setup-python@v5
         with:
-          target: x86_64-unknown-linux-gnu
-          args: --release --out dist
-          sccache: false
-          manylinux: auto
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Build wheels
+        run: |
+          uv sync --group dev
+          uv run maturin build --release --out dist
       - uses: actions/upload-artifact@v4
         with:
           name: python-wheels

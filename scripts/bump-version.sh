@@ -69,9 +69,16 @@ if [[ "$CURRENT" == "$NEW" ]]; then
   echo "workspace version already $NEW"
 else
   awk -v new="$NEW" '
-    /^\[workspace\.package\]/ { in_pkg = 1 }
-    /^\[/ && !/^\[workspace\.package\]/ { in_pkg = 0 }
-    in_pkg && /^version = "/ { print "version = \"" new "\""; next }
+    /^\[workspace\.package\]/ { in_pkg = 1; in_deps = 0 }
+    /^\[workspace\.dependencies\]/ { in_deps = 1; in_pkg = 0 }
+    /^\[/ && !/^\[workspace\.package\]/ && !/^\[workspace\.dependencies\]/ { in_pkg = 0; in_deps = 0 }
+    in_pkg && /^version = "/ {
+      print "version = \"" new "\""
+      next
+    }
+    in_deps && /^ontographia-/ {
+      gsub(/version = "[^"]+"/, "version = \"" new "\"")
+    }
     { print }
   ' Cargo.toml > Cargo.toml.tmp
   mv Cargo.toml.tmp Cargo.toml
