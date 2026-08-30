@@ -186,20 +186,57 @@ jobs:
           path: dist/*.tar.gz
 
   build-wheels:
-    name: Python wheels (${{ matrix.python-version }})
+    name: Python wheels (${{ matrix.platform }}, py${{ matrix.python-version }})
     needs: [resolve-version, verify]
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     env:
       RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+            python-version: "3.11"
+          - os: ubuntu-latest
+            platform: linux-x86_64
+            python-version: "3.12"
+          - os: ubuntu-latest
+            platform: linux-x86_64
+            python-version: "3.13"
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+            python-version: "3.11"
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+            python-version: "3.12"
+          - os: ubuntu-24.04-arm
+            platform: linux-arm64
+            python-version: "3.13"
+          - os: macos-latest
+            platform: macos-arm64
+            python-version: "3.11"
+          - os: macos-latest
+            platform: macos-arm64
+            python-version: "3.12"
+          - os: macos-latest
+            platform: macos-arm64
+            python-version: "3.13"
+          - os: windows-latest
+            platform: windows-x86_64
+            python-version: "3.11"
+          - os: windows-latest
+            platform: windows-x86_64
+            python-version: "3.12"
+          - os: windows-latest
+            platform: windows-x86_64
+            python-version: "3.13"
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -207,13 +244,14 @@ jobs:
         with:
           enable-cache: true
       - name: Build wheels
+        shell: bash
         run: |
           uv python pin ${{ matrix.python-version }}
           uv sync --group dev
           uv run --python "$(command -v python3)" maturin build --release --out dist
       - uses: actions/upload-artifact@v4
         with:
-          name: python-wheels-${{ matrix.python-version }}
+          name: python-wheels-${{ matrix.platform }}-${{ matrix.python-version }}
           path: dist/*.whl
 
   upload-assets:

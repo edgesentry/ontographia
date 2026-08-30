@@ -155,7 +155,7 @@ ontographia-schema = "0.1"
 
 ### Python
 
-Supported: **3.11, 3.12, 3.13** (`requires-python = ">=3.11"`). CI runs Python smoke and Neo4j integration on all three; releases ship Linux wheels for each.
+Supported: **3.11, 3.12, 3.13** (`requires-python = ">=3.11"`). CI runs Python smoke and Neo4j integration on all three; releases ship wheels for **Linux x86_64**, **Linux arm64**, **macOS arm64**, and **Windows x86_64** (12 wheels per version).
 
 ```bash
 pip install ontographia
@@ -177,7 +177,7 @@ The release workflow creates `bindings/go/vX.Y.Z` automatically.
 |----------|----------|
 | `ontographia-{version}-{target}.tar.gz` | `ontographia` CLI binary |
 | `libontographia_ffi-{version}-{target}.tar.gz` | Shared library for Go/cgo (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`) |
-| `ontographia-{version}-*.whl` | Python package |
+| `ontographia-{version}-*.whl` | Python package (Linux x86_64/arm64, macOS arm64, Windows x86_64 × Python 3.11–3.13) |
 
 ## Related
 
