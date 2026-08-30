@@ -13,11 +13,12 @@ cargo test --workspace
 echo "==> CLI smoke test"
 bash scripts/cli_smoke_test.sh
 
-echo "==> cargo publish dry-run (publishable library crates)"
-for pkg in ontographia-core ontographia-adapters ontographia-schema; do
-  echo "--- $pkg"
-  cargo publish -p "$pkg" --dry-run --allow-dirty
-done
+# Only ontographia-core can be dry-run against crates.io before this version is published.
+# ontographia-adapters / -schema depend on ontographia-core = "^X.Y.Z"; cargo publish --dry-run
+# and cargo package resolve that from crates.io, so they fail until core is published.
+# Workspace tests + CLI build above already validate dependents via path deps.
+echo "==> cargo publish dry-run (ontographia-core)"
+cargo publish -p ontographia-core --dry-run --allow-dirty
 
 echo "==> CLI release build (depends on workspace crates; validated via build, not publish dry-run)"
 cargo build --release -p ontographia-cli

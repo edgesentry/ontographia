@@ -34,7 +34,7 @@ Both workflows share the same internal validation (`scripts/preflight-release.sh
 
 1. Open **Actions → Release check**.
 2. Click **Run workflow** (branch `main`).
-3. Confirm the run passes (version from `Cargo.toml`, tests, `cargo publish --dry-run`, wheel build).
+3. Confirm the run passes (version from `Cargo.toml`, tests, `cargo publish --dry-run` for `ontographia-core`, wheel build).
 
 No tag or GitHub Release is created.
 
