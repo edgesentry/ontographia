@@ -28,7 +28,7 @@ See **[docs/release.md](docs/release.md)** for tagging from `main` and CI artifa
 |--------|---------|
 | CLI | `cargo install ontographia-cli` or [GitHub Releases](https://github.com/edgesentry/ontographia/releases) |
 | Rust libs | `ontographia-core`, `ontographia-adapters`, `ontographia-schema` on [crates.io](https://crates.io) |
-| Python | `pip install ontographia` |
+| Python | `pip install ontographia` (wheels for 3.11–3.13) |
 | Go | `go get github.com/edgesentry/ontographia/bindings/go@v0.1.0` (+ FFI lib from Releases) |
 
 ```bash

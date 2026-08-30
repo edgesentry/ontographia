@@ -23,23 +23,37 @@ jobs:
         run: bash scripts/cli_smoke_test.sh
 
   python:
+    name: python (${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
       - uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.13"
           enable-cache: true
+      - name: Pin Python for uv
+        run: uv python pin ${{ matrix.python-version }}
       - name: install python dependencies
         run: uv sync --group dev
       - name: build and install bindings
-        run: uv run maturin develop --release
+        run: uv run --python "$(command -v python3)" maturin develop --release
       - name: smoke test
-        run: uv run python scripts/python_smoke_test.py
+        run: uv run --python "$(command -v python3)" python scripts/python_smoke_test.py
 
   neo4j-integration:
+    name: neo4j-integration (${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
     services:
       neo4j:
         image: neo4j:2025.06
@@ -51,21 +65,25 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
       - uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.13"
           enable-cache: true
+      - name: Pin Python for uv
+        run: uv python pin ${{ matrix.python-version }}
       - name: install python dependencies
         run: uv sync --group dev
       - name: build and install bindings
-        run: uv run maturin develop --release
+        run: uv run --python "$(command -v python3)" maturin develop --release
       - name: neo4j integration test
         env:
           NEO4J_URI: bolt://localhost:7687
           NEO4J_USER: neo4j
           NEO4J_PASSWORD: ontographia
           NEO4J_LOAD_SEED: "1"
-        run: uv run python scripts/neo4j_integration_test.py
+        run: uv run --python "$(command -v python3)" python scripts/neo4j_integration_test.py
 
   go:
     runs-on: ubuntu-latest
