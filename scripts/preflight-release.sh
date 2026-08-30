@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pre-release validation: version match, tag availability, full release-check.
-# Used by the Release workflow and documented for local CLI use.
+# Used by Release check, Release preflight, and local CLI. See docs/release.md.
 set -euo pipefail
 
 VERSION="${1:-}"

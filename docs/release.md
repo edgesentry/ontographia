@@ -8,8 +8,9 @@ Ontographia ships **Rust crates + CLI**, a **Python wheel** (PyPI), and **Go bin
 flowchart LR
   A[PR merge to main] --> B[CI green on main]
   B --> C[Bump version in Cargo.toml]
-  C --> D[Release workflow]
-  D --> E1[Preflight / release check]
+  C --> D[Release check optional]
+  D --> E[Release workflow]
+  E --> E1[Preflight same as Release check]
   E1 --> E2[Create tag + GitHub Release]
   E2 --> F[Build and upload artifacts]
   F --> G1[GitHub Release assets]
@@ -19,49 +20,66 @@ flowchart LR
 
 1. Merge feature work to `main` and confirm [CI](https://github.com/edgesentry/ontographia/actions/workflows/ci.yml) passes.
 2. Bump the workspace version on `main` (see [Version bumps](#version-bumps)) — **no local git tag**.
-3. Run the **[Release](https://github.com/edgesentry/ontographia/actions/workflows/release.yml)** workflow (see below).
-4. The workflow runs **preflight** (same checks as the old Release check), **creates `vX.Y.Z` + GitHub Release**, then builds and uploads artifacts.
+3. **(Recommended)** Run **[Release check](https://github.com/edgesentry/ontographia/actions/workflows/release-check.yml)** — dry-run only; no tag or release is created.
+4. Run **[Release](https://github.com/edgesentry/ontographia/actions/workflows/release.yml)** — runs the **same preflight** again, then creates `vX.Y.Z`, the GitHub Release, and uploads artifacts.
 
-**Immutable tags:** preflight fails if `vX.Y.Z`, `release-processed/vX.Y.Z`, or `bindings/go/vX.Y.Z` already exists on the remote. After a successful start, `release-processed/vX.Y.Z` is claimed; the same version cannot be re-released — bump the version in `Cargo.toml`.
+Both workflows call the shared [`preflight-release.yml`](https://github.com/edgesentry/ontographia/blob/main/.github/workflows/preflight-release.yml) reusable workflow (backed by `scripts/preflight-release.sh`).
 
-## Option A — GitHub Actions button
+**Immutable tags:** preflight fails if `vX.Y.Z`, `release-processed/vX.Y.Z`, or `bindings/go/vX.Y.Z` already exists on the remote. After a successful Release start, `release-processed/vX.Y.Z` is claimed; the same version cannot be re-released — bump the version in `Cargo.toml`.
+
+## Option A — GitHub Actions
+
+### Release check (dry-run)
+
+1. Open **Actions → Release check**.
+2. Click **Run workflow** (branch `main`).
+3. Enter **version** without the `v` prefix (e.g. `0.1.1`).
+4. Confirm the run passes (tests, `cargo publish --dry-run`, wheel build).
+
+No tag or GitHub Release is created.
+
+### Release (publish)
 
 1. Open **Actions → Release**.
-2. Click **Run workflow** (branch must be `main`).
-3. Enter **version** without the `v` prefix (e.g. `0.1.1`) — must match `[workspace.package] version` in `Cargo.toml`.
+2. Click **Run workflow** (branch `main`).
+3. Enter the same **version** (e.g. `0.1.1`) — must match `Cargo.toml`.
 4. Click **Run workflow**.
 
-Watch progress on the workflow run page. On success, assets appear on the [Releases](https://github.com/edgesentry/ontographia/releases) page.
+Preflight runs again on the runner, then the workflow creates the tag, GitHub Release, and uploads assets.
 
 ## Option B — CLI
 
 Requires [GitHub CLI](https://cli.github.com/) (`gh`) authenticated with `repo` scope.
 
-### Full release (preflight + trigger workflow)
+### Release check only
+
+```bash
+bash scripts/preflight-release.sh 0.1.1
+# or trigger the Release check workflow:
+gh workflow run "Release check" --ref main -f version=0.1.1
+```
+
+### Full release
 
 ```bash
 # 1. Bump version on main (via PR or locally)
 scripts/bump-version.sh 0.1.1 --commit
 git push origin main
 
-# 2. Preflight + trigger Release workflow
+# 2. (Recommended) dry-run
+bash scripts/preflight-release.sh 0.1.1
+# or: gh workflow run "Release check" --ref main -f version=0.1.1
+
+# 3. Preflight locally + trigger Release workflow
 scripts/trigger-release.sh 0.1.1
 
-# 3. Watch the run
+# 4. Watch the run
 gh run watch --workflow Release
 ```
 
-`trigger-release.sh` runs `preflight-release.sh` then `gh workflow run Release`.
+`trigger-release.sh` runs `preflight-release.sh` locally, then `gh workflow run Release`. The Release workflow still runs preflight on the runner.
 
-### Preflight only (no release)
-
-Use this to validate before clicking **Run workflow** in the UI, or after bumping the version locally:
-
-```bash
-bash scripts/preflight-release.sh 0.1.1
-```
-
-Equivalent to:
+### Preflight steps (shared by Release check and Release)
 
 ```bash
 bash scripts/verify-release-version.sh v0.1.1
@@ -69,13 +87,13 @@ bash scripts/verify-tag-not-exists.sh v0.1.1
 bash scripts/release-check.sh
 ```
 
-### Trigger workflow only (skip local preflight)
+(`preflight-release.sh` runs all three.)
+
+### Trigger Release only (skip local preflight)
 
 ```bash
 gh workflow run Release --ref main -f version=0.1.1
 ```
-
-The workflow always runs preflight on the runner; local preflight is optional but recommended.
 
 ## Version bumps
 

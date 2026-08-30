@@ -1,0 +1,36 @@
+# Shared preflight job: version match, tag availability, release-check.sh
+# Called by Release check (dry-run only) and Release (first stage).
+name: Preflight release
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Version to validate (must match Cargo.toml on main), e.g. 0.1.1"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  preflight:
+    name: Pre-release validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Run preflight (version, tag availability, release check)
+        run: bash scripts/preflight-release.sh "${{ inputs.version }}"
