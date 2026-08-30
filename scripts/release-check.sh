@@ -22,16 +22,14 @@ done
 echo "==> CLI release build (depends on workspace crates; validated via build, not publish dry-run)"
 cargo build --release -p ontographia-cli
 
-echo "==> maturin wheel build"
+echo "==> maturin wheel build (3.11, 3.12, 3.13)"
 mkdir -p /tmp/ontographia-release-check-dist
-if command -v uv >/dev/null 2>&1; then
+for py in 3.11 3.12 3.13; do
+  echo "--- Python ${py}"
+  uv python install "${py}"
   uv sync --group dev
-  # Use the interpreter from setup-python / uv pin, not a machine-specific path in .python-version
-  uv run --python "$(command -v python3)" maturin build --release --out /tmp/ontographia-release-check-dist
-else
-  python3 -m pip install maturin
-  maturin build --release --out /tmp/ontographia-release-check-dist
-fi
+  uv run --python "${py}" maturin build --release --out /tmp/ontographia-release-check-dist
+done
 ls -la /tmp/ontographia-release-check-dist/*.whl
 
 echo "release check ok"
