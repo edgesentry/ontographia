@@ -1,10 +1,13 @@
-# Triggered when a GitHub Release is published (tag created via Releases UI).
-# Run "Release check" workflow first. See docs/release.md
+# One-shot release: preflight (release check) → tag + GitHub Release → build & upload.
+# See docs/release.md
 name: Release
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release (must match Cargo.toml on main), e.g. 0.1.1"
+        required: true
 
 permissions:
   contents: write
@@ -12,16 +15,59 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  RELEASE_TAG: ${{ github.event.release.tag_name }}
+  RELEASE_TAG: v${{ inputs.version }}
 
 jobs:
+  preflight:
+    name: Pre-release validation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Run preflight (version, tag availability, release check)
+        run: bash scripts/preflight-release.sh "${{ inputs.version }}"
+
+  create-release:
+    name: Create tag and GitHub Release
+    needs: preflight
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Create tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          SHA="$(git rev-parse HEAD)"
+          gh release create "${{ env.RELEASE_TAG }}" \
+            --target "$SHA" \
+            --title "${{ env.RELEASE_TAG }}" \
+            --generate-notes
+
   verify:
-    name: Verify on tagged commit
+    name: Claim version and verify tag
+    needs: create-release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
 
       - name: Refuse re-release of immutable tag
@@ -34,12 +80,6 @@ jobs:
 
       - name: Verify tag matches workspace version
         run: bash scripts/verify-release-version.sh "${{ env.RELEASE_TAG }}"
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - name: cargo test
-        run: cargo test --workspace
-      - name: CLI smoke test
-        run: bash scripts/cli_smoke_test.sh
 
   build-cli:
     name: CLI (${{ matrix.artifact }})
@@ -61,7 +101,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -110,7 +150,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -143,7 +183,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
       - uses: actions/setup-python@v5
         with:
@@ -174,10 +214,10 @@ jobs:
         run: |
           mkdir -p release-files
           find dist -type f \( -name '*.tar.gz' -o -name '*.whl' \) -exec cp {} release-files/ \;
-      - name: Upload to existing release
+      - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.release.tag_name }}
+          tag_name: ${{ env.RELEASE_TAG }}
           files: release-files/*
           overwrite_files: true
 
@@ -188,7 +228,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
       - name: Push bindings/go tag
         env:
@@ -214,7 +254,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ env.RELEASE_TAG }}
       - uses: dtolnay/rust-toolchain@stable
       - name: Publish ontographia-core
         run: cargo publish -p ontographia-core --allow-dirty

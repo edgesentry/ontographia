@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Fail if an immutable release tag already exists on origin.
-# Use before creating a GitHub Release (Release check workflow).
+# Use before triggering the Release workflow.
 set -euo pipefail
 
 TAG="${1:-}"
