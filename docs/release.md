@@ -13,7 +13,7 @@ flowchart LR
   D -. optional .-> E
   E --> F[GitHub Release + artifacts]
   F --> G1[Release assets]
-  F --> G2[cargo.io optional]
+  F --> G2[crates.io optional]
   F --> G3[PyPI optional]
 ```
 
