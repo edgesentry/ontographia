@@ -11,14 +11,14 @@ keywords = ["neo4j", "cypher", "ontology", "schema", "constraints"]
 categories = ["database"]
 
 [dependencies]
-ontographia-core = { path = "../ontographia-core" }
+ontographia-core = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
 indexmap = { workspace = true }
 
 [dev-dependencies]
-ontographia-adapters = { path = "../ontographia-adapters" }
+ontographia-adapters = { workspace = true }
 
 [[test]]
 name = "integration"

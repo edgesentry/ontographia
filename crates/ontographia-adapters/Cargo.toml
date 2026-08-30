@@ -11,7 +11,7 @@ keywords = ["neo4j", "cypher", "ontology", "rdf", "owl"]
 categories = ["database", "parsing"]
 
 [dependencies]
-ontographia-core = { path = "../ontographia-core" }
+ontographia-core = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_yaml = { workspace = true }

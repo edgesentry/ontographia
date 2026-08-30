@@ -1,11 +1,10 @@
-# Cut a release from main (tag v*).
-# See docs/release.md for the full checklist.
+# Triggered when a GitHub Release is published (tag created via Releases UI).
+# Run "Release check" workflow first. See docs/release.md
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -13,6 +12,7 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  RELEASE_TAG: ${{ github.event.release.tag_name }}
 
 jobs:
   verify:
@@ -20,8 +20,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+
+      - name: Refuse re-release of immutable tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/verify-release-not-processed.sh "${{ env.RELEASE_TAG }}"
+
+      - name: Claim release version
+        run: bash scripts/claim-release-processed.sh "${{ env.RELEASE_TAG }}"
+
       - name: Verify tag matches workspace version
-        run: bash scripts/verify-release-version.sh "${{ github.ref_name }}"
+        run: bash scripts/verify-release-version.sh "${{ env.RELEASE_TAG }}"
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: cargo test
@@ -48,6 +60,8 @@ jobs:
             artifact: windows-x86_64
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -56,8 +70,10 @@ jobs:
         run: cargo build --release -p ontographia-cli --target ${{ matrix.target }}
       - name: Package CLI
         shell: bash
+        env:
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${RELEASE_TAG#v}"
           NAME="ontographia-${VERSION}-${{ matrix.artifact }}"
           mkdir -p "dist/${NAME}"
           if [[ "${{ runner.os }}" == "Windows" ]]; then
@@ -93,6 +109,8 @@ jobs:
             lib: ontographia_ffi.dll
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -101,8 +119,10 @@ jobs:
         run: cargo build --release -p ontographia-ffi --target ${{ matrix.target }}
       - name: Package FFI
         shell: bash
+        env:
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${RELEASE_TAG#v}"
           NAME="libontographia_ffi-${VERSION}-${{ matrix.artifact }}"
           mkdir -p "dist/${NAME}"
           cp "target/${{ matrix.target }}/release/${{ matrix.lib }}" "dist/${NAME}/"
@@ -118,24 +138,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: PyO3/maturin-action@v1
         with:
-          target: x86_64-unknown-linux-gnu
-          args: --release --out dist
-          sccache: false
-          manylinux: auto
+          ref: ${{ github.event.release.tag_name }}
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+      - name: Build wheels
+        run: |
+          uv sync --group dev
+          uv run maturin build --release --out dist
       - uses: actions/upload-artifact@v4
         with:
           name: python-wheels
           path: dist/*.whl
 
-  github-release:
-    name: GitHub Release
+  upload-assets:
+    name: Upload GitHub Release assets
     needs: [build-cli, build-ffi, build-wheels]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
       - uses: actions/download-artifact@v4
         with:
           path: dist
@@ -144,11 +169,12 @@ jobs:
         run: |
           mkdir -p release-files
           find dist -type f \( -name '*.tar.gz' -o -name '*.whl' \) -exec cp {} release-files/ \;
-      - name: Create release
+      - name: Upload to existing release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          tag_name: ${{ github.event.release.tag_name }}
           files: release-files/*
+          overwrite_files: true
 
   tag-go-module:
     name: Tag Go module
@@ -157,25 +183,33 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.release.tag_name }}
           fetch-depth: 0
       - name: Push bindings/go tag
+        env:
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
         run: |
-          GO_TAG="bindings/go/${GITHUB_REF_NAME}"
+          GO_TAG="bindings/go/${RELEASE_TAG}"
+          if git ls-remote --tags origin "refs/tags/${GO_TAG}" | grep -q .; then
+            echo "error: ${GO_TAG} already exists" >&2
+            exit 1
+          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -f "$GO_TAG" "${GITHUB_SHA}"
-          git push origin "$GO_TAG" --force
+          git tag -a "$GO_TAG" "${GITHUB_SHA}"
+          git push origin "$GO_TAG"
 
   publish-crates:
     name: Publish Rust crates
     needs: verify
     runs-on: ubuntu-latest
-    # Set repository variable PUBLISH_TO_REGISTRIES=true and secret CARGO_REGISTRY_TOKEN
     if: vars.PUBLISH_TO_REGISTRIES == 'true'
     env:
       CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
       - uses: dtolnay/rust-toolchain@stable
       - name: Publish ontographia-core
         run: cargo publish -p ontographia-core --allow-dirty
