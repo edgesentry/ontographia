@@ -6,6 +6,9 @@ edition.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
+readme = "../../README.md"
+keywords = ["neo4j", "cypher", "ontology", "graph", "rdf"]
+categories = ["database", "parsing"]
 
 [dependencies]
 serde = { workspace = true }

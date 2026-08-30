@@ -5,11 +5,13 @@ members = [
     "crates/ontographia-adapters",
     "crates/ontographia-ffi",
     "crates/ontographia-schema",
+    "crates/ontographia-cli",
     "bindings/python",
 ]
 default-members = [
     "crates/ontographia-core",
     "crates/ontographia-adapters",
+    "crates/ontographia-cli",
 ]
 
 [workspace.package]
@@ -17,7 +19,7 @@ version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0"
 authors = ["Ontographia Contributors"]
-repository = "https://github.com/ontographia/ontographia"
+repository = "https://github.com/edgesentry/ontographia"
 
 [workspace.dependencies]
 serde = { version = "1", features = ["derive"] }

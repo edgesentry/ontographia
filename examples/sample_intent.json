@@ -1,0 +1,32 @@
+{
+  "start": { "class": "Product", "alias": "product" },
+  "traverse": [
+    {
+      "relationship": "has_part",
+      "direction": "out",
+      "to": { "class": "Part", "alias": "part" }
+    },
+    {
+      "relationship": "supplied_by",
+      "direction": "out",
+      "to": { "class": "Supplier", "alias": "supplier" }
+    }
+  ],
+  "filter": [
+    {
+      "alias": "product",
+      "property": "sku",
+      "op": "eq",
+      "value": "SPX-100"
+    }
+  ],
+  "return": [
+    {
+      "alias": "supplier",
+      "property": "name",
+      "as_name": "supplier_name"
+    }
+  ],
+  "limit": 20,
+  "optional": false
+}

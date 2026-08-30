@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/yohei1126/ontographia/bindings/go/ontographia"
+	"github.com/edgesentry/ontographia/bindings/go/ontographia"
 )
 
 func repoRoot(t *testing.T) string {

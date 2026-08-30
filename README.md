@@ -20,6 +20,24 @@ Ontology → Adapter → COM → validate(Intent) → QueryAst → Emitter → C
 
 Intent JSON is produced outside the core (LLM or hand-authored), constrained by `intent_json_schema()`. Full pipeline, COM, validation rules, AST, emitters, and bindings: **[docs/architecture.md](docs/architecture.md)**.
 
+## Install (released versions)
+
+See **[docs/release.md](docs/release.md)** for tagging from `main` and CI artifacts.
+
+| Target | Install |
+|--------|---------|
+| CLI | `cargo install ontographia-cli` or [GitHub Releases](https://github.com/edgesentry/ontographia/releases) |
+| Rust libs | `ontographia-core`, `ontographia-adapters`, `ontographia-schema` on [crates.io](https://crates.io) |
+| Python | `pip install ontographia` |
+| Go | `go get github.com/edgesentry/ontographia/bindings/go@v0.1.0` (+ FFI lib from Releases) |
+
+```bash
+# CLI example (after install)
+ontographia build --ontology examples/manufacturing.native.yaml \
+  --intent examples/sample_intent.json --json
+ontographia schema examples/manufacturing.native.yaml --json-out schema.json
+```
+
 ## Supported ontology formats
 
 | Format | Extensions |
@@ -50,7 +68,7 @@ cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufac
 
 ## Quick start (Python)
 
-Requires [uv](https://docs.astral.sh/uv/) and Python 3.13.
+Requires [uv](https://docs.astral.sh/uv/) and Python 3.11+.
 
 ```bash
 uv sync --group dev
@@ -97,7 +115,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/yohei1126/ontographia/bindings/go/ontographia"
+	"github.com/edgesentry/ontographia/bindings/go/ontographia"
 )
 
 func main() {

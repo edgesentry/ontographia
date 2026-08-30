@@ -31,6 +31,7 @@ Ontology → Adapter → COM → validate(Intent) → QueryAst → Emitter → C
 | Graph schema DDL + offline catalog diff | [docs/architecture.md](docs/architecture.md) § Graph schema governance, [`crates/ontographia-schema/`](crates/ontographia-schema/) |
 | Ontology ↔ Neo4j alignment, responsibilities, `schema.json` | [docs/ontology-graph-alignment.md](docs/ontology-graph-alignment.md) |
 | CodeQL (disable Default setup before using workflow) | [docs/codeql-setup.md](docs/codeql-setup.md) |
+| Release (tag from main, artifacts, registries) | [docs/release.md](docs/release.md) |
 | Neo4j setup, seed data, query execution walkthrough | [docs/end-to-end-neo4j.md](docs/end-to-end-neo4j.md) |
 | LLM / agent workflow for Intent extraction | [skills/ontographia-cypher-builder/SKILL.md](skills/ontographia-cypher-builder/SKILL.md) |
 | LiteLLM local setup (OpenAI, Gemini, Cursor) | [docs/litellm-local.md](docs/litellm-local.md) |

@@ -1,0 +1,205 @@
+# Cut a release from main (tag v*).
+# See docs/release.md for the full checklist.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  verify:
+    name: Verify on tagged commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: cargo test
+        run: cargo test --workspace
+      - name: CLI smoke test
+        run: bash scripts/cli_smoke_test.sh
+
+  build-cli:
+    name: CLI (${{ matrix.artifact }})
+    needs: verify
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: linux-x86_64
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: macos-arm64
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: windows-x86_64
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      - name: Build CLI
+        run: cargo build --release -p ontographia-cli --target ${{ matrix.target }}
+      - name: Package CLI
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          NAME="ontographia-${VERSION}-${{ matrix.artifact }}"
+          mkdir -p "dist/${NAME}"
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            cp "target/${{ matrix.target }}/release/ontographia.exe" "dist/${NAME}/"
+          else
+            cp "target/${{ matrix.target }}/release/ontographia" "dist/${NAME}/"
+          fi
+          tar -czf "dist/${NAME}.tar.gz" -C dist "${NAME}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cli-${{ matrix.artifact }}
+          path: dist/*.tar.gz
+
+  build-ffi:
+    name: FFI (${{ matrix.artifact }})
+    needs: verify
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: linux-x86_64
+            lib: libontographia_ffi.so
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: macos-arm64
+            lib: libontographia_ffi.dylib
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            artifact: windows-x86_64
+            lib: ontographia_ffi.dll
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      - name: Build FFI
+        run: cargo build --release -p ontographia-ffi --target ${{ matrix.target }}
+      - name: Package FFI
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          NAME="libontographia_ffi-${VERSION}-${{ matrix.artifact }}"
+          mkdir -p "dist/${NAME}"
+          cp "target/${{ matrix.target }}/release/${{ matrix.lib }}" "dist/${NAME}/"
+          tar -czf "dist/${NAME}.tar.gz" -C dist "${NAME}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ffi-${{ matrix.artifact }}
+          path: dist/*.tar.gz
+
+  build-wheels:
+    name: Python wheels
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: PyO3/maturin-action@v1
+        with:
+          target: x86_64-unknown-linux-gnu
+          args: --release --out dist
+          sccache: false
+          manylinux: auto
+      - uses: actions/upload-artifact@v4
+        with:
+          name: python-wheels
+          path: dist/*.whl
+
+  github-release:
+    name: GitHub Release
+    needs: [build-cli, build-ffi, build-wheels]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Collect release files
+        run: |
+          mkdir -p release-files
+          find dist -type f \( -name '*.tar.gz' -o -name '*.whl' \) -exec cp {} release-files/ \;
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: release-files/*
+
+  tag-go-module:
+    name: Tag Go module
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Push bindings/go tag
+        run: |
+          GO_TAG="bindings/go/${GITHUB_REF_NAME}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f "$GO_TAG" "${GITHUB_SHA}"
+          git push origin "$GO_TAG" --force
+
+  publish-crates:
+    name: Publish Rust crates
+    needs: verify
+    runs-on: ubuntu-latest
+    # Set repository variable PUBLISH_TO_REGISTRIES=true and secret CARGO_REGISTRY_TOKEN
+    if: vars.PUBLISH_TO_REGISTRIES == 'true'
+    env:
+      CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Publish ontographia-core
+        run: cargo publish -p ontographia-core --allow-dirty
+      - name: Wait for crates.io index
+        run: sleep 45
+      - name: Publish ontographia-adapters
+        run: cargo publish -p ontographia-adapters --allow-dirty
+      - name: Publish ontographia-schema
+        run: cargo publish -p ontographia-schema --allow-dirty
+      - name: Wait for crates.io index
+        run: sleep 45
+      - name: Publish ontographia-cli
+        run: cargo publish -p ontographia-cli --allow-dirty
+
+  publish-pypi:
+    name: Publish PyPI
+    needs: build-wheels
+    runs-on: ubuntu-latest
+    if: vars.PUBLISH_TO_REGISTRIES == 'true'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: python-wheels
+          path: dist
+      - name: Upload to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: dist
