@@ -1,0 +1,41 @@
+# Dry-run the full release pipeline before creating a GitHub Release.
+# See docs/release.md
+name: Release check
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Expected version (e.g. 0.1.1) — must match Cargo.toml on main"
+        required: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Pre-release validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - name: Verify version matches Cargo.toml
+        run: bash scripts/verify-release-version.sh "v${{ inputs.version }}"
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+
+      - name: Run release check
+        run: bash scripts/release-check.sh

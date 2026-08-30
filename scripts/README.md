@@ -37,7 +37,8 @@ Full setup: [docs/litellm-local.md](../docs/litellm-local.md)
 | Script | Purpose |
 |--------|---------|
 | [`workspace-version.sh`](workspace-version.sh) | Print `[workspace.package] version` from `Cargo.toml` |
-| [`bump-version.sh`](bump-version.sh) | Bump workspace version; optional commit / tag / push |
+| [`bump-version.sh`](bump-version.sh) | Bump workspace version; optional commit (tag via GitHub Releases UI) |
+| [`release-check.sh`](release-check.sh) | Local pre-release validation (tests, publish dry-run, wheel build) |
 | [`verify-release-version.sh`](verify-release-version.sh) | Ensure `vX.Y.Z` tag matches `Cargo.toml` |
 
 See [docs/release.md](../docs/release.md).

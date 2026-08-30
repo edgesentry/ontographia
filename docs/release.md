@@ -7,38 +7,33 @@ Ontographia ships **Rust crates + CLI**, a **Python wheel** (PyPI), and **Go bin
 ```mermaid
 flowchart LR
   A[PR merge to main] --> B[CI green on main]
-  B --> C[Tag vX.Y.Z on main]
-  C --> D[Release workflow]
-  D --> E1[GitHub Release artifacts]
-  D --> E2[cargo publish optional]
-  D --> E3[PyPI upload optional]
+  B --> C[Bump version in Cargo.toml]
+  C --> D[Release check workflow]
+  D --> E[GitHub Releases UI: Publish vX.Y.Z]
+  E --> F[Release workflow]
+  F --> G1[Upload artifacts]
+  F --> G2[cargo publish optional]
+  F --> G3[PyPI upload optional]
 ```
 
 1. Merge feature work to `main` and confirm [CI](https://github.com/edgesentry/ontographia/actions/workflows/ci.yml) passes.
-2. Bump the workspace version (see [Version bumps](#version-bumps)).
-3. Push the bump commit to `main`, then tag:
+2. Bump the workspace version on `main` (see [Version bumps](#version-bumps)) — **no local git tag**.
+3. Run **[Release check](https://github.com/edgesentry/ontographia/actions/workflows/release-check.yml)** from Actions:
+   - **Run workflow** → branch `main` → version e.g. `0.1.1`
+   - Must pass (tests, `cargo publish --dry-run`, wheel build)
+4. Create the release on GitHub:
+   - **Releases → Draft a new release**
+   - **Choose a tag:** `v0.1.1` (create new tag on `main`)
+   - Add release notes (optional)
+   - **Publish release** (not draft-only if you want the pipeline to run)
+5. [Release workflow](../.github/workflows/release.yml) runs on `release: published`:
+   - Verifies tag matches `Cargo.toml`
+   - Builds CLI / FFI / wheels
+   - Uploads assets to the GitHub Release you just created
+   - Tags `bindings/go/vX.Y.Z`
+   - Optionally publishes to crates.io / PyPI
 
-   ```bash
-   git checkout main && git pull
-   scripts/bump-version.sh 0.2.0 --commit --tag --push
-   ```
-
-   Or bump and tag in separate steps:
-
-   ```bash
-   scripts/bump-version.sh 0.2.0 --commit
-   git push origin main
-   git tag -a v0.2.0 -m "Release v0.2.0"
-   git push origin v0.2.0
-   ```
-
-4. The [Release workflow](../.github/workflows/release.yml) runs on `v*` tags:
-   - Runs `cargo test --workspace` and CLI smoke test
-   - Builds `ontographia` CLI binaries (Linux, macOS, Windows)
-   - Builds `libontographia_ffi` per platform (for Go consumers)
-   - Builds Python wheels (`maturin build`)
-   - Creates a GitHub Release with all artifacts
-   - Optionally publishes to crates.io / PyPI when secrets are configured
+> **Do not** `git push` tags manually — use the Releases UI so the release page and tag are created together.
 
 ## Version bumps
 
@@ -51,14 +46,18 @@ flowchart LR
 | Go | No file; `bindings/go/vX.Y.Z` tag created by the release workflow |
 
 ```bash
-# preview: updates Cargo.toml only
-scripts/bump-version.sh 0.2.0
-
-# bump + test + commit + tag + push (on main)
-scripts/bump-version.sh 0.2.0 --commit --tag --push
+# bump + test + commit (push to main via PR)
+scripts/bump-version.sh 0.1.1 --commit
 ```
 
 The release workflow rejects tags that do not match the workspace version (`scripts/verify-release-version.sh`).
+
+Local pre-flight (same checks as the Release check workflow):
+
+```bash
+bash scripts/verify-release-version.sh v0.1.1
+bash scripts/release-check.sh
+```
 
 ## GitHub secrets (optional registry publish)
 
@@ -67,17 +66,18 @@ The release workflow rejects tags that do not match the workspace version (`scri
 | `CARGO_REGISTRY_TOKEN` | `cargo publish` for `ontographia-core`, `-adapters`, `-schema`, `-cli` |
 | `PYPI_API_TOKEN` | `maturin upload` to PyPI |
 
-Without these secrets, the workflow still uploads **GitHub Release artifacts** only.
+| Variable | Purpose |
+|----------|---------|
+| `PUBLISH_TO_REGISTRIES` | Set to `true` to enable crates.io / PyPI publish jobs |
+
+Without registry settings, the workflow still uploads **GitHub Release assets**.
 
 ## Install after release
 
 ### CLI (GitHub Release or crates.io)
 
 ```bash
-# from crates.io (after publish)
 cargo install ontographia-cli
-
-# or download ontographia-*-linux-x86_64.tar.gz from GitHub Releases
 ```
 
 ```bash
@@ -99,26 +99,15 @@ ontographia-schema = "0.1"
 pip install ontographia
 ```
 
-Requires a wheel matching your platform (built by the release workflow).
-
 ### Go
 
-Go bindings use **cgo** and link `libontographia_ffi`. After release:
-
 ```bash
-go get github.com/edgesentry/ontographia/bindings/go@v0.1.0
+go get github.com/edgesentry/ontographia/bindings/go@v0.1.1
 ```
 
-Download the matching `libontographia_ffi-*` archive from GitHub Releases and set `LD_LIBRARY_PATH` (Linux), `DYLD_LIBRARY_PATH` (macOS), or PATH (Windows) to the directory containing the shared library. Then build your app with `CGO_ENABLED=1`.
+Download the matching `libontographia_ffi-*` archive from GitHub Releases for cgo linking.
 
-Tag convention for the Go submodule:
-
-```bash
-git tag bindings/go/v0.1.0 <commit-on-main>
-git push origin bindings/go/v0.1.0
-```
-
-The release workflow creates this tag automatically when the root tag `v0.1.0` is pushed.
+The release workflow creates `bindings/go/vX.Y.Z` automatically when the GitHub Release is published.
 
 ## Artifacts
 
@@ -127,7 +116,6 @@ The release workflow creates this tag automatically when the root tag `v0.1.0` i
 | `ontographia-{version}-{target}.tar.gz` | `ontographia` CLI binary |
 | `libontographia_ffi-{version}-{target}.tar.gz` | Shared library for Go/cgo |
 | `ontographia-{version}-*.whl` | Python package |
-| Source archive | GitHub auto-generated zip/tar.gz |
 
 ## Related
 

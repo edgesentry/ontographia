@@ -14,7 +14,7 @@ Updates [workspace.package].version in Cargo.toml (the only version file).
 
 Options:
   --commit    Stage Cargo.toml and create commit "chore: release vX.Y.Z"
-  --tag       Create annotated tag vX.Y.Z (implies --commit if Cargo.toml changed)
+  --tag       Create annotated tag vX.Y.Z locally (prefer GitHub Releases UI instead)
   --push      Push current branch and tag to origin (use after --tag)
   --no-test   Skip cargo test --workspace
 
