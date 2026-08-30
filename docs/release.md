@@ -97,7 +97,7 @@ ontographia-schema = "0.1"
 
 ### Python
 
-Supported: **3.11, 3.12, 3.13** (`requires-python = ">=3.11"`). CI tests all three; releases ship Linux wheels for each.
+Supported: **3.11, 3.12, 3.13** (`requires-python = ">=3.11"`). CI runs Python smoke and Neo4j integration on all three; releases ship Linux wheels for each.
 
 ```bash
 pip install ontographia
