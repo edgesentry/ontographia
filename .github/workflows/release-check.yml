@@ -40,6 +40,8 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
+      - name: Pin Python for uv
+        run: uv python pin 3.11
 
       - name: Run release check
         run: bash scripts/release-check.sh

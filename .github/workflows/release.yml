@@ -149,8 +149,9 @@ jobs:
           enable-cache: true
       - name: Build wheels
         run: |
+          uv python pin 3.11
           uv sync --group dev
-          uv run maturin build --release --out dist
+          uv run --python "$(command -v python3)" maturin build --release --out dist
       - uses: actions/upload-artifact@v4
         with:
           name: python-wheels
