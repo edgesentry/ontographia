@@ -8,22 +8,21 @@ Ontographia ships **Rust crates + CLI**, a **Python wheel** (PyPI), and **Go bin
 flowchart LR
   A[PR merge to main] --> B[CI green on main]
   B --> C[Bump version in Cargo.toml]
-  C --> D[Release check optional]
-  D --> E[Release workflow]
-  E --> E1[Preflight same as Release check]
-  E1 --> E2[Create tag + GitHub Release]
-  E2 --> F[Build and upload artifacts]
-  F --> G1[GitHub Release assets]
-  F --> G2[cargo publish optional]
-  F --> G3[PyPI upload optional]
+  C --> D[Release check]
+  C --> E[Release]
+  D -. optional .-> E
+  E --> F[GitHub Release + artifacts]
+  F --> G1[Release assets]
+  F --> G2[cargo.io optional]
+  F --> G3[PyPI optional]
 ```
 
 1. Merge feature work to `main` and confirm [CI](https://github.com/edgesentry/ontographia/actions/workflows/ci.yml) passes.
 2. Bump the workspace version on `main` (see [Version bumps](#version-bumps)) — **no local git tag**.
 3. **(Recommended)** Run **[Release check](https://github.com/edgesentry/ontographia/actions/workflows/release-check.yml)** — dry-run only; no tag or release is created.
-4. Run **[Release](https://github.com/edgesentry/ontographia/actions/workflows/release.yml)** — reads `[workspace.package] version` from `Cargo.toml`, runs preflight, then creates `vX.Y.Z`, the GitHub Release, and uploads artifacts.
+4. Run **[Release](https://github.com/edgesentry/ontographia/actions/workflows/release.yml)** — reads `Cargo.toml`, creates `vX.Y.Z`, uploads artifacts.
 
-Both workflows call the shared [`preflight-release.yml`](https://github.com/edgesentry/ontographia/blob/main/.github/workflows/preflight-release.yml) reusable workflow (backed by `scripts/preflight-release.sh`). **No version input** — bump `Cargo.toml` on `main` first.
+Both workflows share the same internal validation (`scripts/preflight-release.sh`). **No version input** — bump `Cargo.toml` on `main` first.
 
 **Immutable tags:** preflight fails if `vX.Y.Z`, `release-processed/vX.Y.Z`, or `bindings/go/vX.Y.Z` already exists on the remote. After a successful Release start, `release-processed/vX.Y.Z` is claimed; the same version cannot be re-released — bump the version in `Cargo.toml`.
 
@@ -43,7 +42,7 @@ No tag or GitHub Release is created.
 2. Open **Actions → Release**.
 3. Click **Run workflow** (branch `main`) — no version field; the workflow reads `Cargo.toml`.
 
-Preflight runs on the runner, then the workflow creates `vX.Y.Z`, the GitHub Release, and uploads assets.
+Preflight runs internally, then the workflow creates `vX.Y.Z`, the GitHub Release, and uploads assets.
 
 ## Option B — CLI
 
