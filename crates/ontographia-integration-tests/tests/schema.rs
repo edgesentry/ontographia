@@ -18,7 +18,6 @@ fn normalize_unique_requirements(cypher: &str) -> BTreeSet<String> {
         .lines()
         .filter_map(|line| {
             let line = line.trim();
-            // FOR (p:Product) REQUIRE p.sku IS UNIQUE;
             let rest = line.strip_prefix("FOR (")?;
             let after_label = rest.split_once(") REQUIRE ")?;
             let label = after_label.0.split(':').nth(1)?;

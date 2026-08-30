@@ -6,6 +6,7 @@ members = [
     "crates/ontographia-ffi",
     "crates/ontographia-schema",
     "crates/ontographia-cli",
+    "crates/ontographia-integration-tests",
     "bindings/python",
 ]
 default-members = [

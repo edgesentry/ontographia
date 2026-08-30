@@ -198,8 +198,8 @@ COM → GraphSchema::from_com()
 CLI example:
 
 ```bash
-cargo run -p ontographia-schema --example emit_constraints -- examples/manufacturing.native.yaml
-cargo run -p ontographia-schema --example emit_constraints -- examples/manufacturing.native.yaml --snapshot examples/neo4j/catalog.snapshot.json
+ontographia schema examples/manufacturing.native.yaml
+ontographia schema examples/manufacturing.native.yaml --snapshot examples/neo4j/catalog.snapshot.json
 ```
 
 **Out of scope (v1):** Neo4j live introspection, data seed generation, automatic migration execution. Seed data remains in [`examples/neo4j/seed.cypher`](../examples/neo4j/seed.cypher); generated constraints are tested for semantic equivalence.

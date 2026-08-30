@@ -112,7 +112,7 @@ Sample domain (same semantics, different syntax): `examples/manufacturing.*`.
 cargo test --workspace
 ./scripts/start_neo4j.sh --seed
 cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.native.yaml
-cargo run -p ontographia-schema --example emit_constraints -- examples/manufacturing.native.yaml
+cargo run -p ontographia-cli -- schema examples/manufacturing.native.yaml
 uv sync --group dev && uv run maturin develop --release   # Python bindings
 cargo build --release -p ontographia-ffi && cd bindings/go && go test ./...  # Go bindings
 python examples/run_neo4j_demo.py --ontology examples/manufacturing.native.yaml

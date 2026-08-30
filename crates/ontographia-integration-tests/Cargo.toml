@@ -1,0 +1,19 @@
+[package]
+name = "ontographia-integration-tests"
+description = "Workspace integration tests (not published)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+ontographia-adapters = { workspace = true }
+ontographia-schema = { workspace = true }
+
+[[test]]
+name = "schema"
+path = "tests/schema.rs"
+
+[[example]]
+name = "emit_constraints"
+path = "examples/emit_constraints.rs"

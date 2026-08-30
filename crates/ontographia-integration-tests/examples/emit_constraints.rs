@@ -1,11 +1,11 @@
 //! Emit Neo4j schema artifacts from an ontology file.
 //!
+//! Prefer the CLI after install: `ontographia schema <ontology> ...`
+//!
 //! ```bash
-//! cargo run -p ontographia-schema --example emit_constraints -- examples/manufacturing.native.yaml
-//! cargo run -p ontographia-schema --example emit_constraints -- examples/manufacturing.native.yaml \
+//! cargo run -p ontographia-integration-tests --example emit_constraints -- examples/manufacturing.native.yaml
+//! cargo run -p ontographia-integration-tests --example emit_constraints -- examples/manufacturing.native.yaml \
 //!   --out examples/neo4j/constraints.cypher --json-out examples/neo4j/schema.json
-//! cargo run -p ontographia-schema --example emit_constraints -- examples/manufacturing.native.yaml \
-//!   --snapshot examples/neo4j/catalog.snapshot.json
 //! ```
 
 use std::env;
