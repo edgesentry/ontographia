@@ -68,6 +68,19 @@ graph LR
 | LinkML | [`manufacturing.linkml.yaml`](https://github.com/edgesentry/ontographia/blob/main/examples/manufacturing.linkml.yaml) |
 | OBO (taxonomy-style classes) | [`manufacturing.obo`](https://github.com/edgesentry/ontographia/blob/main/examples/manufacturing.obo) |
 
+## Prerequisites
+
+This walkthrough uses **released packages** — no Rust toolchain required for the CLI or Python paths.
+
+| Need | How |
+|------|-----|
+| Neo4j **2025.06+** | [§1 Start Neo4j](#1-start-neo4j) |
+| Example files and helper scripts | `git clone https://github.com/edgesentry/ontographia.git` (build not required) |
+| Ontographia CLI or Python | `brew install ontographia` or `pip install ontographia` |
+| Neo4j driver (Python execute path) | `pip install neo4j` |
+
+Language-specific install details: [Rust](rust.md), [Python](python.md), [Go](go.md).
+
 ## 1. Start Neo4j
 
 Use **Neo4j 2025.06+** with Cypher 25 support.
@@ -149,21 +162,24 @@ Or with the dev container running:
 }
 ```
 
-### Generate Cypher (Rust)
+### Generate Cypher (CLI)
+
+Install the CLI if needed: `brew install ontographia` or `cargo install ontographia-cli`.
 
 ```bash
-cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.native.yaml
+ontographia build \
+  --ontology examples/manufacturing.native.yaml \
+  --intent examples/sample_intent.json \
+  --json
 ```
 
-Any supported ontology format works:
-
-```bash
-cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.owl.ttl
-cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.jsonld
-cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.linkml.yaml
-```
+Any supported ontology format works — swap the `--ontology` path (for example `examples/manufacturing.owl.ttl`).
 
 ### Generate Cypher (Python)
+
+```bash
+pip install ontographia
+```
 
 ```python
 import ontographia
@@ -193,13 +209,28 @@ RETURN supplier.name AS supplier_name
 LIMIT 20
 ```
 
+??? note "Generate Cypher from source (contributors)"
+
+    From a git checkout with Rust installed:
+
+    ```bash
+    cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.native.yaml
+    ```
+
+    Any supported ontology format works:
+
+    ```bash
+    cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.owl.ttl
+    cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.jsonld
+    cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.linkml.yaml
+    ```
+
 ## 4. Execute against Neo4j
 
 ```bash
-uv sync --group dev
-uv run maturin develop --release
+pip install ontographia neo4j
 
-export NEO4J_PASSWORD=your-password
+export NEO4J_PASSWORD=ontographia   # or your-password
 python examples/run_neo4j_demo.py --ontology examples/manufacturing.linkml.yaml --execute
 ```
 
@@ -273,31 +304,45 @@ Add a `has_sub_part` step between `has_part` and `supplied_by` to traverse `Prod
 
 ## 6. Verify all ontology formats
 
-```bash
-cargo test --workspace
-```
-
-Integration tests load each `examples/manufacturing.*` file and assert Cypher 25 output for the supplier intent.
+The same supplier intent should produce equivalent Cypher 25 for every ontology syntax. With the released CLI:
 
 ```bash
 for f in examples/manufacturing.native.yaml \
          examples/manufacturing.owl.ttl \
          examples/manufacturing.jsonld \
          examples/manufacturing.linkml.yaml; do
-  cargo run -p ontographia-adapters --example intent_to_cypher -- "$f"
+  ontographia build --ontology "$f" --intent examples/sample_intent.json --json
 done
 ```
 
+??? note "Verify all formats from source (contributors)"
+
+    Integration tests load each `examples/manufacturing.*` file and assert Cypher 25 output for the supplier intent:
+
+    ```bash
+    cargo test --workspace
+    ```
+
+    ```bash
+    for f in examples/manufacturing.native.yaml \
+             examples/manufacturing.owl.ttl \
+             examples/manufacturing.jsonld \
+             examples/manufacturing.linkml.yaml; do
+      cargo run -p ontographia-adapters --example intent_to_cypher -- "$f"
+    done
+    ```
+
 ## 7. Local LLM E2E (not run in CI)
 
-CI uses deterministic mock Intent fixtures (`scripts/neo4j_integration_test.py`). For a **real LLM** on your machine, use [`examples/run_llm_e2e.py`](https://github.com/edgesentry/ontographia/blob/main/examples/run_llm_e2e.py):
+CI uses deterministic mock Intent fixtures (`scripts/neo4j_integration_test.py`). For a **real LLM** on your machine, clone the repo for [`examples/run_llm_e2e.py`](https://github.com/edgesentry/ontographia/blob/main/examples/run_llm_e2e.py) and install Ontographia from PyPI — no Rust build required:
 
 ```bash
+git clone https://github.com/edgesentry/ontographia.git && cd ontographia
+pip install ontographia neo4j openai
 ./scripts/start_neo4j.sh --seed
-uv sync --group dev && uv run maturin develop --release
 
 # Offline demo (fixture LLM, no API key):
-uv run python examples/run_llm_e2e.py \
+python examples/run_llm_e2e.py \
   --question "List suppliers for parts in product SKU SPX-100" \
   --execute --password ontographia
 
@@ -307,10 +352,21 @@ export OPENAI_API_KEY=sk-...
 # Ollama example:
 # export OPENAI_BASE_URL=http://localhost:11434/v1
 # export OPENAI_MODEL=llama3.1
-uv run python examples/run_llm_e2e.py \
+python examples/run_llm_e2e.py \
   --question "Which plant hosts production Line-1?" \
   --execute --password ontographia
 ```
+
+??? note "LLM E2E from source (contributors)"
+
+    ```bash
+    ./scripts/start_neo4j.sh --seed
+    uv sync --group dev && uv run maturin develop --release
+
+    uv run python examples/run_llm_e2e.py \
+      --question "List suppliers for parts in product SKU SPX-100" \
+      --execute --password ontographia
+    ```
 
 Pipeline:
 

@@ -41,6 +41,8 @@ ontographia build --ontology examples/manufacturing.native.yaml \
 ontographia schema examples/manufacturing.native.yaml --json-out schema.json
 ```
 
+**Quickstart:** language guides ([Rust](rust.md) / [Python](python.md) / [Go](go.md)) → [Neo4j walkthrough](end-to-end-neo4j.md).
+
 ## Supported ontology formats
 
 | Format | Extensions |
@@ -65,6 +67,7 @@ Detection and routing: `crates/ontographia-adapters/src/registry.rs`.
 
 | Topic | Page |
 |-------|------|
+| Quickstart (install → Neo4j demo) | [Rust](rust.md) / [Python](python.md) / [Go](go.md) → [Neo4j walkthrough](end-to-end-neo4j.md) |
 | Rust library & CLI | [Rust](rust.md) |
 | Python bindings (PyO3) | [Python](python.md) |
 | Go bindings (cgo / FFI) | [Go](go.md) |

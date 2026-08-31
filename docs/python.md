@@ -5,12 +5,8 @@ Python bindings expose `ontographia.Engine` via PyO3. They call the same Rust `E
 ## Requirements
 
 - Python **3.11, 3.12, or 3.13**
-- [uv](https://docs.astral.sh/uv/) recommended for local development
-- Rust toolchain (for `maturin develop` from source)
 
-## Install
-
-**Released wheel** (after publish to PyPI):
+## Quickstart (released)
 
 ```bash
 pip install ontographia
@@ -25,22 +21,11 @@ PyPI wheels are built for **Python 3.11–3.13** on:
 | macOS Apple Silicon | `macosx_*_arm64` |
 | Windows x86_64 | `win_amd64` |
 
-Intel macOS and other platforms: build from source with `maturin develop` (below).
-
-**From source** (git checkout):
-
-```bash
-uv sync --group dev
-uv run maturin develop --release
-```
-
-Pin the interpreter uv uses:
-
-```bash
-uv python pin 3.12   # or 3.11 / 3.13
-```
+Intel macOS and other platforms without a wheel: see [Developing from source (contributors)](#developing-from-source-contributors) below.
 
 ## Basic usage
+
+Examples below use paths under `examples/` from a [git clone](https://github.com/edgesentry/ontographia) (no build required for the released wheel).
 
 ```python
 import ontographia
@@ -79,27 +64,45 @@ Dialects: `"cypher25"` (default), `"cypher5"`, `"gql"`.
 
 ## Neo4j execution
 
-With the `neo4j` driver installed (`uv sync --group dev`):
-
 ```bash
+pip install ontographia neo4j
+git clone https://github.com/edgesentry/ontographia.git && cd ontographia
 ./scripts/start_neo4j.sh --seed
-uv run python examples/run_neo4j_demo.py --ontology examples/manufacturing.native.yaml --execute
+export NEO4J_PASSWORD=ontographia
+python examples/run_neo4j_demo.py --ontology examples/manufacturing.native.yaml --execute
 ```
 
 Step-by-step tutorial: [Neo4j walkthrough](end-to-end-neo4j.md).
 
 ## LLM end-to-end (local)
 
-For Intent extraction via a real LLM on your machine:
+For Intent extraction via a real LLM on your machine, clone the repo for `examples/run_llm_e2e.py` and install Ontographia from PyPI:
 
 ```bash
-uv sync --group dev --group llm
-uv run python examples/run_llm_e2e.py --ontology examples/manufacturing.native.yaml
+pip install ontographia
+git clone https://github.com/edgesentry/ontographia.git && cd ontographia
+pip install neo4j openai   # or use repo dev deps — see contributor section
+python examples/run_llm_e2e.py --ontology examples/manufacturing.native.yaml
 ```
 
 LiteLLM proxy setup (OpenAI, Gemini, Cursor): [LiteLLM (local)](litellm-local.md).
 
-## Tests
+## Developing from source (contributors)
+
+**Requirements:** [uv](https://docs.astral.sh/uv/) (recommended), Rust toolchain, maturin.
+
+```bash
+uv sync --group dev
+uv run maturin develop --release
+```
+
+Pin the interpreter uv uses:
+
+```bash
+uv python pin 3.12   # or 3.11 / 3.13
+```
+
+### Tests
 
 ```bash
 uv run python scripts/python_smoke_test.py

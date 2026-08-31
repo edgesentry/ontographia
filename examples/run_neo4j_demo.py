@@ -55,8 +55,8 @@ def main() -> int:
         import ontographia
     except ImportError:
         print(
-            "ontographia is not installed. Set up with:\n"
-            "  uv sync --group dev && uv run maturin develop --release",
+            "ontographia is not installed. Install with:\n"
+            "  pip install ontographia",
             file=sys.stderr,
         )
         return 1
@@ -80,7 +80,7 @@ def main() -> int:
     try:
         from neo4j import GraphDatabase
     except ImportError:
-        print("neo4j is required for --execute (included in uv dev group)", file=sys.stderr)
+        print("neo4j is required for --execute. Install with:\n  pip install neo4j", file=sys.stderr)
         return 1
 
     driver = GraphDatabase.driver(args.uri, auth=(args.user, args.password))

@@ -12,9 +12,9 @@ The Rust workspace owns the full pipeline: ontology adapters, COM, Intent valida
 | `ontographia-ffi` | Stable C ABI for Go and other FFI callers |
 | `ontographia-cli` | `build` and `schema` subcommands |
 
-## Install
+## Quickstart (released)
 
-From [crates.io](https://crates.io) (after a release):
+Install from [crates.io](https://crates.io):
 
 ```bash
 cargo add ontographia-core ontographia-adapters
@@ -24,14 +24,11 @@ cargo add ontographia-schema
 cargo install ontographia-cli
 ```
 
-From a git checkout:
-
-```bash
-cargo test --workspace
-cargo build -p ontographia-cli --release
-```
+Or via Homebrew: `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap)).
 
 ## Library usage
+
+Examples below use paths under `examples/` from a [git clone](https://github.com/edgesentry/ontographia) (no build required for the released crates).
 
 ```rust
 use ontographia_adapters::load_ontology_from_path;
@@ -72,10 +69,18 @@ ontographia schema examples/manufacturing.native.yaml \
   --snapshot examples/neo4j/catalog.snapshot.json
 ```
 
-## Examples & tests
+## Next steps
+
+- Full pipeline design: [Architecture](architecture.md)
+- Run against Neo4j with seed data: [Neo4j walkthrough](end-to-end-neo4j.md)
+
+## Developing from source (contributors)
+
+From a git checkout:
 
 ```bash
 cargo test --workspace
+cargo build -p ontographia-cli --release
 cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.native.yaml
 bash scripts/cli_smoke_test.sh
 ```
@@ -96,8 +101,3 @@ bash scripts/cli_smoke_test.sh
 | Add a format | New module under `ontographia-adapters/src/` + `registry.rs` |
 | Graph schema / constraints | `ontographia-schema/src/` (`from_com`, `emit`, `diff`) |
 | E2E adapter tests | `ontographia-adapters/tests/integration.rs` |
-
-## Next steps
-
-- Full pipeline design: [Architecture](architecture.md)
-- Run against Neo4j with seed data: [Neo4j walkthrough](end-to-end-neo4j.md)
