@@ -75,14 +75,14 @@ fn py_to_json(value: &Bound<'_, PyAny>) -> PyResult<serde_json::Value> {
     if let Ok(s) = value.extract::<String>() {
         return Ok(serde_json::Value::String(s));
     }
+    if let Ok(b) = value.extract::<bool>() {
+        return Ok(serde_json::json!(b));
+    }
     if let Ok(i) = value.extract::<i64>() {
         return Ok(serde_json::json!(i));
     }
     if let Ok(f) = value.extract::<f64>() {
         return Ok(serde_json::json!(f));
-    }
-    if let Ok(b) = value.extract::<bool>() {
-        return Ok(serde_json::json!(b));
     }
     if let Ok(dict) = value.cast::<PyDict>() {
         let mut map = serde_json::Map::new();

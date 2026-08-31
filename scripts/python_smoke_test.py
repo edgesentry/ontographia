@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 
 
@@ -18,30 +19,9 @@ def main() -> int:
         return 1
 
     engine = ontographia.Engine.load("examples/manufacturing.native.yaml")
-    result = engine.build(
-        {
-            "start": {"class": "Product", "alias": "product"},
-            "traverse": [
-                {
-                    "relationship": "has_part",
-                    "direction": "out",
-                    "to": {"class": "Part", "alias": "part"},
-                },
-                {
-                    "relationship": "supplied_by",
-                    "direction": "out",
-                    "to": {"class": "Supplier", "alias": "supplier"},
-                },
-            ],
-            "filter": [
-                {"alias": "product", "property": "sku", "op": "eq", "value": "SPX-100"}
-            ],
-            "return": [
-                {"alias": "supplier", "property": "name", "as_name": "supplier_name"}
-            ],
-            "limit": 20,
-        }
-    )
+    with open("examples/sample_intent.json") as f:
+        intent = json.load(f)
+    result = engine.build(intent)
 
     if not result["query"].startswith("CYPHER 25"):
         print(f"unexpected query prefix: {result['query']!r}", file=sys.stderr)
