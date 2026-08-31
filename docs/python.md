@@ -16,6 +16,17 @@ Python bindings expose `ontographia.Engine` via PyO3. They call the same Rust `E
 pip install ontographia
 ```
 
+PyPI wheels are built for **Python 3.11–3.13** on:
+
+| Platform | Wheel tag (examples) |
+|----------|----------------------|
+| Linux x86_64 | `manylinux_*_x86_64` |
+| Linux arm64 (aarch64) | `manylinux_*_aarch64` |
+| macOS Apple Silicon | `macosx_*_arm64` |
+| Windows x86_64 | `win_amd64` |
+
+Intel macOS and other platforms: build from source with `maturin develop` (below).
+
 **From source** (git checkout):
 
 ```bash
