@@ -16,6 +16,7 @@ Walkthrough: [docs/end-to-end-neo4j.md](../docs/end-to-end-neo4j.md)
 | Script | Purpose |
 |--------|---------|
 | [`python_smoke_test.py`](python_smoke_test.py) | Python binding smoke test |
+| [`docs_check.sh`](docs_check.sh) | MkDocs lint, strict build, and HTML assertions (CI) |
 | [`neo4j_integration_test.py`](neo4j_integration_test.py) | Mock LLM Intent → Cypher → Neo4j (CI) |
 
 ## LiteLLM (`scripts/litellm/`)
