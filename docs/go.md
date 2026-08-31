@@ -43,7 +43,7 @@ export LD_LIBRARY_PATH=/path/to/extracted/libontographia_ffi-*/
 ## Module import
 
 ```bash
-go get github.com/edgesentry/ontographia/bindings/go@v0.1.2
+go get github.com/edgesentry/ontographia/bindings/go@v0.1.3
 ```
 
 From a git checkout:
