@@ -134,7 +134,14 @@ If a Release run fails partway through (for example after `ontographia-core` was
 
 ## Install after release
 
-### CLI (GitHub Release or crates.io)
+### CLI (GitHub Release, Homebrew, or crates.io)
+
+```bash
+brew tap edgesentry/tap
+brew install ontographia
+```
+
+Or:
 
 ```bash
 cargo install ontographia-cli
