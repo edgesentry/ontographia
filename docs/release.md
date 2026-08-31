@@ -62,7 +62,7 @@ gh workflow run "Release check" --ref main
 
 ```bash
 # 1. Bump version on main (via PR or locally)
-scripts/bump-version.sh 0.1.2 --commit
+scripts/bump-version.sh 0.1.3 --commit
 git push origin main
 
 # 2. (Recommended) dry-run
@@ -106,7 +106,7 @@ gh workflow run Release --ref main
 | Go | No file; `bindings/go/vX.Y.Z` tag created by the release workflow |
 
 ```bash
-scripts/bump-version.sh 0.1.2 --commit
+scripts/bump-version.sh 0.1.3 --commit
 ```
 
 The release workflow rejects versions that do not match `Cargo.toml` (`scripts/verify-release-version.sh`).
@@ -164,7 +164,7 @@ pip install ontographia
 ### Go
 
 ```bash
-go get github.com/edgesentry/ontographia/bindings/go@v0.1.2
+go get github.com/edgesentry/ontographia/bindings/go@v0.1.3
 ```
 
 Download the matching `libontographia_ffi-*` archive from GitHub Releases for cgo linking (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`).
