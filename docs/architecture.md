@@ -32,13 +32,15 @@ flowchart LR
 
 At runtime the public entry point is `Engine::build()`:
 
-```27:31:crates/ontographia-core/src/engine.rs
-    pub fn build(&self, intent: Intent, dialect: Dialect) -> Result<EmittedQuery> {
-        let validated = validate_intent(&self.ontology, intent)?;
-        let ast = build_ast(&self.ontology, &validated)?;
-        emit_query(dialect, &ast, &validated.params)
-    }
+```rust
+pub fn build(&self, intent: Intent, dialect: Dialect) -> Result<EmittedQuery> {
+    let validated = validate_intent(&self.ontology, intent)?;
+    let ast = build_ast(&self.ontology, &validated)?;
+    emit_query(dialect, &ast, &validated.params)
+}
 ```
+
+Source: [`crates/ontographia-core/src/engine.rs`](https://github.com/edgesentry/ontographia/blob/main/crates/ontographia-core/src/engine.rs)
 
 ## Design principles
 
@@ -69,7 +71,7 @@ At runtime the public entry point is `Engine::build()`:
 
 Each adapter implements:
 
-```4:11:crates/ontographia-adapters/src/registry.rs
+```rust
 pub trait OntologyAdapter {
     fn name(&self) -> &'static str;
     fn detect(source: &[u8], path_hint: Option<&str>) -> bool;
@@ -79,6 +81,8 @@ pub trait OntologyAdapter {
     fn supported_extensions() -> &'static [&'static str];
 }
 ```
+
+Source: [`crates/ontographia-adapters/src/registry.rs`](https://github.com/edgesentry/ontographia/blob/main/crates/ontographia-adapters/src/registry.rs)
 
 Adapters **must** map their source format into COM. There is no alternate internal representation.
 
@@ -101,7 +105,7 @@ COM is the shared intermediate representation for all formats. JSON Schema: [`sc
 
 `Engine::intent_json_schema()` generates a JSON Schema for the `Intent` struct and **injects ontology-specific enums** for `class` and `relationship` fields so constrained decoding / tool schemas cannot invent schema names.
 
-```3:7:crates/ontographia-core/src/schema_gen.rs
+```rust
 pub fn intent_json_schema(ontology: &CanonicalOntology) -> serde_json::Value {
     let mut schema = serde_json::to_value(schemars::schema_for!(crate::intent::Intent))
         .expect("schema serialization");
@@ -109,6 +113,8 @@ pub fn intent_json_schema(ontology: &CanonicalOntology) -> serde_json::Value {
     schema
 }
 ```
+
+Source: [`crates/ontographia-core/src/schema_gen.rs`](https://github.com/edgesentry/ontographia/blob/main/crates/ontographia-core/src/schema_gen.rs)
 
 Intent extraction (LLM prompts, retries, repair) lives in the **application layer** — see [skills/ontographia-cypher-builder/SKILL.md](https://github.com/edgesentry/ontographia/blob/main/skills/ontographia-cypher-builder/SKILL.md) and [Neo4j walkthrough](end-to-end-neo4j.md). The core only defines the shape and validates instances.
 
