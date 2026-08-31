@@ -248,7 +248,7 @@ jobs:
         run: |
           uv python pin ${{ matrix.python-version }}
           uv sync --group dev
-          uv run --python "$(command -v python3)" maturin build --release --out dist
+          uv run maturin build --release --out dist
       - uses: actions/upload-artifact@v4
         with:
           name: python-wheels-${{ matrix.platform }}-${{ matrix.python-version }}
