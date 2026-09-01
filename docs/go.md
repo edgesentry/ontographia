@@ -11,7 +11,7 @@ Go bindings wrap the stable C ABI in `ontographia-ffi` via cgo. Use them when yo
 ### 1. Go module
 
 ```bash
-go get github.com/edgesentry/ontographia/bindings/go@v0.1.3
+go get github.com/edgesentry/ontographia/bindings/go@v0.1.4
 ```
 
 ### 2. FFI shared library
@@ -20,19 +20,19 @@ Pre-built libraries are attached to [GitHub Releases](https://github.com/edgesen
 
 | Archive | Platform |
 |---------|----------|
-| `libontographia_ffi-0.1.3-linux-x86_64.tar.gz` | Linux x86_64 |
-| `libontographia_ffi-0.1.3-linux-arm64.tar.gz` | Linux arm64 (aarch64) |
-| `libontographia_ffi-0.1.3-macos-arm64.tar.gz` | macOS Apple Silicon |
-| `libontographia_ffi-0.1.3-windows-x86_64.tar.gz` | Windows x86_64 |
+| `libontographia_ffi-0.1.4-linux-x86_64.tar.gz` | Linux x86_64 |
+| `libontographia_ffi-0.1.4-linux-arm64.tar.gz` | Linux arm64 (aarch64) |
+| `libontographia_ffi-0.1.4-macos-arm64.tar.gz` | macOS Apple Silicon |
+| `libontographia_ffi-0.1.4-windows-x86_64.tar.gz` | Windows x86_64 |
 
 Extract the archive and point the dynamic linker at the directory containing `libontographia_ffi.so` (or `.dylib` / `.dll`):
 
 ```bash
 # Linux (x86_64 or arm64)
-export LD_LIBRARY_PATH=/path/to/extracted/libontographia_ffi-0.1.3-*/
+export LD_LIBRARY_PATH=/path/to/extracted/libontographia_ffi-0.1.4-*/
 
 # macOS Apple Silicon
-export DYLD_LIBRARY_PATH=/path/to/extracted/libontographia_ffi-0.1.3-macos-arm64/
+export DYLD_LIBRARY_PATH=/path/to/extracted/libontographia_ffi-0.1.4-macos-arm64/
 ```
 
 ## Basic usage
