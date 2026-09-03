@@ -232,6 +232,7 @@ Mark business-key properties with `unique: true` in native ontology YAML (see [`
 
 ## Related docs
 
+- Related work (Text2Cypher / adaptive decoding): [related-work.md](related-work.md)
 - Neo4j walkthrough: [end-to-end-neo4j.md](end-to-end-neo4j.md)
 - Ontology ↔ graph alignment: [ontology-graph-alignment.md](ontology-graph-alignment.md)
 - Agent routing: [AGENTS.md](https://github.com/edgesentry/ontographia/blob/main/AGENTS.md)

@@ -10,3 +10,4 @@ __pycache__/
 *.pyd
 .DS_Store
 scripts/litellm/.env
+_inputs/
