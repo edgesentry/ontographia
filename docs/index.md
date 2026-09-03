@@ -72,6 +72,7 @@ Detection and routing: `crates/ontographia-adapters/src/registry.rs`.
 | Python bindings (PyO3) | [Python](python.md) |
 | Go bindings (cgo / FFI) | [Go](go.md) |
 | Pipeline, COM, validation, emitters | [Architecture](architecture.md) |
+| Related Text2Cypher / adaptive-decoding work | [Related work](related-work.md) |
 | Neo4j seed data + execute queries | [Neo4j walkthrough](end-to-end-neo4j.md) |
 | Ontology ↔ Neo4j schema alignment | [Ontology & graph alignment](ontology-graph-alignment.md) |
 | Local LLM via LiteLLM proxy | [LiteLLM (local)](litellm-local.md) |

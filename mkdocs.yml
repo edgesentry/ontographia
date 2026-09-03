@@ -54,6 +54,7 @@ nav:
     - Python: python.md
     - Go: go.md
   - Architecture: architecture.md
+  - Related work: related-work.md
   - Neo4j walkthrough: end-to-end-neo4j.md
   - Ontology & graph alignment: ontology-graph-alignment.md
   - Repository layout: repository-layout.md
