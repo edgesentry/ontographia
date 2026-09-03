@@ -11,3 +11,5 @@ __pycache__/
 .DS_Store
 scripts/litellm/.env
 _inputs/
+_plan
+examples/llm/eval/out/
