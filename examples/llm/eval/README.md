@@ -1,57 +1,42 @@
-# Track A evaluation (Issue #49 / #50)
+# Intent-layer evaluation harness
 
-Reproducible stress test for the failure mode called out in colleague feedback and [related-work](../../../docs/related-work.md): on a **large ontology**, an Intent can use a **plausible but wrong** property, still pass ontology validation / `Engine::build`, and never look like a hard error.
+Offline experiments under `examples/llm/eval/`. Published summaries: [docs/evaluation.md](../../../docs/evaluation.md).
 
-This harness does **not** require a live LLM for the core demonstration. It:
+## Track A — distractor ontology stress test (Issues #49 / #50)
 
-1. Builds `small` / `mid` (~200 props) / `large` (~2000 props) ontologies from [`manufacturing.native.yaml`](../../manufacturing.native.yaml) plus near-duplicate + `CustomField_*` distractors
-2. Runs ≥40 gold Intents (compile should succeed on all sizes)
-3. Corrupts each gold Intent to a near-duplicate property (`name` → `PlantName`, `sku` → `SKU`, …)
-4. Shows those **silent-wrong** Intents **fail** on `small` (distractor absent) but **compile on mid/large**
-5. Estimates full-schema prompt size via `build_initial_user_message` (chars/4 ≈ tokens)
-
-## Run
-
-From repo root (needs `uv run maturin develop` / installed `ontographia`):
+Reproduces silent wrong-field selection on large schemas **without a live LLM**.
 
 ```bash
-uv run python examples/llm/eval/run_track_a.py
 uv run python examples/llm/eval/run_track_a.py --record
-uv run python examples/llm/eval/run_track_a.py --profiles large --json-out examples/llm/eval/out/track_a.json
-uv run python examples/llm/eval/run_track_a.py --write-ontologies
 ```
 
-## Recording results
+Details: baselines in [`baselines/track_a_full_schema.md`](baselines/track_a_full_schema.md).
+
+## Track B — HF Text2Cypher schema → Ontographia (Issues #52 / #53)
+
+External validity for **schema conversion** using [neo4j/text2cypher-2025v1](https://huggingface.co/datasets/neo4j/text2cypher-2025v1) demo-DB rows (`Node properties` format).
+
+Measures convert/load success and whether gold Cypher labels/rels/properties appear in the converted ontology (not Intent generation quality; no Neo4j execution in this arm).
+
+```bash
+uv run --with datasets python examples/llm/eval/run_track_b.py --record
+uv run --with datasets python examples/llm/eval/run_track_b.py --record --write-ontologies
+```
+
+Requires ephemeral `datasets` (not a core package dependency). Check the HF dataset card for license before redistributing rows.
+
+Baselines: [`baselines/track_b_schema_convert.md`](baselines/track_b_schema_convert.md).
+
+Converter module: [`schema_convert.py`](schema_convert.py) (also best-effort JSON introspect; unsupported formats raise).
+
+## Artifacts
 
 | Path | Purpose |
 |------|---------|
-| [`baselines/track_a_full_schema.md`](baselines/track_a_full_schema.md) | Human-readable latest baseline (commit this) |
-| [`baselines/track_a_full_schema.json`](baselines/track_a_full_schema.json) | Machine-readable latest + meta (`git_rev`, timestamp) |
-| `baselines/track_a_full_schema_YYYYMMDDTHHMMSSZ.json` | Timestamped snapshot from `--record` |
-| `out/` | Scratch only (gitignored) |
+| `baselines/*.md` / `*.json` | Commit-friendly latest results |
+| `out/` | Scratch (gitignored) |
 
-```bash
-uv run python examples/llm/eval/run_track_a.py --record
-git add examples/llm/eval/baselines/
-```
+## Related issues
 
-## Reading the table
-
-| Column | Meaning |
-|--------|---------|
-| `props` | Property count in ontology |
-| `gold_ok` | Gold Intents that compile |
-| `wrong_ok` | Silent-wrong Intents that still compile |
-| `wrong_fail` | Silent-wrong rejected (expected on `small`) |
-| `prop_hit` | Mean Property Hit of wrong vs gold (should be below 1.0) |
-| `tok_p50` | Approx prompt tokens for full-schema user message |
-
-## Published docs
-
-Canonical write-up of this baseline: [docs/evaluation.md](../../../docs/evaluation.md).
-
-## Relation to GitHub issues
-
-- [#49](https://github.com/edgesentry/ontographia/issues/49) harness
-- [#50](https://github.com/edgesentry/ontographia/issues/50) full-schema baseline (this run)
-- [#51](https://github.com/edgesentry/ontographia/issues/51) later: add subset / fallback arms after [#45](https://github.com/edgesentry/ontographia/issues/45)
+- Track A: [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), later [#51](https://github.com/edgesentry/ontographia/issues/51)
+- Track B: [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53)
