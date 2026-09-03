@@ -16,8 +16,23 @@ From repo root (needs `uv run maturin develop` / installed `ontographia`):
 
 ```bash
 uv run python examples/llm/eval/run_track_a.py
+uv run python examples/llm/eval/run_track_a.py --record
 uv run python examples/llm/eval/run_track_a.py --profiles large --json-out examples/llm/eval/out/track_a.json
 uv run python examples/llm/eval/run_track_a.py --write-ontologies
+```
+
+## Recording results
+
+| Path | Purpose |
+|------|---------|
+| [`baselines/track_a_full_schema.md`](baselines/track_a_full_schema.md) | Human-readable latest baseline (commit this) |
+| [`baselines/track_a_full_schema.json`](baselines/track_a_full_schema.json) | Machine-readable latest + meta (`git_rev`, timestamp) |
+| `baselines/track_a_full_schema_YYYYMMDDTHHMMSSZ.json` | Timestamped snapshot from `--record` |
+| `out/` | Scratch only (gitignored) |
+
+```bash
+uv run python examples/llm/eval/run_track_a.py --record
+git add examples/llm/eval/baselines/
 ```
 
 ## Reading the table
