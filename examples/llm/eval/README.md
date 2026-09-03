@@ -46,6 +46,10 @@ git add examples/llm/eval/baselines/
 | `prop_hit` | Mean Property Hit of wrong vs gold (should be below 1.0) |
 | `tok_p50` | Approx prompt tokens for full-schema user message |
 
+## Published docs
+
+Canonical write-up of this baseline: [docs/evaluation.md](../../../docs/evaluation.md).
+
 ## Relation to GitHub issues
 
 - [#49](https://github.com/edgesentry/ontographia/issues/49) harness

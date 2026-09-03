@@ -16,3 +16,5 @@ Pipeline and design principles: [Architecture](architecture.md).
 - **Schema filtering & Cypher refinement** assume the LLM produces Cypher and mitigate failure modes around that choice (smaller schema in the prompt; check/fix the query afterward).
 - **Difficulty-adaptive decoding** (DSC, input-adaptive allocation) assume expensive multi-sample or multi-verifier loops and ask *when* to spend that compute. The Text2Cypher iterative-refinement post cites both as motivation to skip verification on simple queries.
 - **Ontographia** keeps the LLM on schema-constrained **Intent JSON**, uses the ontology as the source of truth for names and structure, binds filter values as parameters, and compiles via a controlled AST. Syntax and injection risk leave the model’s job; remaining hard problems (wrong field among many plausible ones) sit in Intent generation — where schema filtering, Intent-level refinement, and difficulty-adaptive spend are natural next steps, not Cypher rewriting.
+
+Measured stress-test baseline (silent wrong fields still compile on large ontologies): [Evaluation — Track A](evaluation.md#track-a--distractor-ontology-stress-test).

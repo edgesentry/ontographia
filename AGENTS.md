@@ -21,6 +21,7 @@ Ontographia converts **ontology definitions** + **Intent JSON** into **determini
 | Rust / Python / Go usage | [docs/rust.md](docs/rust.md), [docs/python.md](docs/python.md), [docs/go.md](docs/go.md) |
 | Architecture (pipeline, COM, Intent, AST, emitters) | [docs/architecture.md](docs/architecture.md) |
 | Related work (Text2Cypher / adaptive decoding) | [docs/related-work.md](docs/related-work.md) |
+| Intent-layer evaluation baselines | [docs/evaluation.md](docs/evaluation.md) |
 | Graph schema DDL + offline catalog diff | [docs/architecture.md](docs/architecture.md) (Graph schema governance), [docs/ontology-graph-alignment.md](docs/ontology-graph-alignment.md) |
 | Neo4j setup, seed data, execution | [docs/end-to-end-neo4j.md](docs/end-to-end-neo4j.md) |
 | LLM / agent Intent extraction | [skills/ontographia-cypher-builder/SKILL.md](skills/ontographia-cypher-builder/SKILL.md) |
