@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "recorded_at": "2026-09-03T11:20:01Z",
+    "git_rev": "bfe7336",
+    "profiles": [
+      "small",
+      "mid",
+      "large"
+    ],
+    "condition": "full_schema",
+    "harness": "examples/llm/eval/run_track_a.py"
+  },
+  "results": [
+    {
+      "profile": "small",
+      "ontology": {
+        "profile_name": "small",
+        "properties": 16,
+        "distractor_properties": 0,
+        "distractor_classes": 0,
+        "near_duplicates": 0
+      },
+      "n_gold": 40,
+      "gold_compile_ok": 40,
+      "gold_compile_fail": 0,
+      "silent_wrong_compile_ok": 0,
+      "silent_wrong_compile_fail": 40,
+      "silent_wrong_skipped": 0,
+      "silent_wrong_property_hit_mean": 0.5,
+      "silent_wrong_prop_f1_mean": 0.5,
+      "prompt_chars_p50": 5436,
+      "prompt_approx_tokens_p50": 1359,
+      "prompt_approx_tokens_max": 1359
+    },
+    {
+      "profile": "mid",
+      "ontology": {
+        "profile_name": "mid",
+        "properties": 200,
+        "distractor_properties": 184,
+        "distractor_classes": 7,
+        "near_duplicates": 32
+      },
+      "n_gold": 40,
+      "gold_compile_ok": 40,
+      "gold_compile_fail": 0,
+      "silent_wrong_compile_ok": 40,
+      "silent_wrong_compile_fail": 0,
+      "silent_wrong_skipped": 0,
+      "silent_wrong_property_hit_mean": 0.5,
+      "silent_wrong_prop_f1_mean": 0.5,
+      "prompt_chars_p50": 9839,
+      "prompt_approx_tokens_p50": 2460,
+      "prompt_approx_tokens_max": 2460
+    },
+    {
+      "profile": "large",
+      "ontology": {
+        "profile_name": "large",
+        "properties": 2000,
+        "distractor_properties": 1984,
+        "distractor_classes": 7,
+        "near_duplicates": 32
+      },
+      "n_gold": 40,
+      "gold_compile_ok": 40,
+      "gold_compile_fail": 0,
+      "silent_wrong_compile_ok": 40,
+      "silent_wrong_compile_fail": 0,
+      "silent_wrong_skipped": 0,
+      "silent_wrong_property_hit_mean": 0.5,
+      "silent_wrong_prop_f1_mean": 0.5,
+      "prompt_chars_p50": 54839,
+      "prompt_approx_tokens_p50": 13710,
+      "prompt_approx_tokens_max": 13710
+    }
+  ]
+}

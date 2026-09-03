@@ -11,3 +11,6 @@ __pycache__/
 .DS_Store
 scripts/litellm/.env
 _inputs/
+_plan
+examples/llm/eval/out/
+examples/llm/eval/baselines/track_a_full_schema_2*.json
