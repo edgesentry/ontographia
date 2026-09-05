@@ -270,7 +270,7 @@ jobs:
           mkdir -p release-files
           find dist -type f \( -name '*.tar.gz' -o -name '*.whl' \) -exec cp {} release-files/ \;
       - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           files: release-files/*
