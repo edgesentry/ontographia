@@ -129,7 +129,7 @@ jobs:
             cp "target/${{ matrix.target }}/release/ontographia" "dist/${NAME}/"
           fi
           tar -czf "dist/${NAME}.tar.gz" -C dist "${NAME}"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: cli-${{ matrix.artifact }}
           path: dist/*.tar.gz
@@ -180,7 +180,7 @@ jobs:
           mkdir -p "dist/${NAME}"
           cp "target/${{ matrix.target }}/release/${{ matrix.lib }}" "dist/${NAME}/"
           tar -czf "dist/${NAME}.tar.gz" -C dist "${NAME}"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ffi-${{ matrix.artifact }}
           path: dist/*.tar.gz
@@ -249,7 +249,7 @@ jobs:
           uv python pin ${{ matrix.python-version }}
           uv sync --group dev
           uv run maturin build --release --out dist
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: python-wheels-${{ matrix.platform }}-${{ matrix.python-version }}
           path: dist/*.whl
