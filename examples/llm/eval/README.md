@@ -33,7 +33,7 @@ uv run python examples/llm/eval/run_track_a_h2.py --record
 uv run python examples/llm/eval/test_exec_feedback.py
 ```
 
-Baselines: [`baselines/track_a_h2.md`](baselines/track_a_h2.md). Summary: [docs/evaluation.md](../../../docs/evaluation.md#h2-study--execution-feedback-intent-refine).
+Baselines: [`baselines/track_a_h2.md`](baselines/track_a_h2.md). Summary: [docs/evaluation.md](../../../docs/evaluation.md#h2-study-execution-feedback-intent-refine).
 
 ## Track B — HF Text2Cypher schema → Ontographia (Issues #52 / #53)
 
