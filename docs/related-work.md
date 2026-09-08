@@ -1,6 +1,6 @@
 # Related work
 
-Adjacent research improves **LLM → Cypher** (or general LLM decoding) along two axes Ontographia cares about: **what context the model sees**, and **how much / how often to verify and resample**. Ontographia shares the end goal (safe, accurate Cypher) but places the LLM one layer earlier.
+Adjacent research improves **LLM → Cypher** (or general LLM decoding) along two axes Ontographia cares about: **what context the model sees**, and **how much / how often to verify and resample**. Ontographia shares the end goal (safe, accurate Cypher) but places the LLM one layer earlier. Subsetting, retries, and execution feedback therefore ship in the **app / agent layer** ([`examples/llm/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/)), not in Cypher emitters — see [Architecture — outside the core](architecture.md#what-is-intentionally-outside-the-core).
 
 Pipeline and design principles: [Architecture](architecture.md).
 
