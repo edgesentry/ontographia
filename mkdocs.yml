@@ -30,6 +30,11 @@ theme:
 plugins:
   - search
 
+validation:
+  links:
+    # Fail `mkdocs build --strict` on broken heading anchors (e.g. em-dash slug mistakes).
+    anchors: warn
+
 extra_javascript:
   - https://unpkg.com/mermaid@10/dist/mermaid.min.js
   - javascripts/mermaid.js
