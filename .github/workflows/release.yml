@@ -261,7 +261,7 @@ jobs:
     env:
       RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
@@ -345,7 +345,7 @@ jobs:
     runs-on: ubuntu-latest
     if: vars.PUBLISH_TO_REGISTRIES == 'true'
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           pattern: python-wheels-*
           path: dist
