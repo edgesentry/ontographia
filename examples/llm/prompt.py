@@ -109,6 +109,12 @@ def build_correction_message(
     previous_intent: dict[str, Any],
     error: str,
 ) -> str:
+    if error.startswith("Neo4j execution feedback"):
+        return (
+            f"{error}\n\n"
+            f"Previous Intent JSON:\n{json.dumps(previous_intent, indent=2)}\n\n"
+            "Return a corrected Intent JSON only. Do not output Cypher."
+        )
     example = pick_example_intent(user_question)
     return (
         "Your previous Intent JSON failed validation.\n"
