@@ -32,8 +32,39 @@ uv run python examples/llm/eval/run_track_a.py --record
 
 Updates [`examples/llm/eval/baselines/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/eval/baselines). After regenerating, sync the table above if numbers change.
 
+## Track B — public Text2Cypher schemas
+
+**Question:** Can Neo4j Text2Cypher **schema text** from public demo databases be converted into a loadable Ontographia ontology, and does that ontology cover tokens used in gold Cypher?
+
+**Harness:** [`examples/llm/eval/run_track_b.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_b.py) + [`schema_convert.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/schema_convert.py).
+
+Dataset: [neo4j/text2cypher-2025v1](https://huggingface.co/datasets/neo4j/text2cypher-2025v1) `test` split, rows with a `database_reference_alias` and schema starting with `Node properties` (15 neo4jlabs demo DBs). This arm does **not** score Intent generation or execute Cypher against Neo4j.
+
+### Schema-convert baseline
+
+Recorded `2026-09-03T11:29:09Z` (git `9b3c7cf`). Machine-readable: [`examples/llm/eval/baselines/track_b_schema_convert.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_schema_convert.json).
+
+| metric | value |
+|--------|------:|
+| demo DBs converted | 15 / 15 |
+| Engine.load OK | 15 / 15 |
+| questions scored (≤15 per DB) | 211 |
+| mean label coverage (gold Cypher ∩ ontology) | 0.96 |
+| mean relationship coverage | 1.00 |
+| mean property coverage | 0.81 |
+
+**Reading:** Conversion is reliable for the demo `Node properties` format. Relationship coverage is high because patterns are explicit in the schema text. Property gaps (~19%) often come from Cypher using properties omitted from the schema snippet, or from heuristic token extraction noise. JSON introspect / free-text schemas are unsupported or best-effort only.
+
+### Reproduce / refresh
+
+```bash
+uv run --with datasets python examples/llm/eval/run_track_b.py --record
+```
+
+Check the Hugging Face dataset card for license before redistributing samples.
+
 ## Related
 
 - [Related work](related-work.md)
 - [Architecture](architecture.md)
-- Issues [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50)
+- Issues [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53)

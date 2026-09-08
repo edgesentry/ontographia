@@ -1,0 +1,192 @@
+{
+  "meta": {
+    "recorded_at": "2026-09-03T11:29:09Z",
+    "git_rev": "9b3c7cf",
+    "dataset": "neo4j/text2cypher-2025v1",
+    "split": "test",
+    "limit_per_ref": 15,
+    "refs_filter": null,
+    "harness": "examples/llm/eval/run_track_b.py",
+    "license_note": "Dataset neo4j/text2cypher-2025v1 \u2014 check HF card before redistribution"
+  },
+  "summary": {
+    "n_rows": 211,
+    "n_refs": 15,
+    "convert_ok": 15,
+    "convert_fail": 0,
+    "engine_load_ok": 15,
+    "engine_load_fail": 0,
+    "coverage_rows": 211,
+    "coverage_skipped": 0,
+    "label_coverage_mean": 0.9586,
+    "rel_coverage_mean": 1.0,
+    "prop_coverage_mean": 0.8132,
+    "per_ref": [
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_bluesky",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 1,
+        "n_relationships": 1,
+        "n_properties": 7,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_bluesky.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_buzzoverflow",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 3,
+        "n_relationships": 2,
+        "n_properties": 16,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_buzzoverflow.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_eoflix",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 13,
+        "n_relationships": 27,
+        "n_properties": 76,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_eoflix.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_fincen",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 3,
+        "n_relationships": 5,
+        "n_properties": 32,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_fincen.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_gameofthrones",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 1,
+        "n_relationships": 5,
+        "n_properties": 10,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_gameofthrones.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_grandstack",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 4,
+        "n_relationships": 3,
+        "n_properties": 13,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_grandstack.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_movies",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 2,
+        "n_relationships": 6,
+        "n_properties": 6,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_movies.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_network",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 17,
+        "n_relationships": 42,
+        "n_properties": 41,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_network.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_northwind",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 5,
+        "n_relationships": 4,
+        "n_properties": 51,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_northwind.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_offshoreleaks",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 5,
+        "n_relationships": 26,
+        "n_properties": 75,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_offshoreleaks.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_openstreetmap",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 10,
+        "n_relationships": 33,
+        "n_properties": 0,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_openstreetmap.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_recommendations",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 6,
+        "n_relationships": 8,
+        "n_properties": 46,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_recommendations.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_stackoverflow2",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 5,
+        "n_relationships": 6,
+        "n_properties": 0,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_stackoverflow2.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_twitch",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 5,
+        "n_relationships": 13,
+        "n_properties": 13,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_twitch.native.yaml",
+        "engine_load_ok": true
+      },
+      {
+        "database_reference_alias": "neo4jlabs_demo_db_twitter",
+        "convert_ok": true,
+        "format": "node_properties",
+        "n_classes": 6,
+        "n_relationships": 18,
+        "n_properties": 0,
+        "warnings": [],
+        "ontology_path": "/Users/yoheionishi/work/ontographia/examples/llm/eval/out/track_b/neo4jlabs_demo_db_twitter.native.yaml",
+        "engine_load_ok": true
+      }
+    ]
+  }
+}
