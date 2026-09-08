@@ -2,7 +2,7 @@
 
 - Recorded: `2026-09-08T14:42:52Z`
 - Git: `c8d8a05`
-- Model: `ontographia-gemini`
+- Model: `ontographia-gemini` → upstream **Gemini 3.7 Flash** (`gemini-3.7-flash`)
 - Base URL: `http://127.0.0.1:4000/v1`
 - Harness: `examples/llm/eval/run_track_a_h1_live.py`
 - Profiles: mid, large

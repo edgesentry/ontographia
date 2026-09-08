@@ -18,7 +18,9 @@
     "skip_exec": false,
     "repair_mapping_path": "examples/llm/mappings/movies.repair.yaml",
     "selection": "HF neo4j/text2cypher-2025v1 test; Node properties only; refs=['neo4jlabs_demo_db_movies', 'neo4jlabs_demo_db_recommendations']; stratified sample n=60 seed=53",
-    "license_note": "Dataset neo4j/text2cypher-2025v1 \u2014 check HF card before redistribution"
+    "license_note": "Dataset neo4j/text2cypher-2025v1 \u2014 check HF card before redistribution",
+    "upstream_model": "gemini-3.7-flash",
+    "model_note": "LiteLLM alias ontographia-gemini \u2192 gemini/gemini-3.7-flash"
   },
   "results": {
     "summary": {

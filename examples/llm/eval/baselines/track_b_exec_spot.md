@@ -2,7 +2,7 @@
 
 - Recorded: `2026-09-08T15:10:33Z`
 - Git: `5965059`
-- Model: `ontographia-gemini`
+- Model: `ontographia-gemini` → upstream **Gemini 3.7 Flash** (`gemini-3.7-flash`)
 - Refs: neo4jlabs_demo_db_movies, neo4jlabs_demo_db_recommendations
 - N: 60 (seed=53)
 - URI: `neo4j+s://demo.neo4jlabs.com`

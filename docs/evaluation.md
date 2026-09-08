@@ -54,7 +54,7 @@ Recorded in [`examples/llm/eval/baselines/track_a_h1.json`](https://github.com/e
 
 **Question:** Do the H1 gains hold with a real OpenAI-compatible LLM (not a mechanical inducer)?
 
-**Harness:** [`examples/llm/eval/run_track_a_h1_live.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h1_live.py). Recorded `2026-09-08T14:42:52Z` via LiteLLM alias `ontographia-gemini` (Gemini 3.7 Flash), `temperature=0`, 40 gold × mid/large × three policies. Machine-readable: [`examples/llm/eval/baselines/track_a_h1_live.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live.json).
+**Harness:** [`examples/llm/eval/run_track_a_h1_live.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h1_live.py). Recorded `2026-09-08T14:42:52Z` via LiteLLM alias `ontographia-gemini` → upstream **Gemini 3.7 Flash** (`gemini-3.7-flash`), `temperature=0`, 40 gold × mid/large × three policies. Machine-readable: [`examples/llm/eval/baselines/track_a_h1_live.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live.json).
 
 | profile | condition | Property Hit | compile OK | near-dup picks | invent-without-seeing | fallback | ≈tok p95 |
 |---------|-----------|-------------:|-----------:|---------------:|----------------------:|---------:|---------:|
@@ -156,7 +156,7 @@ Recorded `2026-09-03T11:29:09Z` (git `9b3c7cf`). Machine-readable: [`examples/ll
 
 **Question:** On public demo DBs, can Question → LLM Intent → `Engine.build` → Neo4j rows match gold Cypher execution?
 
-**Harness:** [`examples/llm/eval/run_track_b_exec.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_b_exec.py). Recorded `2026-09-08T15:10:33Z` (LiteLLM `ontographia-gemini`), n=60 (seed=53) on `movies` + `recommendations` via `neo4j+s://demo.neo4jlabs.com`. HF gold Cypher literal `\n` sequences are normalized; write golds are skipped. Baseline: [`track_b_exec_spot.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_exec_spot.md).
+**Harness:** [`examples/llm/eval/run_track_b_exec.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_b_exec.py). Recorded `2026-09-08T15:10:33Z` (LiteLLM `ontographia-gemini` → **Gemini 3.7 Flash** / `gemini-3.7-flash`), n=60 (seed=53) on `movies` + `recommendations` via `neo4j+s://demo.neo4jlabs.com`. HF gold Cypher literal `\n` sequences are normalized; write golds are skipped. Baseline: [`track_b_exec_spot.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_exec_spot.md).
 
 | metric | value |
 |--------|------:|
