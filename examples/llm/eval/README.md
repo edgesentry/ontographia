@@ -5,12 +5,14 @@ Offline experiments under `examples/llm/eval/`. Published summaries: [docs/evalu
 ## Track A — distractor ontology stress test (Issues #49 / #50)
 
 Reproduces silent wrong-field selection on large schemas **without a live LLM**.
+Also reports exact-match **subset** prompt size (`tok_sub`, issue [#45](https://github.com/edgesentry/ontographia/issues/45)).
 
 ```bash
 uv run python examples/llm/eval/run_track_a.py --record
+uv run python examples/llm/eval/test_subset.py
 ```
 
-Details: baselines in [`baselines/track_a_full_schema.md`](baselines/track_a_full_schema.md).
+Details: baselines in [`baselines/track_a_full_schema.md`](baselines/track_a_full_schema.md). Subset helper: [`../subset.py`](../subset.py).
 
 ## Track B — HF Text2Cypher schema → Ontographia (Issues #52 / #53)
 
@@ -39,4 +41,5 @@ Converter module: [`schema_convert.py`](schema_convert.py) (also best-effort JSO
 ## Related issues
 
 - Track A: [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), later [#51](https://github.com/edgesentry/ontographia/issues/51)
+- Subset prompts: [#45](https://github.com/edgesentry/ontographia/issues/45)
 - Track B: [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53)

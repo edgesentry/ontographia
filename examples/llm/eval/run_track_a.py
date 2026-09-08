@@ -36,6 +36,7 @@ from llm.eval.distractor import (  # noqa: E402
 from llm.eval.gold import build_gold_cases, make_silent_wrong_intent  # noqa: E402
 from llm.eval.metrics import approx_tokens, intent_soft_f1, property_hit  # noqa: E402
 from llm.prompt import build_initial_user_message  # noqa: E402
+from llm.subset import prompt_views_for_question  # noqa: E402
 
 
 def _mean(xs: list[float]) -> float:
@@ -59,9 +60,9 @@ def _git_rev() -> str | None:
 
 def format_results_table(results: list[dict[str, Any]]) -> str:
     lines = [
-        "Track A stress test (full-schema prompt + compile)",
+        "Track A stress test (full-schema compile + prompt size vs subset)",
         f"{'profile':<8} {'props':>7} {'gold_ok':>8} {'wrong_ok':>8} "
-        f"{'wrong_fail':>10} {'prop_hit':>8} {'tok_p50':>8}",
+        f"{'wrong_fail':>10} {'prop_hit':>8} {'tok_full':>8} {'tok_sub':>8}",
     ]
     for row in results:
         lines.append(
@@ -69,7 +70,8 @@ def format_results_table(results: list[dict[str, Any]]) -> str:
             f"{row['gold_compile_ok']:>8} {row['silent_wrong_compile_ok']:>8} "
             f"{row['silent_wrong_compile_fail']:>10} "
             f"{row['silent_wrong_property_hit_mean']:>8.2f} "
-            f"{row['prompt_approx_tokens_p50']:>8}"
+            f"{row['prompt_approx_tokens_p50']:>8} "
+            f"{row['prompt_approx_tokens_subset_p50']:>8}"
         )
     return "\n".join(lines)
 
@@ -107,6 +109,9 @@ def write_baseline(payload: dict[str, Any], results: list[dict[str, Any]]) -> tu
             "On mid/large, `silent_wrong_compile_ok ≈ gold_ok` means `Engine::build` "
             "accepts plausible wrong fields (Kervin failure mode). "
             "On small, `wrong_fail` should be high because distractors are absent.",
+            "",
+            "`tok_sub` is exact-match ontology subset prompts (issue #45); "
+            "it should be much smaller than `tok_full` on mid/large.",
             "",
             "Machine-readable copy: [`track_a_full_schema.json`](track_a_full_schema.json).",
             "",
@@ -164,10 +169,23 @@ def run_profile(profile: str, *, sample_prompt_n: int = 5) -> dict[str, Any]:
 
     prompt_token_samples: list[int] = []
     prompt_char_samples: list[int] = []
+    subset_token_samples: list[int] = []
+    subset_empty = 0
     for case in gold_cases[:sample_prompt_n]:
         msg = build_initial_user_message(case.question, schema, ontology=ontology)
         prompt_char_samples.append(len(msg))
         prompt_token_samples.append(approx_tokens(msg))
+        sub_schema, sub_ont, subset = prompt_views_for_question(
+            case.question, schema, ontology
+        )
+        if subset.empty:
+            subset_empty += 1
+            subset_token_samples.append(approx_tokens(msg))
+        else:
+            sub_msg = build_initial_user_message(
+                case.question, sub_schema, ontology=sub_ont
+            )
+            subset_token_samples.append(approx_tokens(sub_msg))
 
     return {
         "profile": profile,
@@ -183,6 +201,9 @@ def run_profile(profile: str, *, sample_prompt_n: int = 5) -> dict[str, Any]:
         "prompt_chars_p50": int(statistics.median(prompt_char_samples)),
         "prompt_approx_tokens_p50": int(statistics.median(prompt_token_samples)),
         "prompt_approx_tokens_max": max(prompt_token_samples) if prompt_token_samples else 0,
+        "prompt_approx_tokens_subset_p50": int(statistics.median(subset_token_samples)),
+        "prompt_subset_empty_in_sample": subset_empty,
+        "prompt_sample_n": sample_prompt_n,
     }
 
 
@@ -228,7 +249,7 @@ def main() -> int:
             "recorded_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "git_rev": _git_rev(),
             "profiles": profiles,
-            "condition": "full_schema",
+            "condition": "full_schema_compile_plus_subset_prompt_size",
             "harness": "examples/llm/eval/run_track_a.py",
         },
         "results": results,
@@ -240,7 +261,8 @@ def main() -> int:
     print(
         "Interpretation: on mid/large, silent_wrong_compile_ok ≈ gold_ok means "
         "Engine::build accepts plausible wrong fields (Kervin failure mode). "
-        "On small, wrong_fail should be high because distractors are absent."
+        "On small, wrong_fail should be high because distractors are absent. "
+        "tok_sub is exact-match subset prompts (issue #45) and should shrink vs tok_full."
     )
 
     if args.record:
