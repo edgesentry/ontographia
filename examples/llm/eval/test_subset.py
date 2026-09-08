@@ -169,6 +169,160 @@ def test_pipeline_fallback_to_full() -> None:
     _assert(outcome.schema_mode == "full", outcome.schema_mode)
     _assert(extractor.modes == ["subset", "full"], extractor.modes)
     _assert(outcome.intent["start"]["class"] == "Line", outcome.intent)
+    _assert(outcome.llm_calls == 2, f"expected 2 llm calls, got {outcome.llm_calls}")
+    _assert(outcome.phases_tried == ("subset", "full"), outcome.phases_tried)
+
+
+def test_adaptive_success_skips_full_and_limits_retries() -> None:
+    """Easy path: subset succeeds on first call → no full schema, 1 LLM call (#47)."""
+    import ontographia
+
+    engine = ontographia.Engine.load(str(EXAMPLES / "manufacturing.native.yaml"))
+    schema = engine.intent_json_schema()
+    ontology = engine.ontology_json()
+    case = next(c for c in build_gold_cases() if c.id == "line_plant_00")
+
+    class CountingExtractor:
+        def __init__(self) -> None:
+            self.calls = 0
+            self.modes: list[str] = []
+
+        def extract(
+            self,
+            user_question: str,
+            intent_json_schema: dict[str, Any],
+            *,
+            ontology: dict[str, Any] | None = None,
+        ) -> dict[str, Any]:
+            del user_question, ontology
+            self.calls += 1
+            enums = (
+                intent_json_schema.get("$defs", {})
+                .get("NodeRef", {})
+                .get("properties", {})
+                .get("class", {})
+                .get("enum")
+                or []
+            )
+            mode = "subset" if len(enums) < 5 else "full"
+            self.modes.append(mode)
+            return copy.deepcopy(case.intent)
+
+        def extract_correction(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
+            del args, kwargs
+            raise AssertionError("correction should not run on easy success path")
+
+    extractor = CountingExtractor()
+    outcome = extract_validated_intent(
+        engine,
+        extractor,
+        case.question,
+        schema,
+        ontology=ontology,
+        schema_policy="auto",
+        initial_retries=1,
+        escalated_retries=5,
+    )
+    _assert(not outcome.used_fallback, "easy success should not escalate")
+    _assert(outcome.schema_mode == "subset", outcome.schema_mode)
+    _assert(extractor.modes == ["subset"], extractor.modes)
+    _assert(extractor.calls == 1, extractor.calls)
+    _assert(outcome.llm_calls == 1, outcome.llm_calls)
+    _assert(outcome.phases_tried == ("subset",), outcome.phases_tried)
+
+
+def test_adaptive_escalate_uses_escalated_retry_budget() -> None:
+    """Hard path: subset fails with initial_retries=1, then full with escalated budget."""
+    import ontographia
+
+    engine = ontographia.Engine.load(str(EXAMPLES / "manufacturing.native.yaml"))
+    schema = engine.intent_json_schema()
+    ontology = engine.ontology_json()
+    case = next(c for c in build_gold_cases() if c.id == "line_plant_00")
+    good = case.intent
+
+    class EscalatingExtractor:
+        def __init__(self) -> None:
+            self.modes: list[str] = []
+            self.subset_attempts = 0
+            self.full_attempts = 0
+
+        def _mode(self, intent_json_schema: dict[str, Any]) -> str:
+            enums = (
+                intent_json_schema.get("$defs", {})
+                .get("NodeRef", {})
+                .get("properties", {})
+                .get("class", {})
+                .get("enum")
+                or []
+            )
+            return "subset" if len(enums) < 5 else "full"
+
+        def extract(
+            self,
+            user_question: str,
+            intent_json_schema: dict[str, Any],
+            *,
+            ontology: dict[str, Any] | None = None,
+        ) -> dict[str, Any]:
+            del user_question, ontology
+            mode = self._mode(intent_json_schema)
+            self.modes.append(mode)
+            if mode == "subset":
+                self.subset_attempts += 1
+                bad = copy.deepcopy(good)
+                bad["return"] = [
+                    {
+                        "alias": "plant",
+                        "property": "not_a_real_property",
+                        "as_name": "x",
+                    }
+                ]
+                return bad
+            self.full_attempts += 1
+            # Fail first full attempt so escalated_retries > 1 is exercised.
+            if self.full_attempts == 1:
+                bad = copy.deepcopy(good)
+                bad["return"] = [
+                    {
+                        "alias": "plant",
+                        "property": "still_wrong_property",
+                        "as_name": "x",
+                    }
+                ]
+                return bad
+            return copy.deepcopy(good)
+
+        def extract_correction(
+            self,
+            user_question: str,
+            intent_json_schema: dict[str, Any],
+            *,
+            ontology: dict[str, Any] | None = None,
+            previous_intent: dict[str, Any] | None = None,
+            error: str | None = None,
+        ) -> dict[str, Any]:
+            del previous_intent, error
+            return self.extract(user_question, intent_json_schema, ontology=ontology)
+
+    extractor = EscalatingExtractor()
+    outcome = extract_validated_intent(
+        engine,
+        extractor,
+        case.question,
+        schema,
+        ontology=ontology,
+        schema_policy="auto",
+        initial_retries=1,
+        escalated_retries=3,
+    )
+    _assert(outcome.used_fallback, "expected escalate to full")
+    _assert(outcome.schema_mode == "full", outcome.schema_mode)
+    _assert(extractor.subset_attempts == 1, extractor.subset_attempts)
+    _assert(extractor.full_attempts == 2, extractor.full_attempts)
+    # 1 subset + 2 full (extract + 1 correction) = 3
+    _assert(outcome.llm_calls == 3, outcome.llm_calls)
+    _assert(outcome.phases_tried == ("subset", "full"), outcome.phases_tried)
 
 
 def main() -> int:
@@ -178,6 +332,8 @@ def main() -> int:
         test_subset_excludes_distractors_and_shrinks_prompt,
         test_filter_schema_preserves_original,
         test_pipeline_fallback_to_full,
+        test_adaptive_success_skips_full_and_limits_retries,
+        test_adaptive_escalate_uses_escalated_retry_budget,
     ]
     failed = 0
     for fn in tests:

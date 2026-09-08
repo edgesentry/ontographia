@@ -1,0 +1,281 @@
+{
+  "meta": {
+    "recorded_at": "2026-09-08T13:28:37Z",
+    "git_rev": "cbcde8f",
+    "profiles": [
+      "small",
+      "mid",
+      "large"
+    ],
+    "conditions": [
+      "always_full_fixed",
+      "adaptive"
+    ],
+    "slices": [
+      "easy",
+      "hard"
+    ],
+    "study": "h3_adaptive_spend",
+    "issue": 54,
+    "feature_issue": 47,
+    "harness": "examples/llm/eval/run_track_a_h3.py",
+    "budgets": {
+      "always_full_retries": 5,
+      "adaptive_initial_retries": 1,
+      "adaptive_escalated_retries": 5
+    }
+  },
+  "verdict": {
+    "verdict": "support",
+    "reason": "on large/easy: tokens p95 \u2264 \u221230% vs always_full, LLM calls not higher, Compile/Property Hit not worse; hard slice escalates and recovers (mechanical arm)",
+    "criteria": {
+      "easy_token_p95_rel_change": -0.909,
+      "token_p95_reduction_threshold": -0.3,
+      "easy_property_hit_delta_pt": 0.0,
+      "easy_adaptive_mean_llm_calls": 1.0,
+      "easy_full_mean_llm_calls": 1.0,
+      "easy_calls_not_higher": true,
+      "easy_compile_not_worse": true,
+      "hard_escalation_rate": 1.0,
+      "hard_adaptive_compile_ok": 40,
+      "hard_escalate_recovers": true
+    },
+    "caveat": "Mechanical arm: mock extractors (gold on easy; subset-fail\u2192full-gold on hard). Measures #47 retry/schema budgeting, not live-LLM difficulty routing. Follow-up live LLM: issue #68."
+  },
+  "results": [
+    {
+      "profile": "small",
+      "ontology": {
+        "profile_name": "small",
+        "properties": 16,
+        "distractor_properties": 0,
+        "distractor_classes": 0,
+        "near_duplicates": 0
+      },
+      "slices": {
+        "easy": {
+          "always_full_fixed": {
+            "n": 40,
+            "property_hit_mean": 1.0,
+            "compile_ok": 40,
+            "compile_fail": 0,
+            "escalation_rate": 0.0,
+            "mean_llm_calls": 1.0,
+            "prompt_approx_tokens_final_p50": 1317,
+            "prompt_approx_tokens_final_p95": 1359,
+            "prompt_approx_tokens_total_p50": 1317,
+            "prompt_approx_tokens_total_p95": 1359,
+            "mean_wall_ms": 0.034,
+            "gold_structure_covered_rate": 1.0
+          },
+          "adaptive": {
+            "n": 40,
+            "property_hit_mean": 1.0,
+            "compile_ok": 40,
+            "compile_fail": 0,
+            "escalation_rate": 0.0,
+            "mean_llm_calls": 1.0,
+            "prompt_approx_tokens_final_p50": 1172,
+            "prompt_approx_tokens_final_p95": 1246,
+            "prompt_approx_tokens_total_p50": 1172,
+            "prompt_approx_tokens_total_p95": 1246,
+            "mean_wall_ms": 0.084,
+            "gold_structure_covered_rate": 1.0
+          }
+        },
+        "hard": {
+          "always_full_fixed": {
+            "n": 40,
+            "property_hit_mean": 1.0,
+            "compile_ok": 40,
+            "compile_fail": 0,
+            "escalation_rate": 0.0,
+            "mean_llm_calls": 1.0,
+            "prompt_approx_tokens_final_p50": 1317,
+            "prompt_approx_tokens_final_p95": 1359,
+            "prompt_approx_tokens_total_p50": 1317,
+            "prompt_approx_tokens_total_p95": 1359,
+            "mean_wall_ms": 0.03,
+            "gold_structure_covered_rate": 1.0
+          },
+          "adaptive": {
+            "n": 40,
+            "property_hit_mean": 1.0,
+            "compile_ok": 40,
+            "compile_fail": 0,
+            "escalation_rate": 1.0,
+            "mean_llm_calls": 2.0,
+            "prompt_approx_tokens_final_p50": 1317,
+            "prompt_approx_tokens_final_p95": 1359,
+            "prompt_approx_tokens_total_p50": 2489,
+            "prompt_approx_tokens_total_p95": 2605,
+            "mean_wall_ms": 0.116,
+            "gold_structure_covered_rate": 1.0
+          }
+        }
+      },
+      "deltas_easy_vs_full": {
+        "adaptive_minus_full_property_hit_pt": 0.0,
+        "adaptive_token_final_p95_rel_change": -0.0831,
+        "adaptive_mean_llm_calls_delta": 0.0,
+        "adaptive_compile_ok_delta": 0
+      }
+    },
+    {
+      "profile": "mid",
+      "ontology": {
+        "profile_name": "mid",
+        "properties": 200,
+        "distractor_properties": 184,
+        "distractor_classes": 7,
+        "near_duplicates": 32
+      },
+      "slices": {
+        "easy": {
+          "always_full_fixed": {
+            "n": 40,
+            "property_hit_mean": 1.0,
+            "compile_ok": 40,
+            "compile_fail": 0,
+            "escalation_rate": 0.0,
+            "mean_llm_calls": 1.0,
+            "prompt_approx_tokens_final_p50": 2417,
+            "prompt_approx_tokens_final_p95": 2460,
+            "prompt_approx_tokens_total_p50": 2417,
+            "prompt_approx_tokens_total_p95": 2460,
+            "mean_wall_ms": 0.03,
+            "gold_structure_covered_rate": 1.0
+          },
+          "adaptive": {
+            "n": 40,
+            "property_hit_mean": 1.0,
+            "compile_ok": 40,
+            "compile_fail": 0,
+            "escalation_rate": 0.0,
+            "mean_llm_calls": 1.0,
+            "prompt_approx_tokens_final_p50": 1174,
+            "prompt_approx_tokens_final_p95": 1247,
+            "prompt_approx_tokens_total_p50": 1174,
+            "prompt_approx_tokens_total_p95": 1247,
+            "mean_wall_ms": 0.097,
+            "gold_structure_covered_rate": 1.0
+          }
+        },
+        "hard": {
+          "always_full_fixed": {
+            "n": 40,
+            "property_hit_mean": 1.0,
+            "compile_ok": 40,
+            "compile_fail": 0,
+            "escalation_rate": 0.0,
+            "mean_llm_calls": 1.0,
+            "prompt_approx_tokens_final_p50": 2417,
+            "prompt_approx_tokens_final_p95": 2460,
+            "prompt_approx_tokens_total_p50": 2417,
+            "prompt_approx_tokens_total_p95": 2460,
+            "mean_wall_ms": 0.03,
+            "gold_structure_covered_rate": 1.0
+          },
+          "adaptive": {
+            "n": 40,
+            "property_hit_mean": 1.0,
+            "compile_ok": 40,
+            "compile_fail": 0,
+            "escalation_rate": 1.0,
+            "mean_llm_calls": 2.0,
+            "prompt_approx_tokens_final_p50": 2417,
+            "prompt_approx_tokens_final_p95": 2460,
+            "prompt_approx_tokens_total_p50": 3591,
+            "prompt_approx_tokens_total_p95": 3707,
+            "mean_wall_ms": 0.125,
+            "gold_structure_covered_rate": 1.0
+          }
+        }
+      },
+      "deltas_easy_vs_full": {
+        "adaptive_minus_full_property_hit_pt": 0.0,
+        "adaptive_token_final_p95_rel_change": -0.4931,
+        "adaptive_mean_llm_calls_delta": 0.0,
+        "adaptive_compile_ok_delta": 0
+      }
+    },
+    {
+      "profile": "large",
+      "ontology": {
+        "profile_name": "large",
+        "properties": 2000,
+        "distractor_properties": 1984,
+        "distractor_classes": 7,
+        "near_duplicates": 32
+      },
+      "slices": {
+        "easy": {
+          "always_full_fixed": {
+            "n": 40,
+            "property_hit_mean": 1.0,
+            "compile_ok": 40,
+            "compile_fail": 0,
+            "escalation_rate": 0.0,
+            "mean_llm_calls": 1.0,
+            "prompt_approx_tokens_final_p50": 13667,
+            "prompt_approx_tokens_final_p95": 13710,
+            "prompt_approx_tokens_total_p50": 13667,
+            "prompt_approx_tokens_total_p95": 13710,
+            "mean_wall_ms": 0.031,
+            "gold_structure_covered_rate": 1.0
+          },
+          "adaptive": {
+            "n": 40,
+            "property_hit_mean": 1.0,
+            "compile_ok": 40,
+            "compile_fail": 0,
+            "escalation_rate": 0.0,
+            "mean_llm_calls": 1.0,
+            "prompt_approx_tokens_final_p50": 1174,
+            "prompt_approx_tokens_final_p95": 1247,
+            "prompt_approx_tokens_total_p50": 1174,
+            "prompt_approx_tokens_total_p95": 1247,
+            "mean_wall_ms": 0.195,
+            "gold_structure_covered_rate": 1.0
+          }
+        },
+        "hard": {
+          "always_full_fixed": {
+            "n": 40,
+            "property_hit_mean": 1.0,
+            "compile_ok": 40,
+            "compile_fail": 0,
+            "escalation_rate": 0.0,
+            "mean_llm_calls": 1.0,
+            "prompt_approx_tokens_final_p50": 13667,
+            "prompt_approx_tokens_final_p95": 13710,
+            "prompt_approx_tokens_total_p50": 13667,
+            "prompt_approx_tokens_total_p95": 13710,
+            "mean_wall_ms": 0.031,
+            "gold_structure_covered_rate": 1.0
+          },
+          "adaptive": {
+            "n": 40,
+            "property_hit_mean": 1.0,
+            "compile_ok": 40,
+            "compile_fail": 0,
+            "escalation_rate": 1.0,
+            "mean_llm_calls": 2.0,
+            "prompt_approx_tokens_final_p50": 13667,
+            "prompt_approx_tokens_final_p95": 13710,
+            "prompt_approx_tokens_total_p50": 14841,
+            "prompt_approx_tokens_total_p95": 14957,
+            "mean_wall_ms": 0.216,
+            "gold_structure_covered_rate": 1.0
+          }
+        }
+      },
+      "deltas_easy_vs_full": {
+        "adaptive_minus_full_property_hit_pt": 0.0,
+        "adaptive_token_final_p95_rel_change": -0.909,
+        "adaptive_mean_llm_calls_delta": 0.0,
+        "adaptive_compile_ok_delta": 0
+      }
+    }
+  ]
+}

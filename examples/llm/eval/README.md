@@ -35,6 +35,17 @@ uv run python examples/llm/eval/test_exec_feedback.py
 
 Baselines: [`baselines/track_a_h2.md`](baselines/track_a_h2.md). Summary: [docs/evaluation.md](../../../docs/evaluation.md#h2-study-execution-feedback-intent-refine).
 
+## H3 — difficulty-adaptive spend (Issue #54)
+
+Mechanical cost/quality comparison: `always_full_fixed` vs subset-first adaptive escalate ([#47](https://github.com/edgesentry/ontographia/issues/47)).
+
+```bash
+uv run python examples/llm/eval/run_track_a_h3.py --record
+uv run python examples/llm/eval/test_subset.py
+```
+
+Baselines: [`baselines/track_a_h3.md`](baselines/track_a_h3.md). Summary: [docs/evaluation.md](../../../docs/evaluation.md#h3-study-difficulty-adaptive-spend).
+
 ## Track B — HF Text2Cypher schema → Ontographia (Issues #52 / #53)
 
 External validity for **schema conversion** using [neo4j/text2cypher-2025v1](https://huggingface.co/datasets/neo4j/text2cypher-2025v1) demo-DB rows (`Node properties` format).
@@ -64,4 +75,5 @@ Converter module: [`schema_convert.py`](schema_convert.py) (also best-effort JSO
 - Track A: [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51)
 - Subset prompts: [#45](https://github.com/edgesentry/ontographia/issues/45)
 - H2 exec feedback: [#46](https://github.com/edgesentry/ontographia/issues/46), [#55](https://github.com/edgesentry/ontographia/issues/55)
+- H3 adaptive spend: [#47](https://github.com/edgesentry/ontographia/issues/47), [#54](https://github.com/edgesentry/ontographia/issues/54)
 - Track B: [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53)

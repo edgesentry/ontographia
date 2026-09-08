@@ -71,12 +71,37 @@ Recorded in [`examples/llm/eval/baselines/track_a_h2.json`](https://github.com/e
 
 **Caveat:** Mechanical arm proves the loop recovers Empty@Valid when Intent correction succeeds. It does **not** measure live-LLM correction quality or Exec Match on a real Neo4j database.
 
+### H3 study — difficulty-adaptive spend
+
+**Question:** On easy questions, can subset-first extraction with a small retry budget cut prompt tokens vs always-full + fixed retries **without** hurting Compile Success / Property Hit? On hard questions, does escalation to full schema recover?
+
+**Harness:** [`examples/llm/eval/run_track_a_h3.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h3.py) (mechanical; mock extractors; no live LLM).
+
+**Method:** Compare `always_full_fixed` (full schema, `max_retries=5`) vs `adaptive` (subset-first, `initial_retries=1`, escalate to full with `escalated_retries=5` — [issue #47](https://github.com/edgesentry/ontographia/issues/47)).
+
+- **easy:** mock extractor returns gold Intent on the first call.
+- **hard:** subset extract is invalid; full extract returns gold (forces escalation).
+
+Recorded in [`examples/llm/eval/baselines/track_a_h3.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h3.json). Regenerate: `uv run python examples/llm/eval/run_track_a_h3.py --record`.
+
+| profile | slice | condition | Property Hit | compile OK | escalation | mean LLM calls | ≈tok final p95 | ≈tok total p95 |
+|---------|-------|-----------|-------------:|-----------:|-----------:|---------------:|---------------:|---------------:|
+| large | easy | always_full_fixed | 1.00 | 40/40 | 0.00 | 1.00 | 13,710 | 13,710 |
+| large | easy | adaptive | 1.00 | 40/40 | 0.00 | 1.00 | **1,247** | **1,247** |
+| large | hard | always_full_fixed | 1.00 | 40/40 | 0.00 | 1.00 | 13,710 | 13,710 |
+| large | hard | adaptive | 1.00 | 40/40 | **1.00** | 2.00 | 13,710 | 14,957 |
+
+**H3 verdict: support** (predeclared on `large` / easy): tokens p95 ≈ −91% vs always_full, LLM calls not higher, Compile / Property Hit not worse; hard slice escalates (rate 1.00) and recovers compile.
+
+**Caveat:** Mechanical arm measures #47 schema/retry budgeting with mock extractors. It does **not** measure live-LLM difficulty routing. Follow-up: [issue #68](https://github.com/edgesentry/ontographia/issues/68).
+
 ### Reproduce / refresh
 
 ```bash
 uv run python examples/llm/eval/run_track_a.py --record
 uv run python examples/llm/eval/run_track_a_h1.py --record
 uv run python examples/llm/eval/run_track_a_h2.py --record
+uv run python examples/llm/eval/run_track_a_h3.py --record
 ```
 
 Updates [`examples/llm/eval/baselines/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/eval/baselines). After regenerating, sync the tables above if numbers change.
@@ -116,4 +141,4 @@ Check the Hugging Face dataset card for license before redistributing samples.
 
 - [Related work](related-work.md)
 - [Architecture](architecture.md)
-- Issues [#45](https://github.com/edgesentry/ontographia/issues/45), [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53), [#55](https://github.com/edgesentry/ontographia/issues/55), [#46](https://github.com/edgesentry/ontographia/issues/46)
+- Issues [#45](https://github.com/edgesentry/ontographia/issues/45), [#46](https://github.com/edgesentry/ontographia/issues/46), [#47](https://github.com/edgesentry/ontographia/issues/47), [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53), [#54](https://github.com/edgesentry/ontographia/issues/54), [#55](https://github.com/edgesentry/ontographia/issues/55), [#68](https://github.com/edgesentry/ontographia/issues/68)

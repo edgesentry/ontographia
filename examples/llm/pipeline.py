@@ -12,6 +12,8 @@ from llm.semantic_validate import semantic_validate_intent
 from llm.subset import prompt_views_for_question
 
 DEFAULT_MAX_RETRIES = 5
+DEFAULT_INITIAL_RETRIES = 1
+DEFAULT_ESCALATED_RETRIES = DEFAULT_MAX_RETRIES
 DEFAULT_MAX_EXEC_REFINES = 2
 
 SchemaPolicy = Literal["auto", "subset", "full"]
@@ -27,6 +29,9 @@ class ExtractOutcome:
     schema_mode: Literal["subset", "full"]
     used_fallback: bool
     subset_stats: dict[str, int | bool] | None = None
+    llm_calls: int = 0
+    phases_tried: tuple[str, ...] = ()
+    retries_budget_used: int = 0
     exec_refine_attempts: int = 0
     execution_ok: bool | None = None
     execution_row_count: int | None = None
@@ -42,17 +47,35 @@ def extract_validated_intent(
     *,
     ontology: dict[str, Any] | None = None,
     dialect: str = "cypher25",
-    max_retries: int = DEFAULT_MAX_RETRIES,
+    max_retries: int | None = None,
+    initial_retries: int = DEFAULT_INITIAL_RETRIES,
+    escalated_retries: int = DEFAULT_ESCALATED_RETRIES,
     schema_policy: SchemaPolicy = "auto",
 ) -> ExtractOutcome:
     """Extract Intent JSON, retrying with validation feedback when invalid.
 
     ``schema_policy``:
-      - ``auto`` (default): try exact-match ontology subset first; on failure,
-        fall back to the full Intent schema / ontology vocabulary (issue #45).
+      - ``auto`` (default): try exact-match ontology subset first with a small
+        retry budget; on failure, escalate to full schema and more retries
+        (issues #45 / #47 difficulty-adaptive spend).
       - ``subset``: subset only (no fallback; for evaluation).
       - ``full``: full schema only.
+
+    Retry budgets (issue #47):
+      - subset phase uses ``initial_retries`` (default 1)
+      - full / escalate phase uses ``escalated_retries`` (default 5)
+      - ``max_retries``, if set, overrides both budgets (legacy / eval pin)
     """
+    if max_retries is not None:
+        if max_retries < 1:
+            raise ValueError("max_retries must be >= 1")
+        initial_retries = max_retries
+        escalated_retries = max_retries
+    if initial_retries < 1:
+        raise ValueError("initial_retries must be >= 1")
+    if escalated_retries < 1:
+        raise ValueError("escalated_retries must be >= 1")
+
     phases = _schema_phases(
         user_question,
         intent_json_schema,
@@ -61,28 +84,46 @@ def extract_validated_intent(
     )
     last_error = "unknown validation error"
     used_fallback = False
+    llm_calls = 0
+    phases_tried: list[str] = []
+    retries_budget_used = 0
 
     for phase_idx, phase in enumerate(phases):
         if phase_idx > 0:
             used_fallback = True
+        budget = (
+            initial_retries if phase["mode"] == "subset" else escalated_retries
+        )
+        phases_tried.append(phase["mode"])
         try:
-            intent, result = _extract_with_schema(
+            intent, result, calls = _extract_with_schema(
                 engine,
                 extractor,
                 user_question,
                 phase["schema"],
                 ontology=phase["ontology"],
                 dialect=dialect,
-                max_retries=max_retries,
+                max_retries=budget,
             )
+            llm_calls += calls
+            retries_budget_used += calls
             return ExtractOutcome(
                 intent=intent,
                 result=result,
                 schema_mode=phase["mode"],
                 used_fallback=used_fallback,
                 subset_stats=phase.get("subset_stats"),
+                llm_calls=llm_calls,
+                phases_tried=tuple(phases_tried),
+                retries_budget_used=retries_budget_used,
             )
         except Exception as exc:  # noqa: BLE001 - become next-phase / final error
+            # Count failed attempts: up to budget extract/correct calls were made.
+            # _extract_with_schema raises after exhausting retries; recover call
+            # count from the exception attribute when present.
+            failed_calls = getattr(exc, "llm_calls", budget)
+            llm_calls += int(failed_calls)
+            retries_budget_used += int(failed_calls)
             last_error = str(exc)
             if phase_idx + 1 >= len(phases):
                 raise ValueError(last_error) from exc
@@ -160,6 +201,7 @@ def refine_intent_after_execution(
                 execution_feedback=(
                     f"{feedback}\n\nIntent correction failed validation: {exc}"
                 ),
+                llm_calls=current.llm_calls + 1,
             )
 
         current = replace(
@@ -167,6 +209,7 @@ def refine_intent_after_execution(
             intent=intent,
             result=result,
             exec_refine_attempts=attempts,
+            llm_calls=current.llm_calls + 1,
         )
 
 
@@ -232,6 +275,14 @@ def _schema_phases(
     return [subset_phase, full]
 
 
+class _ExtractExhausted(ValueError):
+    """Validation failed after exhausting retries; carries llm_calls for accounting."""
+
+    def __init__(self, message: str, *, llm_calls: int) -> None:
+        super().__init__(message)
+        self.llm_calls = llm_calls
+
+
 def _extract_with_schema(
     engine: Any,
     extractor: Any,
@@ -241,9 +292,10 @@ def _extract_with_schema(
     ontology: dict[str, Any] | None,
     dialect: str,
     max_retries: int,
-) -> tuple[dict[str, Any], dict[str, Any]]:
+) -> tuple[dict[str, Any], dict[str, Any], int]:
     intent: dict[str, Any] | None = None
     last_error = "unknown validation error"
+    llm_calls = 0
 
     for attempt in range(max_retries):
         if attempt == 0:
@@ -266,15 +318,16 @@ def _extract_with_schema(
                 error=last_error,
             )
 
+        llm_calls += 1
         intent = repair_intent(user_question, intent)
 
         try:
             semantic_validate_intent(user_question, intent)
             result = engine.build(intent, dialect=dialect)
-            return intent, result
+            return intent, result, llm_calls
         except Exception as exc:  # noqa: BLE001 - validation errors become LLM feedback
             last_error = str(exc)
             if attempt + 1 >= max_retries:
-                raise ValueError(last_error) from exc
+                raise _ExtractExhausted(last_error, llm_calls=llm_calls) from exc
 
-    raise ValueError(last_error)
+    raise _ExtractExhausted(last_error, llm_calls=llm_calls)
