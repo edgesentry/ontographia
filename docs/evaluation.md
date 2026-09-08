@@ -50,11 +50,33 @@ Recorded in [`examples/llm/eval/baselines/track_a_h1.json`](https://github.com/e
 
 **Caveat:** A live LLM could still invent near-duplicates without seeing them in the prompt. This arm measures *prompt-induced* distractibility, not model decoding. Follow-up: [issue #68](https://github.com/edgesentry/ontographia/issues/68).
 
+### H2 study — execution feedback Intent refine
+
+**Question:** When an Intent compiles but Neo4j returns empty (Empty@Valid), does feeding execution feedback into Intent correction (then `Engine::build` again) recover final rows vs stopping after the first empty result?
+
+**Harness:** [`examples/llm/eval/run_track_a_h2.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h2.py) (mechanical; mock executor + gold-returning corrector; no live LLM / Neo4j).
+
+**Method:** Corrupt each gold Intent’s first filter *value* so build still succeeds but the mock executor returns `[]`. Compare `no_refine` (`max_exec_refines=0`) vs `with_refine` (`max_exec_refines=2`). Gold (uncorrupted) control checks that refine does not fire spuriously. Every emitted `{query, params}` is checked against a fresh `Engine.build`.
+
+Recorded in [`examples/llm/eval/baselines/track_a_h2.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h2.json). Regenerate: `uv run python examples/llm/eval/run_track_a_h2.py --record`.
+
+| arm | condition | Empty@Valid | final exec OK | Intent exact | recovered | Cypher = Engine.build | mean corrections |
+|-----|-----------|------------:|--------------:|-------------:|----------:|----------------------:|-----------------:|
+| empty-inducing | no_refine | 1.00 | 0.00 | 0.00 | 0.00 | 1.00 | 0.00 |
+| empty-inducing | with_refine | 1.00 | **1.00** | **1.00** | **1.00** | 1.00 | 1.00 |
+| gold control | no_refine | 0.00 | 1.00 | 1.00 | 0.00 | 1.00 | 0.00 |
+| gold control | with_refine | 0.00 | 1.00 | 1.00 | 0.00 | 1.00 | 0.00 |
+
+**H2 verdict: support** (predeclared): on the empty-inducing set, final execution_ok +100pt with refine, ≥80% recovered to gold Intent + rows, Cypher always from `Engine.build`. Feature: [issue #46](https://github.com/edgesentry/ontographia/issues/46) / `--refine-on-exec`.
+
+**Caveat:** Mechanical arm proves the loop recovers Empty@Valid when Intent correction succeeds. It does **not** measure live-LLM correction quality or Exec Match on a real Neo4j database.
+
 ### Reproduce / refresh
 
 ```bash
 uv run python examples/llm/eval/run_track_a.py --record
 uv run python examples/llm/eval/run_track_a_h1.py --record
+uv run python examples/llm/eval/run_track_a_h2.py --record
 ```
 
 Updates [`examples/llm/eval/baselines/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/eval/baselines). After regenerating, sync the tables above if numbers change.
@@ -94,4 +116,4 @@ Check the Hugging Face dataset card for license before redistributing samples.
 
 - [Related work](related-work.md)
 - [Architecture](architecture.md)
-- Issues [#45](https://github.com/edgesentry/ontographia/issues/45), [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53)
+- Issues [#45](https://github.com/edgesentry/ontographia/issues/45), [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53), [#55](https://github.com/edgesentry/ontographia/issues/55), [#46](https://github.com/edgesentry/ontographia/issues/46)
