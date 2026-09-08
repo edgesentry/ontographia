@@ -48,7 +48,7 @@ Recorded in [`examples/llm/eval/baselines/track_a_h1.json`](https://github.com/e
 
 **Qualitative:** Under `full` / `large`, prompts surface near-duplicates such as `PlantName`, `supplier_name`, `DefectCode`. Under `subset`, none of those names appear in the property list for the 40 gold questions, so the mechanical arm never induces silent-wrong. Fallback rate is **0** on this fixture because gold class/relationship structure is always covered by the exact-match subset.
 
-**Caveat:** A live LLM could still invent near-duplicates without seeing them in the prompt. This arm measures *prompt-induced* distractibility, not model decoding.
+**Caveat:** A live LLM could still invent near-duplicates without seeing them in the prompt. This arm measures *prompt-induced* distractibility, not model decoding. Follow-up: [issue #68](https://github.com/edgesentry/ontographia/issues/68).
 
 ### Reproduce / refresh
 
