@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, replace
 from typing import Any, Literal
 
+from llm.exec_feedback import assess_execution, format_execution_feedback
 from llm.repair import repair_intent
 from llm.semantic_validate import semantic_validate_intent
 from llm.subset import prompt_views_for_question
 
 DEFAULT_MAX_RETRIES = 5
+DEFAULT_MAX_EXEC_REFINES = 2
 
 SchemaPolicy = Literal["auto", "subset", "full"]
+
+# execute_fn(built_result) -> list[dict] rows; may raise on driver errors
+ExecuteFn = Callable[[dict[str, Any]], list[dict[str, Any]]]
 
 
 @dataclass(frozen=True)
@@ -21,6 +27,11 @@ class ExtractOutcome:
     schema_mode: Literal["subset", "full"]
     used_fallback: bool
     subset_stats: dict[str, int | bool] | None = None
+    exec_refine_attempts: int = 0
+    execution_ok: bool | None = None
+    execution_row_count: int | None = None
+    execution_rows: list[dict[str, Any]] | None = None
+    execution_feedback: str | None = None
 
 
 def extract_validated_intent(
@@ -77,6 +88,112 @@ def extract_validated_intent(
                 raise ValueError(last_error) from exc
 
     raise ValueError(last_error)
+
+
+def refine_intent_after_execution(
+    engine: Any,
+    extractor: Any,
+    user_question: str,
+    intent_json_schema: dict[str, Any],
+    outcome: ExtractOutcome,
+    *,
+    execute_fn: ExecuteFn,
+    ontology: dict[str, Any] | None = None,
+    dialect: str = "cypher25",
+    max_exec_refines: int = DEFAULT_MAX_EXEC_REFINES,
+) -> ExtractOutcome:
+    """After a successful build, run Neo4j and optionally correct Intent (issue #46).
+
+    On empty results or driver errors, ask the extractor for a corrected Intent
+    (never Cypher), then ``Engine.build`` again. Uses the full Intent schema for
+    correction prompts so the model can recover from under-selected subsets.
+    """
+    if max_exec_refines < 0:
+        raise ValueError("max_exec_refines must be >= 0")
+    if not hasattr(extractor, "extract_correction"):
+        return _attach_execution(outcome, execute_fn, user_question)
+
+    current = outcome
+    attempts = 0
+
+    while True:
+        assessment_rows: list[dict[str, Any]] | None
+        assessment_error: BaseException | None
+        try:
+            assessment_rows = execute_fn(current.result)
+            assessment_error = None
+        except Exception as exc:  # noqa: BLE001 - becomes Intent feedback
+            assessment_rows = None
+            assessment_error = exc
+
+        assessment = assess_execution(rows=assessment_rows, error=assessment_error)
+        feedback = format_execution_feedback(assessment, user_question=user_question)
+        current = replace(
+            current,
+            execution_ok=assessment.ok,
+            execution_row_count=assessment.row_count,
+            execution_rows=assessment_rows if assessment_error is None else None,
+            execution_feedback=None if assessment.ok else feedback,
+            exec_refine_attempts=attempts,
+        )
+
+        if assessment.ok or attempts >= max_exec_refines:
+            return current
+
+        attempts += 1
+        intent = extractor.extract_correction(
+            user_question,
+            intent_json_schema,
+            ontology=ontology,
+            previous_intent=current.intent,
+            error=feedback,
+        )
+        intent = repair_intent(user_question, intent)
+        try:
+            semantic_validate_intent(user_question, intent)
+            result = engine.build(intent, dialect=dialect)
+        except Exception as exc:  # noqa: BLE001 - treat as failed refine; stop
+            return replace(
+                current,
+                exec_refine_attempts=attempts,
+                execution_ok=False,
+                execution_feedback=(
+                    f"{feedback}\n\nIntent correction failed validation: {exc}"
+                ),
+            )
+
+        current = replace(
+            current,
+            intent=intent,
+            result=result,
+            exec_refine_attempts=attempts,
+        )
+
+
+def _attach_execution(
+    outcome: ExtractOutcome,
+    execute_fn: ExecuteFn,
+    user_question: str,
+) -> ExtractOutcome:
+    rows: list[dict[str, Any]] | None = None
+    try:
+        rows = execute_fn(outcome.result)
+        assessment = assess_execution(rows=rows)
+    except Exception as exc:  # noqa: BLE001
+        assessment = assess_execution(error=exc)
+    feedback = (
+        None
+        if assessment.ok
+        else format_execution_feedback(assessment, user_question=user_question)
+    )
+    return replace(
+        outcome,
+        execution_ok=assessment.ok,
+        execution_row_count=assessment.row_count,
+        execution_rows=rows,
+        execution_feedback=feedback,
+        exec_refine_attempts=0,
+    )
 
 
 def _schema_phases(

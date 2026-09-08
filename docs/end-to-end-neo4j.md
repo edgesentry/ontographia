@@ -355,6 +355,11 @@ export OPENAI_API_KEY=sk-...
 python examples/run_llm_e2e.py \
   --question "Which plant hosts production Line-1?" \
   --execute --password ontographia
+
+# Optional: empty results / Neo4j errors → correct Intent and recompile (issue #46):
+python examples/run_llm_e2e.py \
+  --question "Which plant hosts production Line-1?" \
+  --execute --refine-on-exec --password ontographia
 ```
 
 ??? note "LLM E2E from source (contributors)"
@@ -373,6 +378,7 @@ Pipeline:
 ```
 natural language → IntentExtractor (mock | openai-compatible) → Intent JSON
     → Engine.build() → Cypher 25 + params → Neo4j
+    → (optional --refine-on-exec) empty/error → Intent correction → recompile
 ```
 
 Extractor implementations live in [`examples/llm/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/). Add a new backend by implementing the `IntentExtractor` protocol in `extractors.py` — the Ontographia core stays LLM-agnostic.

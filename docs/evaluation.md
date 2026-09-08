@@ -1,6 +1,6 @@
 # Evaluation
 
-Offline experiments for the **app / agent Intent layer** (not the Rust Cypher emitters). Design context: [Related work](related-work.md).
+Offline experiments for the **app / agent Intent layer** (not the Rust Cypher emitters). Design context: [Related work](related-work.md). Why this stays outside the core: [Architecture — outside the core](architecture.md#what-is-intentionally-outside-the-core).
 
 ## Track A — distractor ontology stress test
 

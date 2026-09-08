@@ -116,7 +116,7 @@ pub fn intent_json_schema(ontology: &CanonicalOntology) -> serde_json::Value {
 
 Source: [`crates/ontographia-core/src/schema_gen.rs`](https://github.com/edgesentry/ontographia/blob/main/crates/ontographia-core/src/schema_gen.rs)
 
-Intent extraction (LLM prompts, retries, repair) lives in the **application layer** — see [skills/ontographia-cypher-builder/SKILL.md](https://github.com/edgesentry/ontographia/blob/main/skills/ontographia-cypher-builder/SKILL.md) and [Neo4j walkthrough](end-to-end-neo4j.md). The core only defines the shape and validates instances.
+Intent extraction (LLM prompts, retries, repair) lives in the **application layer** — see [skills/ontographia-cypher-builder/SKILL.md](https://github.com/edgesentry/ontographia/blob/main/skills/ontographia-cypher-builder/SKILL.md), [`examples/llm/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/), and [Neo4j walkthrough](end-to-end-neo4j.md). The core only defines the shape and validates instances.
 
 ### Intent structure
 
@@ -212,10 +212,15 @@ Mark business-key properties with `unique: true` in native ontology YAML (see [`
 
 ## What is intentionally outside the core
 
+The core must stay **LLM-agnostic and driver-agnostic**: same `Engine::build` for hand-authored Intent, mock fixtures, and live models. Prompt shaping, schema subsetting, execution feedback, and Neo4j sessions are **agent / app concerns** — they may call `intent_json_schema()` / `build()`, but they must not live inside emitters or validation. That keeps bindings thin, lets apps swap LLM backends, and ensures Cypher always comes from deterministic compilation (never from an LLM rewrite). Reference demos: [`examples/llm/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/).
+
 | Concern | Where it lives |
 |---------|----------------|
-| LLM API calls | App layer (`examples/`, agent skills) |
-| Neo4j driver / execution | `examples/run_neo4j_demo.py`, user applications |
+| LLM API calls / Intent extraction | App layer (`examples/llm/`, agent skills) |
+| Ontology subset for Intent prompts | [`examples/llm/subset.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/subset.py) ([issue #45](https://github.com/edgesentry/ontographia/issues/45)) |
+| Neo4j driver / execution | `examples/run_neo4j_demo.py`, `run_llm_e2e.py`, user applications |
+| Execution → Intent refinement | [`examples/llm/exec_feedback.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/exec_feedback.py) + `--refine-on-exec` ([issue #46](https://github.com/edgesentry/ontographia/issues/46)) |
+| Intent-layer evaluation harnesses | [`examples/llm/eval/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/eval/) — [evaluation.md](evaluation.md) |
 | RDF reasoning / OWL entailment | Out of scope — adapters extract asserted schema only |
 | Ontology ↔ Neo4j catalog alignment | [`ontographia-schema`](https://github.com/edgesentry/ontographia/tree/main/crates/ontographia-schema/) (offline diff + constraint DDL) |
 | Graph data seeding | [`examples/neo4j/seed.cypher`](https://github.com/edgesentry/ontographia/blob/main/examples/neo4j/seed.cypher) |

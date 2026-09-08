@@ -76,7 +76,7 @@ When changing emitters or validation, run `cargo test --workspace`.
 
 ## Out of scope for agents (unless explicitly requested)
 
-- LLM API calls inside the Rust/Python core (Intent extraction stays in the app/agent layer).
+- LLM API calls, prompt subsetting, and execution→Intent loops **inside** the Rust/Python core — those stay in the app/agent layer (`examples/llm/`). Rationale: [docs/architecture.md](docs/architecture.md#what-is-intentionally-outside-the-core).
 - RDF reification / full OWL reasoning.
 - Neo4j live introspection or migration execution (`ontographia-schema` is offline DDL + catalog diff only).
 - Duplicating tutorial content into new markdown files.

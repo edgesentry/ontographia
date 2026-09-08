@@ -24,6 +24,11 @@ Usage:
     --question "Which plant hosts production Line-1?" \\
     --execute --password ontographia
 
+  # Intent refine from empty Neo4j results / driver errors (issue #46):
+  uv run python examples/run_llm_e2e.py \\
+    --question "Which plant hosts production Line-1?" \\
+    --execute --refine-on-exec --password ontographia
+
 Environment:
   ONTOGRAPHIA_LLM_BACKEND   mock (default) | openai
   OPENAI_API_KEY            required for openai backend
@@ -49,7 +54,7 @@ SEED_FILE = EXAMPLES / "neo4j/seed.cypher"
 sys.path.insert(0, str(EXAMPLES))
 
 from llm.extractors import create_extractor  # noqa: E402
-from llm.pipeline import extract_validated_intent  # noqa: E402
+from llm.pipeline import extract_validated_intent, refine_intent_after_execution  # noqa: E402
 
 
 def parse_cypher25_seed(path: Path) -> list[str]:
@@ -110,6 +115,20 @@ def main() -> int:
     parser.add_argument("--user", default=os.environ.get("NEO4J_USER", "neo4j"))
     parser.add_argument("--password", default=os.environ.get("NEO4J_PASSWORD"))
     parser.add_argument("--execute", action="store_true", help="Execute generated query against Neo4j")
+    parser.add_argument(
+        "--refine-on-exec",
+        action="store_true",
+        help=(
+            "With --execute: on empty results or Neo4j errors, correct Intent via the LLM "
+            "and recompile (issue #46; never edits Cypher)"
+        ),
+    )
+    parser.add_argument(
+        "--max-exec-refines",
+        type=int,
+        default=2,
+        help="Max Intent corrections from execution feedback (default: 2)",
+    )
     parser.add_argument(
         "--load-seed",
         action="store_true",
@@ -172,11 +191,14 @@ def main() -> int:
     print(outcome.result["query"])
     print("\n=== Parameters ===")
     print(json.dumps(outcome.result["params"], ensure_ascii=False, indent=2))
-    result = outcome.result
 
     if not args.execute:
         print("\n(dry-run: pass --execute to run against Neo4j)")
         return 0
+
+    if args.refine_on_exec and args.max_exec_refines < 0:
+        print("--max-exec-refines must be >= 0", file=sys.stderr)
+        return 1
 
     if not args.password:
         print("NEO4J_PASSWORD or --password is required for --execute", file=sys.stderr)
@@ -189,6 +211,7 @@ def main() -> int:
         return 1
 
     driver = GraphDatabase.driver(args.uri, auth=(args.user, args.password))
+    rows: list[dict[str, Any]] = []
     try:
         driver.verify_connectivity()
         if args.load_seed:
@@ -198,8 +221,42 @@ def main() -> int:
             print(f"\nloading seed from {SEED_FILE.relative_to(ROOT)}")
             load_seed(driver, SEED_FILE)
 
-        with driver.session() as session:
-            rows = session.run(result["query"], result["params"]).data()
+        def execute_fn(built: dict[str, Any]) -> list[dict[str, Any]]:
+            with driver.session() as session:
+                return session.run(built["query"], built["params"]).data()
+
+        if args.refine_on_exec:
+            print(
+                f"\n=== Exec refine enabled "
+                f"(max_exec_refines={args.max_exec_refines}) ==="
+            )
+            outcome = refine_intent_after_execution(
+                engine,
+                extractor,
+                args.question,
+                schema,
+                outcome,
+                execute_fn=execute_fn,
+                ontology=ontology,
+                dialect=args.dialect,
+                max_exec_refines=args.max_exec_refines,
+            )
+            print(
+                f"=== Exec refine: attempts={outcome.exec_refine_attempts} "
+                f"ok={outcome.execution_ok} rows={outcome.execution_row_count} ==="
+            )
+            if outcome.exec_refine_attempts:
+                print("=== Intent JSON (after exec refine) ===")
+                print(json.dumps(outcome.intent, ensure_ascii=False, indent=2))
+                print("\n=== Generated query (after exec refine) ===")
+                print(outcome.result["query"])
+                print("\n=== Parameters (after exec refine) ===")
+                print(json.dumps(outcome.result["params"], ensure_ascii=False, indent=2))
+            if outcome.execution_feedback and not outcome.execution_ok:
+                print(f"\n=== Exec feedback (unresolved) ===\n{outcome.execution_feedback}")
+            rows = list(outcome.execution_rows or [])
+        else:
+            rows = execute_fn(outcome.result)
     except Exception as exc:  # noqa: BLE001
         print(f"Neo4j error: {exc}", file=sys.stderr)
         return 1
