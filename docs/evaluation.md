@@ -20,15 +20,44 @@ Recorded `2026-09-08T09:11:27Z` (git `0563c07`). Machine-readable copy: [`exampl
 | mid | 200 | 40 | 40 | 0 | 0.50 | 2,460 | 1,247 |
 | large | 2,000 | 40 | 40 | 0 | 0.50 | 13,710 | 1,247 |
 
-**Reading:** On `mid` / `large`, silent-wrong Intents compile as often as gold — ontology validation cannot see that the field is the wrong *semantic* choice. On `small`, distractors are absent, so the same wrong Intents fail. Full-schema prompt size grows with the vocabulary dump in `build_initial_user_message`; **exact-match subset prompts** ([issue #45](https://github.com/edgesentry/ontographia/issues/45), [`examples/llm/subset.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/subset.py)) stay ~1.2k tokens even at 2k properties. Comparative Intent quality (full vs subset vs fallback) is still [issue #51](https://github.com/edgesentry/ontographia/issues/51).
+**Reading:** On `mid` / `large`, silent-wrong Intents compile as often as gold — ontology validation cannot see that the field is the wrong *semantic* choice. On `small`, distractors are absent, so the same wrong Intents fail. Full-schema prompt size grows with the vocabulary dump in `build_initial_user_message`; **exact-match subset prompts** ([issue #45](https://github.com/edgesentry/ontographia/issues/45), [`examples/llm/subset.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/subset.py)) stay ~1.2k tokens even at 2k properties.
+
+### H1 study — full vs subset vs subset+fallback
+
+**Question:** Does exact-match subsetting improve Intent field selection *and* cut tokens vs full schema?
+
+**Harness:** [`examples/llm/eval/run_track_a_h1.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h1.py) (mechanical; no live LLM).
+
+**Method:** Induce a silent-wrong near-duplicate Intent **only when** that distractor property name appears in the prompt’s property vocabulary; otherwise use gold. `subset_fallback` uses the full schema when the subset is empty or gold classes/relationships are missing from subset enums (mirrors [#45](https://github.com/edgesentry/ontographia/issues/45) pipeline policy).
+
+Recorded in [`examples/llm/eval/baselines/track_a_h1.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1.json). Regenerate: `uv run python examples/llm/eval/run_track_a_h1.py --record`.
+
+| profile | condition | Property Hit | compile OK | distractor visible | induced wrong | fallback rate | ≈tok p50 | ≈tok p95 |
+|---------|-----------|-------------:|-----------:|-------------------:|--------------:|--------------:|---------:|---------:|
+| small | full | 1.00 | 40/40 | 0 | 0 | 0.00 | 1,317 | 1,359 |
+| small | subset | 1.00 | 40/40 | 0 | 0 | 0.00 | 1,172 | 1,246 |
+| small | subset_fallback | 1.00 | 40/40 | 0 | 0 | 0.00 | 1,172 | 1,246 |
+| mid | full | 0.50 | 40/40 | 40 | 40 | 0.00 | 2,417 | 2,460 |
+| mid | subset | 1.00 | 40/40 | 0 | 0 | 0.00 | 1,174 | 1,247 |
+| mid | subset_fallback | 1.00 | 40/40 | 0 | 0 | 0.00 | 1,174 | 1,247 |
+| large | full | 0.50 | 40/40 | 40 | 40 | 0.00 | 13,667 | 13,710 |
+| large | subset | 1.00 | 40/40 | 0 | 0 | 0.00 | 1,174 | 1,247 |
+| large | subset_fallback | 1.00 | 40/40 | 0 | 0 | 0.00 | 1,174 | 1,247 |
+
+**H1 verdict: support** (predeclared criteria on `large`): Property Hit +50pt vs full, tokens p95 ≈ −91%, compile success not worse.
+
+**Qualitative:** Under `full` / `large`, prompts surface near-duplicates such as `PlantName`, `supplier_name`, `DefectCode`. Under `subset`, none of those names appear in the property list for the 40 gold questions, so the mechanical arm never induces silent-wrong. Fallback rate is **0** on this fixture because gold class/relationship structure is always covered by the exact-match subset.
+
+**Caveat:** A live LLM could still invent near-duplicates without seeing them in the prompt. This arm measures *prompt-induced* distractibility, not model decoding.
 
 ### Reproduce / refresh
 
 ```bash
 uv run python examples/llm/eval/run_track_a.py --record
+uv run python examples/llm/eval/run_track_a_h1.py --record
 ```
 
-Updates [`examples/llm/eval/baselines/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/eval/baselines). After regenerating, sync the table above if numbers change.
+Updates [`examples/llm/eval/baselines/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/eval/baselines). After regenerating, sync the tables above if numbers change.
 
 ## Track B — public Text2Cypher schemas
 
@@ -65,4 +94,4 @@ Check the Hugging Face dataset card for license before redistributing samples.
 
 - [Related work](related-work.md)
 - [Architecture](architecture.md)
-- Issues [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53)
+- Issues [#45](https://github.com/edgesentry/ontographia/issues/45), [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53)

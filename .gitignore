@@ -14,3 +14,5 @@ _inputs/
 _plan
 examples/llm/eval/out/
 examples/llm/eval/baselines/track_a_full_schema_2*.json
+examples/llm/eval/baselines/track_a_h1_2*.json
+examples/llm/eval/baselines/track_b_schema_convert_2*.json

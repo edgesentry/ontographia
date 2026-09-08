@@ -1,0 +1,259 @@
+{
+  "meta": {
+    "recorded_at": "2026-09-08T09:20:56Z",
+    "git_rev": "b7045ae",
+    "profiles": [
+      "small",
+      "mid",
+      "large"
+    ],
+    "conditions": [
+      "full",
+      "subset",
+      "subset_fallback"
+    ],
+    "study": "h1_prompt_vocab_induced",
+    "issue": 51,
+    "harness": "examples/llm/eval/run_track_a_h1.py"
+  },
+  "verdict": {
+    "verdict": "support",
+    "reason": "on large: Property Hit \u2265 +10pt vs full, tokens p95 \u2264 \u221230%, compile success not worse (mechanical prompt-vocab arm)",
+    "criteria": {
+      "property_hit_gain_pt": 50.0,
+      "property_hit_gain_threshold_pt": 10.0,
+      "token_p95_rel_change": -0.909,
+      "token_p95_reduction_threshold": -0.3,
+      "compile_not_worse": true,
+      "subset_compile_ok": 40,
+      "full_compile_ok": 40
+    },
+    "caveat": "Mechanical arm: induced silent-wrong only when the distractor name appears in the prompt property list. A live LLM could still invent near-duplicates without seeing them."
+  },
+  "results": [
+    {
+      "profile": "small",
+      "ontology": {
+        "profile_name": "small",
+        "properties": 16,
+        "distractor_properties": 0,
+        "distractor_classes": 0,
+        "near_duplicates": 0
+      },
+      "conditions": {
+        "full": {
+          "n": 40,
+          "property_hit_mean": 1.0,
+          "compile_ok": 40,
+          "compile_fail": 0,
+          "distractor_visible": 0,
+          "induced_silent_wrong": 0,
+          "fallback_rate": 0.0,
+          "gold_structure_covered_rate": 1.0,
+          "prompt_approx_tokens_p50": 1317,
+          "prompt_approx_tokens_p95": 1359
+        },
+        "subset": {
+          "n": 40,
+          "property_hit_mean": 1.0,
+          "compile_ok": 40,
+          "compile_fail": 0,
+          "distractor_visible": 0,
+          "induced_silent_wrong": 0,
+          "fallback_rate": 0.0,
+          "gold_structure_covered_rate": 1.0,
+          "prompt_approx_tokens_p50": 1172,
+          "prompt_approx_tokens_p95": 1246
+        },
+        "subset_fallback": {
+          "n": 40,
+          "property_hit_mean": 1.0,
+          "compile_ok": 40,
+          "compile_fail": 0,
+          "distractor_visible": 0,
+          "induced_silent_wrong": 0,
+          "fallback_rate": 0.0,
+          "gold_structure_covered_rate": 1.0,
+          "prompt_approx_tokens_p50": 1172,
+          "prompt_approx_tokens_p95": 1246
+        }
+      },
+      "deltas_vs_full": {
+        "subset_minus_full_property_hit_pt": 0.0,
+        "subset_token_p95_rel_change": -0.0831,
+        "subset_compile_ok_delta": 0
+      },
+      "qualitative_full_distractors": []
+    },
+    {
+      "profile": "mid",
+      "ontology": {
+        "profile_name": "mid",
+        "properties": 200,
+        "distractor_properties": 184,
+        "distractor_classes": 7,
+        "near_duplicates": 32
+      },
+      "conditions": {
+        "full": {
+          "n": 40,
+          "property_hit_mean": 0.5,
+          "compile_ok": 40,
+          "compile_fail": 0,
+          "distractor_visible": 40,
+          "induced_silent_wrong": 40,
+          "fallback_rate": 0.0,
+          "gold_structure_covered_rate": 1.0,
+          "prompt_approx_tokens_p50": 2417,
+          "prompt_approx_tokens_p95": 2460
+        },
+        "subset": {
+          "n": 40,
+          "property_hit_mean": 1.0,
+          "compile_ok": 40,
+          "compile_fail": 0,
+          "distractor_visible": 0,
+          "induced_silent_wrong": 0,
+          "fallback_rate": 0.0,
+          "gold_structure_covered_rate": 1.0,
+          "prompt_approx_tokens_p50": 1174,
+          "prompt_approx_tokens_p95": 1247
+        },
+        "subset_fallback": {
+          "n": 40,
+          "property_hit_mean": 1.0,
+          "compile_ok": 40,
+          "compile_fail": 0,
+          "distractor_visible": 0,
+          "induced_silent_wrong": 0,
+          "fallback_rate": 0.0,
+          "gold_structure_covered_rate": 1.0,
+          "prompt_approx_tokens_p50": 1174,
+          "prompt_approx_tokens_p95": 1247
+        }
+      },
+      "deltas_vs_full": {
+        "subset_minus_full_property_hit_pt": 50.0,
+        "subset_token_p95_rel_change": -0.4931,
+        "subset_compile_ok_delta": 0
+      },
+      "qualitative_full_distractors": [
+        {
+          "id": "bom_suppliers_00",
+          "distractor": "SupplierName",
+          "property_hit": 0.5,
+          "note": "visible in full prompt property list"
+        },
+        {
+          "id": "bom_suppliers_01",
+          "distractor": "SupplierName",
+          "property_hit": 0.5,
+          "note": "visible in full prompt property list"
+        },
+        {
+          "id": "bom_suppliers_02",
+          "distractor": "SupplierName",
+          "property_hit": 0.5,
+          "note": "visible in full prompt property list"
+        },
+        {
+          "id": "bom_suppliers_03",
+          "distractor": "SupplierName",
+          "property_hit": 0.5,
+          "note": "visible in full prompt property list"
+        },
+        {
+          "id": "bom_suppliers_04",
+          "distractor": "SupplierName",
+          "property_hit": 0.5,
+          "note": "visible in full prompt property list"
+        }
+      ]
+    },
+    {
+      "profile": "large",
+      "ontology": {
+        "profile_name": "large",
+        "properties": 2000,
+        "distractor_properties": 1984,
+        "distractor_classes": 7,
+        "near_duplicates": 32
+      },
+      "conditions": {
+        "full": {
+          "n": 40,
+          "property_hit_mean": 0.5,
+          "compile_ok": 40,
+          "compile_fail": 0,
+          "distractor_visible": 40,
+          "induced_silent_wrong": 40,
+          "fallback_rate": 0.0,
+          "gold_structure_covered_rate": 1.0,
+          "prompt_approx_tokens_p50": 13667,
+          "prompt_approx_tokens_p95": 13710
+        },
+        "subset": {
+          "n": 40,
+          "property_hit_mean": 1.0,
+          "compile_ok": 40,
+          "compile_fail": 0,
+          "distractor_visible": 0,
+          "induced_silent_wrong": 0,
+          "fallback_rate": 0.0,
+          "gold_structure_covered_rate": 1.0,
+          "prompt_approx_tokens_p50": 1174,
+          "prompt_approx_tokens_p95": 1247
+        },
+        "subset_fallback": {
+          "n": 40,
+          "property_hit_mean": 1.0,
+          "compile_ok": 40,
+          "compile_fail": 0,
+          "distractor_visible": 0,
+          "induced_silent_wrong": 0,
+          "fallback_rate": 0.0,
+          "gold_structure_covered_rate": 1.0,
+          "prompt_approx_tokens_p50": 1174,
+          "prompt_approx_tokens_p95": 1247
+        }
+      },
+      "deltas_vs_full": {
+        "subset_minus_full_property_hit_pt": 50.0,
+        "subset_token_p95_rel_change": -0.909,
+        "subset_compile_ok_delta": 0
+      },
+      "qualitative_full_distractors": [
+        {
+          "id": "bom_suppliers_00",
+          "distractor": "SupplierName",
+          "property_hit": 0.5,
+          "note": "visible in full prompt property list"
+        },
+        {
+          "id": "bom_suppliers_01",
+          "distractor": "SupplierName",
+          "property_hit": 0.5,
+          "note": "visible in full prompt property list"
+        },
+        {
+          "id": "bom_suppliers_02",
+          "distractor": "SupplierName",
+          "property_hit": 0.5,
+          "note": "visible in full prompt property list"
+        },
+        {
+          "id": "bom_suppliers_03",
+          "distractor": "SupplierName",
+          "property_hit": 0.5,
+          "note": "visible in full prompt property list"
+        },
+        {
+          "id": "bom_suppliers_04",
+          "distractor": "SupplierName",
+          "property_hit": 0.5,
+          "note": "visible in full prompt property list"
+        }
+      ]
+    }
+  ]
+}
