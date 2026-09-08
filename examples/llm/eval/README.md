@@ -24,6 +24,15 @@ uv run python examples/llm/eval/run_track_a_h1.py --record
 
 Baselines: [`baselines/track_a_h1.md`](baselines/track_a_h1.md). Summary: [docs/evaluation.md](../../../docs/evaluation.md).
 
+### Live LLM arm (Issue #68)
+
+```bash
+source scripts/litellm/use-provider.sh gemini   # or any OpenAI-compatible backend
+uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --record
+```
+
+Baselines: [`baselines/track_a_h1_live.md`](baselines/track_a_h1_live.md).
+
 ## H2 — execution feedback Intent refine (Issue #55)
 
 Mechanical Empty@Valid recovery: corrupt filter values, mock executor, compare `no_refine` vs `with_refine` ([#46](https://github.com/edgesentry/ontographia/issues/46) loop).
@@ -63,6 +72,23 @@ Baselines: [`baselines/track_b_schema_convert.md`](baselines/track_b_schema_conv
 
 Converter module: [`schema_convert.py`](schema_convert.py) (also best-effort JSON introspect; unsupported formats raise).
 
+### Exec Match spot (Issue #53 remainder)
+
+```bash
+source scripts/litellm/use-provider.sh gemini
+uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py --record
+```
+
+Runs Intent → emit → `demo.neo4jlabs.com` vs gold Cypher row Jaccard on movies (+ recommendations). Baseline: [`baselines/track_b_exec_spot.md`](baselines/track_b_exec_spot.md).
+
+## Repair mapping (Issue #48)
+
+```bash
+uv run python examples/llm/eval/test_repair_mapping.py
+```
+
+Manufacturing heuristics live in [`../mappings/manufacturing.repair.yaml`](../mappings/manufacturing.repair.yaml); a minimal movies mapping proves the non-demo path.
+
 ## Artifacts
 
 | Path | Purpose |
@@ -72,8 +98,9 @@ Converter module: [`schema_convert.py`](schema_convert.py) (also best-effort JSO
 
 ## Related issues
 
-- Track A: [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51)
+- Track A: [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#68](https://github.com/edgesentry/ontographia/issues/68)
 - Subset prompts: [#45](https://github.com/edgesentry/ontographia/issues/45)
 - H2 exec feedback: [#46](https://github.com/edgesentry/ontographia/issues/46), [#55](https://github.com/edgesentry/ontographia/issues/55)
 - H3 adaptive spend: [#47](https://github.com/edgesentry/ontographia/issues/47), [#54](https://github.com/edgesentry/ontographia/issues/54)
 - Track B: [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53)
+- Repair mapping: [#48](https://github.com/edgesentry/ontographia/issues/48)

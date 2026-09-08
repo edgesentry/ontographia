@@ -1,0 +1,18 @@
+# Minimal non-manufacturing mapping for issue #48 acceptance (movies demo vocab).
+# Demonstrates mapping-file-driven repair without manufacturing heuristics.
+
+defaults:
+  limit: 25
+  fill_as_name: true
+
+entity_patterns:
+  - id: movie_title_quoted
+    match: '"([^"]+)"'
+    capture: 1
+    require_filter:
+      alias: movie
+      property: title
+      op: eq
+    set_start:
+      class: Movie
+      alias: movie

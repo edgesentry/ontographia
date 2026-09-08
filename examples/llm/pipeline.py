@@ -51,6 +51,8 @@ def extract_validated_intent(
     initial_retries: int = DEFAULT_INITIAL_RETRIES,
     escalated_retries: int = DEFAULT_ESCALATED_RETRIES,
     schema_policy: SchemaPolicy = "auto",
+    repair_mapping: dict[str, Any] | None = None,
+    repair_mapping_path: str | None = None,
 ) -> ExtractOutcome:
     """Extract Intent JSON, retrying with validation feedback when invalid.
 
@@ -104,6 +106,8 @@ def extract_validated_intent(
                 ontology=phase["ontology"],
                 dialect=dialect,
                 max_retries=budget,
+                repair_mapping=repair_mapping,
+                repair_mapping_path=repair_mapping_path,
             )
             llm_calls += calls
             retries_budget_used += calls
@@ -142,6 +146,8 @@ def refine_intent_after_execution(
     ontology: dict[str, Any] | None = None,
     dialect: str = "cypher25",
     max_exec_refines: int = DEFAULT_MAX_EXEC_REFINES,
+    repair_mapping: dict[str, Any] | None = None,
+    repair_mapping_path: str | None = None,
 ) -> ExtractOutcome:
     """After a successful build, run Neo4j and optionally correct Intent (issue #46).
 
@@ -189,9 +195,19 @@ def refine_intent_after_execution(
             previous_intent=current.intent,
             error=feedback,
         )
-        intent = repair_intent(user_question, intent)
+        intent = repair_intent(
+            user_question,
+            intent,
+            mapping=repair_mapping,
+            mapping_path=repair_mapping_path,
+        )
         try:
-            semantic_validate_intent(user_question, intent)
+            semantic_validate_intent(
+                user_question,
+                intent,
+                mapping=repair_mapping,
+                mapping_path=repair_mapping_path,
+            )
             result = engine.build(intent, dialect=dialect)
         except Exception as exc:  # noqa: BLE001 - treat as failed refine; stop
             return replace(
@@ -292,6 +308,8 @@ def _extract_with_schema(
     ontology: dict[str, Any] | None,
     dialect: str,
     max_retries: int,
+    repair_mapping: dict[str, Any] | None = None,
+    repair_mapping_path: str | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any], int]:
     intent: dict[str, Any] | None = None
     last_error = "unknown validation error"
@@ -319,10 +337,20 @@ def _extract_with_schema(
             )
 
         llm_calls += 1
-        intent = repair_intent(user_question, intent)
+        intent = repair_intent(
+            user_question,
+            intent,
+            mapping=repair_mapping,
+            mapping_path=repair_mapping_path,
+        )
 
         try:
-            semantic_validate_intent(user_question, intent)
+            semantic_validate_intent(
+                user_question,
+                intent,
+                mapping=repair_mapping,
+                mapping_path=repair_mapping_path,
+            )
             result = engine.build(intent, dialect=dialect)
             return intent, result, llm_calls
         except Exception as exc:  # noqa: BLE001 - validation errors become LLM feedback

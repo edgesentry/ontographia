@@ -1,0 +1,69 @@
+# Manufacturing demo Intent repair / semantic-validate rules (issue #48).
+# Loaded by examples/llm/repair.py when no mapping is passed explicitly.
+
+defaults:
+  limit: 20
+  fill_as_name: true
+
+entity_patterns:
+  - id: sku
+    match: '\bSKU\s+([A-Z0-9-]+)\b'
+    flags: IGNORECASE
+    capture: 1
+    require_filter:
+      alias: product
+      property: sku
+      op: eq
+      # value from capture
+    set_start:
+      class: Product
+      alias: product
+    ensure_traverse:
+      - relationship: has_part
+        direction: out
+        to: { class: Part, alias: part }
+      - relationship: supplied_by
+        direction: out
+        to: { class: Supplier, alias: supplier }
+
+  - id: line
+    match: '\b(Line-\d+)\b'
+    flags: IGNORECASE
+    capture: 1
+    require_filter:
+      alias: line
+      property: name
+      op: eq
+    set_start:
+      class: Line
+      alias: line
+    ensure_traverse:
+      - relationship: located_at
+        direction: out
+        to: { class: Plant, alias: plant }
+
+  - id: quarantine
+    match: 'quarantine'
+    flags: IGNORECASE
+    literal_value: quarantine
+    require_filter:
+      alias: lot
+      property: status
+      op: eq
+      value: quarantine
+    set_start:
+      class: Lot
+      alias: lot
+    ensure_traverse:
+      - relationship: has_defect
+        direction: out
+        to: { class: DefectType, alias: defect }
+
+  - id: lot_id
+    match: '\b(LOT-\d{4}-\d{3})\b'
+    flags: IGNORECASE
+    capture: 1
+    require_filter:
+      alias: lot
+      property: lot_id
+      op: eq
