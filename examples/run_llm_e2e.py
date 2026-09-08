@@ -29,6 +29,13 @@ Usage:
     --question "Which plant hosts production Line-1?" \\
     --execute --refine-on-exec --password ontographia
 
+  # Adaptive spend (issue #47; default with --schema-policy auto):
+  # subset + 1 retry first; escalate to full schema + more retries only on failure.
+  uv run python examples/run_llm_e2e.py \\
+    --question "Which plant hosts production Line-1?" \\
+    --schema-policy auto \\
+    --initial-retries 1 --escalated-retries 5
+
 Environment:
   ONTOGRAPHIA_LLM_BACKEND   mock (default) | openai
   OPENAI_API_KEY            required for openai backend
@@ -109,7 +116,22 @@ def main() -> int:
         "--schema-policy",
         choices=["auto", "subset", "full"],
         default="auto",
-        help="Intent prompt schema: auto=exact-match subset then full fallback (issue #45)",
+        help=(
+            "Intent prompt schema: auto=subset first then full escalate "
+            "(issues #45/#47 adaptive spend); subset/full pin one mode"
+        ),
+    )
+    parser.add_argument(
+        "--initial-retries",
+        type=int,
+        default=1,
+        help="Retry budget for the first (subset) phase under auto (issue #47; default: 1)",
+    )
+    parser.add_argument(
+        "--escalated-retries",
+        type=int,
+        default=5,
+        help="Retry budget after escalating to full schema (issue #47; default: 5)",
     )
     parser.add_argument("--uri", default=os.environ.get("NEO4J_URI", "bolt://localhost:7687"))
     parser.add_argument("--user", default=os.environ.get("NEO4J_USER", "neo4j"))
@@ -163,6 +185,10 @@ def main() -> int:
     print(f"=== LLM backend: {backend_name} ===")
     print(f"=== Question ===\n{args.question}\n")
 
+    if args.initial_retries < 1 or args.escalated_retries < 1:
+        print("--initial-retries and --escalated-retries must be >= 1", file=sys.stderr)
+        return 1
+
     try:
         outcome = extract_validated_intent(
             engine,
@@ -172,6 +198,8 @@ def main() -> int:
             ontology=ontology,
             dialect=args.dialect,
             schema_policy=args.schema_policy,
+            initial_retries=args.initial_retries,
+            escalated_retries=args.escalated_retries,
         )
     except Exception as exc:  # noqa: BLE001
         print(f"Intent extraction/validation failed: {exc}", file=sys.stderr)
@@ -179,7 +207,8 @@ def main() -> int:
 
     print(
         f"=== Schema policy: {args.schema_policy} "
-        f"(used={outcome.schema_mode}, fallback={outcome.used_fallback}) ==="
+        f"(used={outcome.schema_mode}, fallback={outcome.used_fallback}, "
+        f"phases={list(outcome.phases_tried)}, llm_calls={outcome.llm_calls}) ==="
     )
     if outcome.subset_stats:
         print(f"=== Subset stats: {outcome.subset_stats} ===")
