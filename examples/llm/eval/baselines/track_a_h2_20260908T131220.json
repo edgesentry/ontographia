@@ -1,0 +1,103 @@
+{
+  "meta": {
+    "recorded_at": "2026-09-08T13:12:20Z",
+    "git_rev": "4db68ce",
+    "conditions": [
+      "no_refine",
+      "with_refine"
+    ],
+    "study": "h2_exec_feedback_mechanical",
+    "issue": 55,
+    "feature_issue": 46,
+    "harness": "examples/llm/eval/run_track_a_h2.py"
+  },
+  "verdict": {
+    "verdict": "support",
+    "reason": "on empty-inducing set: final execution_ok \u2265 +20pt with refine, \u226580% recovered to gold Intent+rows, Cypher always from Engine.build (mechanical arm)",
+    "criteria": {
+      "final_ok_gain_pt": 100.0,
+      "final_ok_gain_threshold_pt": 20.0,
+      "intent_exact_match_gain_pt": 100.0,
+      "cypher_always_from_engine_build": true,
+      "gold_control_no_spurious_refine": true,
+      "no_refine_final_ok_rate": 0.0,
+      "with_refine_final_ok_rate": 1.0,
+      "with_refine_recovered_rate": 1.0,
+      "empty_at_valid_rate": 1.0
+    },
+    "caveat": "Mechanical arm: mock executor + gold-returning corrector. Measures that the #46 loop recovers Empty@Valid when Intent correction succeeds; not live-LLM correction quality or real Neo4j Exec Match."
+  },
+  "results": {
+    "empty_inducing": {
+      "no_refine": {
+        "n": 40,
+        "compile_ok": 40,
+        "empty_at_valid": 40,
+        "empty_at_valid_rate": 1.0,
+        "final_execution_ok": 0,
+        "final_execution_ok_rate": 0.0,
+        "intent_exact_match": 0,
+        "intent_exact_match_rate": 0.0,
+        "recovered": 0,
+        "recovered_rate": 0.0,
+        "cypher_from_engine_build": 40,
+        "cypher_from_engine_build_rate": 1.0,
+        "mean_exec_refine_attempts": 0.0,
+        "mean_correction_calls": 0.0
+      },
+      "with_refine": {
+        "n": 40,
+        "compile_ok": 40,
+        "empty_at_valid": 40,
+        "empty_at_valid_rate": 1.0,
+        "final_execution_ok": 40,
+        "final_execution_ok_rate": 1.0,
+        "intent_exact_match": 40,
+        "intent_exact_match_rate": 1.0,
+        "recovered": 40,
+        "recovered_rate": 1.0,
+        "cypher_from_engine_build": 40,
+        "cypher_from_engine_build_rate": 1.0,
+        "mean_exec_refine_attempts": 1.0,
+        "mean_correction_calls": 1.0
+      }
+    },
+    "gold_control": {
+      "no_refine": {
+        "n": 40,
+        "compile_ok": 40,
+        "empty_at_valid": 0,
+        "empty_at_valid_rate": 0.0,
+        "final_execution_ok": 40,
+        "final_execution_ok_rate": 1.0,
+        "intent_exact_match": 40,
+        "intent_exact_match_rate": 1.0,
+        "recovered": 0,
+        "recovered_rate": 0.0,
+        "cypher_from_engine_build": 40,
+        "cypher_from_engine_build_rate": 1.0,
+        "mean_exec_refine_attempts": 0.0,
+        "mean_correction_calls": 0.0
+      },
+      "with_refine": {
+        "n": 40,
+        "compile_ok": 40,
+        "empty_at_valid": 0,
+        "empty_at_valid_rate": 0.0,
+        "final_execution_ok": 40,
+        "final_execution_ok_rate": 1.0,
+        "intent_exact_match": 40,
+        "intent_exact_match_rate": 1.0,
+        "recovered": 0,
+        "recovered_rate": 0.0,
+        "cypher_from_engine_build": 40,
+        "cypher_from_engine_build_rate": 1.0,
+        "mean_exec_refine_attempts": 0.0,
+        "mean_correction_calls": 0.0
+      }
+    },
+    "skipped_no_filter": 0,
+    "n_cases": 40,
+    "n_empty_inducing": 40
+  }
+}
