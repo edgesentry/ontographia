@@ -1,0 +1,269 @@
+{
+  "meta": {
+    "recorded_at": "2026-09-08T15:10:33Z",
+    "git_rev": "5965059",
+    "issue": 53,
+    "harness": "examples/llm/eval/run_track_b_exec.py",
+    "dataset": "neo4j/text2cypher-2025v1",
+    "split": "test",
+    "refs": [
+      "neo4jlabs_demo_db_movies",
+      "neo4jlabs_demo_db_recommendations"
+    ],
+    "n": 60,
+    "seed": 53,
+    "schema_policy": "auto",
+    "model": "ontographia-gemini",
+    "neo4j_uri": "neo4j+s://demo.neo4jlabs.com",
+    "skip_exec": false,
+    "repair_mapping_path": "examples/llm/mappings/movies.repair.yaml",
+    "selection": "HF neo4j/text2cypher-2025v1 test; Node properties only; refs=['neo4jlabs_demo_db_movies', 'neo4jlabs_demo_db_recommendations']; stratified sample n=60 seed=53",
+    "license_note": "Dataset neo4j/text2cypher-2025v1 \u2014 check HF card before redistribution"
+  },
+  "results": {
+    "summary": {
+      "n": 60,
+      "compile_ok": 41,
+      "compile_rate": 0.6833,
+      "exec_scored": 38,
+      "exec_match": 1,
+      "exec_match_rate": 0.0263,
+      "jaccard_mean": 0.0263,
+      "structure_label_f1_mean": 0.8229,
+      "structure_rel_f1_mean": 0.6667,
+      "structure_prop_f1_mean": 0.613,
+      "by_ref": {
+        "neo4jlabs_demo_db_movies": {
+          "n": 30,
+          "compile_ok": 23,
+          "exec_match_rate": 0.0476,
+          "jaccard_mean": 0.0476
+        },
+        "neo4jlabs_demo_db_recommendations": {
+          "n": 30,
+          "compile_ok": 18,
+          "exec_match_rate": 0.0,
+          "jaccard_mean": 0.0
+        }
+      }
+    },
+    "qualitative": [
+      {
+        "instance_id": "instance_id_32919",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "List the movies released between 1990 and 2000 with a rating higher than 80."
+      },
+      {
+        "instance_id": "instance_id_32747",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "List the movies with more than 100 votes."
+      },
+      {
+        "instance_id": "instance_id_27405",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "\"List me the people that are actors and directors on the same movie\""
+      },
+      {
+        "instance_id": "instance_id_23699",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "Show the top 3 movies with the lowest number of votes."
+      },
+      {
+        "instance_id": "instance_id_40065",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "Who are the first three actors born after 1970 who acted in a movie released before 1990?"
+      },
+      {
+        "instance_id": "instance_id_37586",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "List the first 3 people who acted in a movie released in 2012."
+      },
+      {
+        "instance_id": "instance_id_34991",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "Find all movies with a rating above 90."
+      },
+      {
+        "instance_id": "instance_id_23639",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "Show the first 3 people who have reviewed more than one movie."
+      },
+      {
+        "instance_id": "instance_id_27359",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "compile_failed",
+        "jaccard": null,
+        "question": "\"Give me the top 10 actors based on the number of movies they played in.\""
+      },
+      {
+        "instance_id": "instance_id_37655",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "Find the top 5 movies with the most votes."
+      },
+      {
+        "instance_id": "instance_id_23303",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "compile_failed",
+        "jaccard": null,
+        "question": "Name 3 movies reviewed with a rating over 90."
+      },
+      {
+        "instance_id": "instance_id_38211",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "List the roles of any person in movies with a title containing 'Matrix'."
+      }
+    ],
+    "cases_sample": [
+      {
+        "i": 0,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_32919",
+        "question": "List the movies released between 1990 and 2000 with a rating higher than 80.",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 0.6666666666666666
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 2,
+        "structure": {
+          "label_f1": 0.5,
+          "rel_f1": 1.0,
+          "prop_f1": 0.5
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 20,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 1,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_32747",
+        "question": "List the movies with more than 100 votes.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 15,
+        "pred_row_count": 15,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 2,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_27405",
+        "question": "\"List me the people that are actors and directors on the same movie\"",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 0.4,
+          "rel_f1": 0.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 0,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 3,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_23699",
+        "question": "Show the top 3 movies with the lowest number of votes.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 1.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 4,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_40065",
+        "question": "Who are the first three actors born after 1970 who acted in a movie released before 1990?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      }
+    ]
+  }
+}

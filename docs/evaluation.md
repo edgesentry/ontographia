@@ -152,6 +152,27 @@ Recorded `2026-09-03T11:29:09Z` (git `9b3c7cf`). Machine-readable: [`examples/ll
 
 **Reading:** Conversion is reliable for the demo `Node properties` format. Relationship coverage is high because patterns are explicit in the schema text. Property gaps (~19%) often come from Cypher using properties omitted from the schema snippet, or from heuristic token extraction noise. JSON introspect / free-text schemas are unsupported or best-effort only.
 
+### Exec Match spot (issue #53)
+
+**Question:** On public demo DBs, can Question → LLM Intent → `Engine.build` → Neo4j rows match gold Cypher execution?
+
+**Harness:** [`examples/llm/eval/run_track_b_exec.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_b_exec.py). Recorded `2026-09-08T15:10:33Z` (LiteLLM `ontographia-gemini`), n=60 (seed=53) on `movies` + `recommendations` via `neo4j+s://demo.neo4jlabs.com`. HF gold Cypher literal `\n` sequences are normalized; write golds are skipped. Baseline: [`track_b_exec_spot.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_exec_spot.md).
+
+| metric | value |
+|--------|------:|
+| Compile OK | 41 / 60 (0.68) |
+| Exec scored (read golds that ran) | 38 |
+| Exec Match (exact row-set) | **1 / 38 (0.03)** |
+| Jaccard mean | 0.03 |
+| Structure F1 label / rel / prop | 0.82 / 0.67 / 0.61 |
+
+**Reading:** Schema ingest remains strong; live Intent→emit often compiles (~68%) and structure overlap is moderate, but **exact Exec Match against gold Cypher is rare**. HF gold is Cypher (not Intent), so mismatches mix Intent extraction error, ontology conversion gaps, and legitimate Cypher paraphrases. This spot closes external-validity measurement; it does **not** claim Text2Cypher SOTA or Track A H1-level field-selection proof.
+
+```bash
+source scripts/litellm/use-provider.sh gemini
+uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py --record
+```
+
 ### Reproduce / refresh
 
 ```bash
@@ -164,4 +185,4 @@ Check the Hugging Face dataset card for license before redistributing samples.
 
 - [Related work](related-work.md)
 - [Architecture](architecture.md)
-- Issues [#45](https://github.com/edgesentry/ontographia/issues/45), [#46](https://github.com/edgesentry/ontographia/issues/46), [#47](https://github.com/edgesentry/ontographia/issues/47), [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53), [#54](https://github.com/edgesentry/ontographia/issues/54), [#55](https://github.com/edgesentry/ontographia/issues/55), [#68](https://github.com/edgesentry/ontographia/issues/68)
+- Issues [#45](https://github.com/edgesentry/ontographia/issues/45), [#46](https://github.com/edgesentry/ontographia/issues/46), [#47](https://github.com/edgesentry/ontographia/issues/47), [#48](https://github.com/edgesentry/ontographia/issues/48), [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53), [#54](https://github.com/edgesentry/ontographia/issues/54), [#55](https://github.com/edgesentry/ontographia/issues/55), [#68](https://github.com/edgesentry/ontographia/issues/68)
