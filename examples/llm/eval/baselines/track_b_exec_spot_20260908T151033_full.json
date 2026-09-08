@@ -1,0 +1,1619 @@
+{
+  "meta": {
+    "recorded_at": "2026-09-08T15:10:33Z",
+    "git_rev": "5965059",
+    "issue": 53,
+    "harness": "examples/llm/eval/run_track_b_exec.py",
+    "dataset": "neo4j/text2cypher-2025v1",
+    "split": "test",
+    "refs": [
+      "neo4jlabs_demo_db_movies",
+      "neo4jlabs_demo_db_recommendations"
+    ],
+    "n": 60,
+    "seed": 53,
+    "schema_policy": "auto",
+    "model": "ontographia-gemini",
+    "neo4j_uri": "neo4j+s://demo.neo4jlabs.com",
+    "skip_exec": false,
+    "repair_mapping_path": "examples/llm/mappings/movies.repair.yaml",
+    "selection": "HF neo4j/text2cypher-2025v1 test; Node properties only; refs=['neo4jlabs_demo_db_movies', 'neo4jlabs_demo_db_recommendations']; stratified sample n=60 seed=53",
+    "license_note": "Dataset neo4j/text2cypher-2025v1 \u2014 check HF card before redistribution"
+  },
+  "results": {
+    "summary": {
+      "n": 60,
+      "compile_ok": 41,
+      "compile_rate": 0.6833,
+      "exec_scored": 38,
+      "exec_match": 1,
+      "exec_match_rate": 0.0263,
+      "jaccard_mean": 0.0263,
+      "structure_label_f1_mean": 0.8229,
+      "structure_rel_f1_mean": 0.6667,
+      "structure_prop_f1_mean": 0.613,
+      "by_ref": {
+        "neo4jlabs_demo_db_movies": {
+          "n": 30,
+          "compile_ok": 23,
+          "exec_match_rate": 0.0476,
+          "jaccard_mean": 0.0476
+        },
+        "neo4jlabs_demo_db_recommendations": {
+          "n": 30,
+          "compile_ok": 18,
+          "exec_match_rate": 0.0,
+          "jaccard_mean": 0.0
+        }
+      }
+    },
+    "cases": [
+      {
+        "i": 0,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_32919",
+        "question": "List the movies released between 1990 and 2000 with a rating higher than 80.",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 0.6666666666666666
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 2,
+        "structure": {
+          "label_f1": 0.5,
+          "rel_f1": 1.0,
+          "prop_f1": 0.5
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 20,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 1,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_32747",
+        "question": "List the movies with more than 100 votes.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 15,
+        "pred_row_count": 15,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 2,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_27405",
+        "question": "\"List me the people that are actors and directors on the same movie\"",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 0.4,
+          "rel_f1": 0.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 0,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 3,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_23699",
+        "question": "Show the top 3 movies with the lowest number of votes.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 1.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 4,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_40065",
+        "question": "Who are the first three actors born after 1970 who acted in a movie released before 1990?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 5,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_37586",
+        "question": "List the first 3 people who acted in a movie released in 2012.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 0.5,
+          "rel_f1": 0.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 1,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 6,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_34991",
+        "question": "Find all movies with a rating above 90.",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 0.5
+        },
+        "compile_ok": true,
+        "schema_mode": "full",
+        "used_fallback": true,
+        "llm_calls": 4,
+        "structure": {
+          "label_f1": 0.5,
+          "rel_f1": 1.0,
+          "prop_f1": 0.5
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 16,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 7,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_23639",
+        "question": "Show the first 3 people who have reviewed more than one movie.",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 2,
+        "pred_row_count": 3,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 8,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_27359",
+        "question": "\"Give me the top 10 actors based on the number of movies they played in.\"",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: duplicate alias: movie",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 9,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_23974",
+        "question": "Find the 3 oldest movies reviewed by someone born after 1970.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 1.0
+        },
+        "jaccard": 1.0,
+        "exec_match": true,
+        "gold_row_count": 0,
+        "pred_row_count": 0,
+        "note": "ok"
+      },
+      {
+        "i": 10,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_37655",
+        "question": "Find the top 5 movies with the most votes.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 5,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 11,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_23303",
+        "question": "Name 3 movies reviewed with a rating over 90.",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 0.5
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: return alias not in pattern: movie",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 12,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_38211",
+        "question": "List the roles of any person in movies with a title containing 'Matrix'.",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 0.6666666666666666
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 2,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.5
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 13,
+        "pred_row_count": 13,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 13,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_32710",
+        "question": "Which people have directed movies with the word \"Give\" in the title?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: relationship 'DIRECTED' does not originate from class 'Movie'",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 14,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_32833",
+        "question": "List all people who have written and directed the same movie.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: relationship 'WROTE' does not originate from class 'Movie'",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 15,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_24092",
+        "question": "What are the first 3 movies where Nancy Meyers was involved as a writer and their release years?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "full",
+        "used_fallback": true,
+        "llm_calls": 4,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.8
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 1,
+        "pred_row_count": 1,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 16,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_32768",
+        "question": "Which year saw the release of the most movies?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "full",
+        "used_fallback": true,
+        "llm_calls": 3,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 1.0
+        },
+        "jaccard": null,
+        "exec_match": false,
+        "exec_error": "{neo4j_code: Neo.ClientError.Statement.SyntaxError} {message: In a WITH/RETURN with DISTINCT or an aggregation, it is not possible to access variables declared before the WITH/RETURN: movie (line 4, column 10 (offset: 108))\n\"ORDER BY movie DESC\"\n          ^} {gql_status: 42001} {gql_status_description: error: syntax error or access rule violation - invalid syntax}",
+        "note": "exec_error"
+      },
+      {
+        "i": 17,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_33015",
+        "question": "What is the average rating of movies with the word \"funny\" in their review summary and released after 2010?",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 0.3333333333333333
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 0.5,
+          "rel_f1": 1.0,
+          "prop_f1": 0.4
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 1,
+        "pred_row_count": 0,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 18,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_32730",
+        "question": "Which people have directed movies with a budget higher than $100 million?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 0.5,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 38,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 19,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_37697",
+        "question": "Which 3 directors have directed the most movies released after 2005?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": null,
+        "exec_match": false,
+        "exec_error": "{neo4j_code: Neo.ClientError.Statement.SyntaxError} {message: In a WITH/RETURN with DISTINCT or an aggregation, it is not possible to access variables declared before the WITH/RETURN: movie (line 5, column 10 (offset: 148))\n\"ORDER BY movie DESC\"\n          ^} {gql_status: 42001} {gql_status_description: error: syntax error or access rule violation - invalid syntax}",
+        "note": "exec_error"
+      },
+      {
+        "i": 20,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_23751",
+        "question": "Which movies have been reviewed with a summary 'Fun, but a little far fetched' and what were their ratings?",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 0.3333333333333333
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: relationship 'REVIEWED' does not originate from class 'Movie'",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 21,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_27654",
+        "question": "\"What percentage of all actors in the database have acted in more than one movie?\"",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 0.5,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 1,
+        "pred_row_count": 1,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 22,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_23647",
+        "question": "What are the roles of actors in the movie titled 'Speed Racer'?",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 0.5
+        },
+        "compile_ok": true,
+        "schema_mode": "full",
+        "used_fallback": true,
+        "llm_calls": 4,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 7,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 23,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_23990",
+        "question": "List the top 5 youngest people who have written a movie.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "full",
+        "used_fallback": true,
+        "llm_calls": 3,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 1.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 5,
+        "pred_row_count": 10,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 24,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_36319",
+        "question": "Which 3 people born before 1950 acted in a movie with a tagline containing 'limits'?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 1,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 25,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_38254",
+        "question": "Which actors were born after 1970?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 0.5,
+          "rel_f1": 0.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 18,
+        "pred_row_count": 18,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 26,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_34365",
+        "question": "Which person produced movies directed by Lana Wachowski?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: relationship 'PRODUCED' does not originate from class 'Movie'",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 27,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_32668",
+        "question": "Which person has the highest average rating for movies they wrote?",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 0.5
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 0.8571428571428571,
+          "rel_f1": 1.0,
+          "prop_f1": 1.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 1,
+        "pred_row_count": 10,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 28,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_33101",
+        "question": "How many movies released after 2000 have \"coolest\" in their review summary?",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 0.5
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 0.5,
+          "rel_f1": 1.0,
+          "prop_f1": 0.5
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 1,
+        "pred_row_count": 1,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 29,
+        "ref": "neo4jlabs_demo_db_movies",
+        "db": "movies",
+        "instance_id": "instance_id_39559",
+        "question": "Who are the top 3 actors in terms of the diversity of roles played?",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 0.25
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: return alias not in pattern: character",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 30,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_29363",
+        "question": "What are the top 3 most common languages spoken in the movies directed by Steven Spielberg?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: relationship 'DIRECTED' does not originate from class 'Person'",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 31,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_45628",
+        "question": "How can I set imdbRating=9 for all Movies, using concurrency and batch commits? Give me the recommended approach",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": null,
+        "exec_match": null,
+        "jaccard": null,
+        "note": "skipped_write_gold",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        }
+      },
+      {
+        "i": 32,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_35478",
+        "question": "List the top 3 directors by the number of movies directed.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: relationship 'DIRECTED' does not originate from class 'Person'",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 33,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_29367",
+        "question": "Which actors have starred in both a 'Comedy' and a 'Drama' movie?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 2,
+        "structure": {
+          "label_f1": 0.33333333333333337,
+          "rel_f1": 0.0,
+          "prop_f1": 1.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3675,
+        "pred_row_count": 20,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 34,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_35510",
+        "question": "List the first 5 directors who have directed a movie with an imdbRating of 9 or higher.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: relationship 'DIRECTED' does not originate from class 'Person'",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 35,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_26154",
+        "question": "What are the top 5 movies with the highest budgets?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 5,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 36,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_42563",
+        "question": "List the first 5 actors who have a tmdbId and an imdbId listed on their profile.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 2,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.8
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 5,
+        "pred_row_count": 5,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 37,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_29879",
+        "question": "List the directors who have directed movies with a runtime longer than the average runtime of all movies.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: relationship 'DIRECTED' does not originate from class 'Person'",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 38,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_25180",
+        "question": "List all genres associated with movies that have a runtime less than 80 minutes.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 1082,
+        "pred_row_count": 20,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 39,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_29822",
+        "question": "List the movies released in the year the user \"Omar Huffman\" was born.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: duplicate alias: movie",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 40,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_35393",
+        "question": "Which 3 movies have the highest revenue to budget ratio?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.8
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 3,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 41,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_42790",
+        "question": "What is the total revenue generated by movies directed by directors born in 'Burchard, Nebraska, USA'?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: relationship 'DIRECTED' does not originate from class 'Person'",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 42,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_29608",
+        "question": "What is the total revenue of movies released in the 21st century?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.5
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 1,
+        "pred_row_count": 0,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 43,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_41968",
+        "question": "Which three movies have been rated by the youngest users on average?",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 2,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 44,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_35500",
+        "question": "What are the first 3 movies that were released in the USA?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.5
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 45,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_29508",
+        "question": "What is the name of the actor who has the highest average rating for their movies in the \"Comedy\" genre?",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.8,
+          "rel_coverage": 1.0,
+          "prop_coverage": 0.5
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: duplicate alias: movie",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 46,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_25381",
+        "question": "What are the top 5 directors who have directed the most movies with a runtime under 90 minutes?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: relationship 'DIRECTED' does not originate from class 'Person'",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 47,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_24765",
+        "question": "List the first 5 movies with the highest number of directors involved.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: relationship 'DIRECTED' does not originate from class 'Director'",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 48,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_35461",
+        "question": "List the top 5 actors with the most roles in movies released before 1980.",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.6666666666666666,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 2,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 5,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 49,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_41967",
+        "question": "List the top 3 directors based on the number of different countries their movies have been released in.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 2,
+        "structure": {
+          "label_f1": 0.5,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 3,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 50,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_25071",
+        "question": "Find all actors who have acted in a movie directed by a director born in the same country as them.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: relationship 'DIRECTED' does not originate from class 'Movie'",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 51,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_29345",
+        "question": "List the titles of movies that belong to at least three different genres.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 1.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3293,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 52,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_25369",
+        "question": "Which top 5 movies have the most diverse range of spoken languages?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 5,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 53,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_24931",
+        "question": "List the top 5 movies with the highest IMDb rating.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 5,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 54,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_25339",
+        "question": "List the top 5 shortest movies with an imdbRating above 6.0.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 0.4,
+          "rel_f1": 1.0,
+          "prop_f1": 1.0
+        },
+        "jaccard": null,
+        "exec_match": false,
+        "exec_error": "{neo4j_code: Neo.ClientError.Statement.SyntaxError} {message: Invalid input 'Nemesis': expected an expression, ',', 'ASC', 'ASCENDING', 'ORDER BY', 'CALL', 'CREATE', 'LOAD CSV', 'DELETE', 'DESC', 'DESCENDING', 'DETACH', 'FILTER', 'FINISH', 'FOR', 'FOREACH', 'INSERT', 'LET', 'LIMIT', 'MATCH', 'MERGE', 'NEXT', 'NODETACH', 'OFFSET', 'OPTIONAL', 'REMOVE', 'RETURN', 'SET', 'SHOW', 'SKIP', 'TERMINATE', 'UNION', 'UNWIND', 'USE', 'WITH' or <EOF> (line 5, column 24 (offset: 101))\n\"ORDER BY movie.runtime Nemesis runtime? runtime: runtime; descending: false? descending: false, alias: movie ASC\"\n                        ^} {gql_status: 42001} {gql_status_description: error: syntax error or access rule violation - invalid syntax}",
+        "note": "exec_error"
+      },
+      {
+        "i": 55,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_29631",
+        "question": "Which movie has the most languages?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 1.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 1,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 56,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_42107",
+        "question": "Find all movies that have been rated exactly 5 times.",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 0.5,
+          "rel_f1": 0.0,
+          "prop_f1": 0.6666666666666666
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 397,
+        "pred_row_count": 25,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 57,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_34888",
+        "question": "What are the first 3 genres associated with movies that have been rated by at least 5 different users?",
+        "gold_vocab_coverage": {
+          "label_coverage": 0.75,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 2,
+        "structure": {
+          "label_f1": 1.0,
+          "rel_f1": 0.6666666666666666,
+          "prop_f1": 1.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 3,
+        "pred_row_count": 3,
+        "note": "exec_mismatch"
+      },
+      {
+        "i": 58,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_42394",
+        "question": "What are the top 5 movies directed by directors born in Nebraska?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": false,
+        "compile_error": "validation error: relationship 'DIRECTED' does not originate from class 'Person'",
+        "structure": {
+          "label_f1": 0.0,
+          "rel_f1": 0.0,
+          "prop_f1": 0.0
+        },
+        "exec_match": null,
+        "jaccard": null,
+        "note": "compile_failed"
+      },
+      {
+        "i": 59,
+        "ref": "neo4jlabs_demo_db_recommendations",
+        "db": "recommendations",
+        "instance_id": "instance_id_24599",
+        "question": "Which actors have appeared in movies released in the 'Comedy' genre?",
+        "gold_vocab_coverage": {
+          "label_coverage": 1.0,
+          "rel_coverage": 1.0,
+          "prop_coverage": 1.0
+        },
+        "compile_ok": true,
+        "schema_mode": "subset",
+        "used_fallback": false,
+        "llm_calls": 1,
+        "structure": {
+          "label_f1": 0.7499999999999999,
+          "rel_f1": 0.6666666666666666,
+          "prop_f1": 1.0
+        },
+        "jaccard": 0.0,
+        "exec_match": false,
+        "gold_row_count": 6666,
+        "pred_row_count": 20,
+        "note": "exec_mismatch"
+      }
+    ],
+    "qualitative": [
+      {
+        "instance_id": "instance_id_32919",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "List the movies released between 1990 and 2000 with a rating higher than 80."
+      },
+      {
+        "instance_id": "instance_id_32747",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "List the movies with more than 100 votes."
+      },
+      {
+        "instance_id": "instance_id_27405",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "\"List me the people that are actors and directors on the same movie\""
+      },
+      {
+        "instance_id": "instance_id_23699",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "Show the top 3 movies with the lowest number of votes."
+      },
+      {
+        "instance_id": "instance_id_40065",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "Who are the first three actors born after 1970 who acted in a movie released before 1990?"
+      },
+      {
+        "instance_id": "instance_id_37586",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "List the first 3 people who acted in a movie released in 2012."
+      },
+      {
+        "instance_id": "instance_id_34991",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "Find all movies with a rating above 90."
+      },
+      {
+        "instance_id": "instance_id_23639",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "Show the first 3 people who have reviewed more than one movie."
+      },
+      {
+        "instance_id": "instance_id_27359",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "compile_failed",
+        "jaccard": null,
+        "question": "\"Give me the top 10 actors based on the number of movies they played in.\""
+      },
+      {
+        "instance_id": "instance_id_37655",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "Find the top 5 movies with the most votes."
+      },
+      {
+        "instance_id": "instance_id_23303",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "compile_failed",
+        "jaccard": null,
+        "question": "Name 3 movies reviewed with a rating over 90."
+      },
+      {
+        "instance_id": "instance_id_38211",
+        "ref": "neo4jlabs_demo_db_movies",
+        "note": "exec_mismatch",
+        "jaccard": 0.0,
+        "question": "List the roles of any person in movies with a title containing 'Matrix'."
+      }
+    ]
+  }
+}

@@ -48,7 +48,29 @@ Recorded in [`examples/llm/eval/baselines/track_a_h1.json`](https://github.com/e
 
 **Qualitative:** Under `full` / `large`, prompts surface near-duplicates such as `PlantName`, `supplier_name`, `DefectCode`. Under `subset`, none of those names appear in the property list for the 40 gold questions, so the mechanical arm never induces silent-wrong. Fallback rate is **0** on this fixture because gold class/relationship structure is always covered by the exact-match subset.
 
-**Caveat:** A live LLM could still invent near-duplicates without seeing them in the prompt. This arm measures *prompt-induced* distractibility, not model decoding. Follow-up: [issue #68](https://github.com/edgesentry/ontographia/issues/68).
+**Caveat (mechanical):** This arm measures *prompt-induced* distractibility, not model decoding. Live follow-up: [issue #68](https://github.com/edgesentry/ontographia/issues/68) below.
+
+### H1 live LLM arm (issue #68)
+
+**Question:** Do the H1 gains hold with a real OpenAI-compatible LLM (not a mechanical inducer)?
+
+**Harness:** [`examples/llm/eval/run_track_a_h1_live.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h1_live.py). Recorded `2026-09-08T14:42:52Z` via LiteLLM alias `ontographia-gemini` → upstream **Gemini 3.7 Flash** (`gemini-3.7-flash`), `temperature=0`, 40 gold × mid/large × three policies. Machine-readable: [`examples/llm/eval/baselines/track_a_h1_live.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live.json).
+
+| profile | condition | Property Hit | compile OK | near-dup picks | invent-without-seeing | fallback | ≈tok p95 |
+|---------|-----------|-------------:|-----------:|---------------:|----------------------:|---------:|---------:|
+| mid | full | 0.89 | 36/40 | 0 | 0 | 0.00 | 2,460 |
+| mid | subset | 0.74 | 30/40 | 0 | 0 | 0.00 | 1,247 |
+| mid | subset_fallback | **0.95** | **40/40** | 0 | 0 | 0.15 | **1,247** |
+| large | full | 0.82 | 33/40 | 0 | 0 | 0.00 | 13,710 |
+| large | subset | 0.78 | 32/40 | 0 | 0 | 0.00 | 1,247 |
+| large | subset_fallback | **0.95** | **40/40** | 0 | 0 | 0.17 | **1,247** |
+
+**H1 live verdict: support** on the **recommended production policy** (`subset_fallback` / `schema_policy=auto`): on `large`, Property Hit +12.5pt vs full (0.82 → 0.95), tokens p95 ≈ −91%, compile 40/40 (better than full). Ablation: **subset-only** can under-cover vocabulary (−5pt hit, slightly worse compile) — exact-match pruning needs the full-schema fallback. Invent-without-seeing rate was **0** on this run; preferred near-duplicates were not selected even under `full`.
+
+```bash
+source scripts/litellm/use-provider.sh gemini   # or any OpenAI-compatible backend
+uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --record
+```
 
 ### H2 study — execution feedback Intent refine
 
@@ -69,7 +91,7 @@ Recorded in [`examples/llm/eval/baselines/track_a_h2.json`](https://github.com/e
 
 **H2 verdict: support** (predeclared): on the empty-inducing set, final execution_ok +100pt with refine, ≥80% recovered to gold Intent + rows, Cypher always from `Engine.build`. Feature: [issue #46](https://github.com/edgesentry/ontographia/issues/46) / `--refine-on-exec`.
 
-**Caveat:** Mechanical arm proves the loop recovers Empty@Valid when Intent correction succeeds. It does **not** measure live-LLM correction quality or Exec Match on a real Neo4j database.
+**Caveat:** Mechanical arm proves the loop recovers Empty@Valid when Intent correction succeeds. It does **not** measure live-LLM correction quality on a real Neo4j database. Live field-selection evidence for the Intent layer is covered by the H1 live arm (#68); H2’s contribution remains the deterministic refine loop.
 
 ### H3 study — difficulty-adaptive spend
 
@@ -93,13 +115,14 @@ Recorded in [`examples/llm/eval/baselines/track_a_h3.json`](https://github.com/e
 
 **H3 verdict: support** (predeclared on `large` / easy): tokens p95 ≈ −91% vs always_full, LLM calls not higher, Compile / Property Hit not worse; hard slice escalates (rate 1.00) and recovers compile.
 
-**Caveat:** Mechanical arm measures #47 schema/retry budgeting with mock extractors. It does **not** measure live-LLM difficulty routing. Follow-up: [issue #68](https://github.com/edgesentry/ontographia/issues/68).
+**Caveat:** Mechanical arm measures #47 schema/retry budgeting with mock extractors. Live Intent extraction under `schema_policy=auto` (subset-first + escalate) is exercised in the H1 live arm (#68); this study isolates the spend state machine.
 
 ### Reproduce / refresh
 
 ```bash
 uv run python examples/llm/eval/run_track_a.py --record
 uv run python examples/llm/eval/run_track_a_h1.py --record
+uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --record
 uv run python examples/llm/eval/run_track_a_h2.py --record
 uv run python examples/llm/eval/run_track_a_h3.py --record
 ```
@@ -129,6 +152,27 @@ Recorded `2026-09-03T11:29:09Z` (git `9b3c7cf`). Machine-readable: [`examples/ll
 
 **Reading:** Conversion is reliable for the demo `Node properties` format. Relationship coverage is high because patterns are explicit in the schema text. Property gaps (~19%) often come from Cypher using properties omitted from the schema snippet, or from heuristic token extraction noise. JSON introspect / free-text schemas are unsupported or best-effort only.
 
+### Exec Match spot (issue #53)
+
+**Question:** On public demo DBs, can Question → LLM Intent → `Engine.build` → Neo4j rows match gold Cypher execution?
+
+**Harness:** [`examples/llm/eval/run_track_b_exec.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_b_exec.py). Recorded `2026-09-08T15:10:33Z` (LiteLLM `ontographia-gemini` → **Gemini 3.7 Flash** / `gemini-3.7-flash`), n=60 (seed=53) on `movies` + `recommendations` via `neo4j+s://demo.neo4jlabs.com`. HF gold Cypher literal `\n` sequences are normalized; write golds are skipped. Baseline: [`track_b_exec_spot.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_exec_spot.md).
+
+| metric | value |
+|--------|------:|
+| Compile OK | 41 / 60 (0.68) |
+| Exec scored (read golds that ran) | 38 |
+| Exec Match (exact row-set) | **1 / 38 (0.03)** |
+| Jaccard mean | 0.03 |
+| Structure F1 label / rel / prop | 0.82 / 0.67 / 0.61 |
+
+**Reading:** Schema ingest remains strong; live Intent→emit often compiles (~68%) and structure overlap is moderate, but **exact Exec Match against gold Cypher is rare**. HF gold is Cypher (not Intent), so mismatches mix Intent extraction error, ontology conversion gaps, and legitimate Cypher paraphrases. This spot closes external-validity measurement; it does **not** claim Text2Cypher SOTA or Track A H1-level field-selection proof.
+
+```bash
+source scripts/litellm/use-provider.sh gemini
+uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py --record
+```
+
 ### Reproduce / refresh
 
 ```bash
@@ -141,4 +185,4 @@ Check the Hugging Face dataset card for license before redistributing samples.
 
 - [Related work](related-work.md)
 - [Architecture](architecture.md)
-- Issues [#45](https://github.com/edgesentry/ontographia/issues/45), [#46](https://github.com/edgesentry/ontographia/issues/46), [#47](https://github.com/edgesentry/ontographia/issues/47), [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53), [#54](https://github.com/edgesentry/ontographia/issues/54), [#55](https://github.com/edgesentry/ontographia/issues/55), [#68](https://github.com/edgesentry/ontographia/issues/68)
+- Issues [#45](https://github.com/edgesentry/ontographia/issues/45), [#46](https://github.com/edgesentry/ontographia/issues/46), [#47](https://github.com/edgesentry/ontographia/issues/47), [#48](https://github.com/edgesentry/ontographia/issues/48), [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53), [#54](https://github.com/edgesentry/ontographia/issues/54), [#55](https://github.com/edgesentry/ontographia/issues/55), [#68](https://github.com/edgesentry/ontographia/issues/68)

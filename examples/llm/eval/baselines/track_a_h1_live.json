@@ -1,0 +1,187 @@
+{
+  "meta": {
+    "recorded_at": "2026-09-08T14:42:52Z",
+    "git_rev": "c8d8a05",
+    "profiles": [
+      "mid",
+      "large"
+    ],
+    "conditions": [
+      "full",
+      "subset",
+      "subset_fallback"
+    ],
+    "n_cases": 40,
+    "max_retries": 1,
+    "backend": "openai",
+    "model": "ontographia-gemini",
+    "base_url": "http://127.0.0.1:4000/v1",
+    "study": "h1_live_llm",
+    "issue": 68,
+    "harness": "examples/llm/eval/run_track_a_h1_live.py",
+    "upstream_model": "gemini-3.7-flash",
+    "model_note": "LiteLLM alias ontographia-gemini \u2192 gemini/gemini-3.7-flash"
+  },
+  "verdict": {
+    "verdict": "support",
+    "reason": "live large subset_fallback (recommended policy): Property Hit \u2265 +10pt vs full, tokens p95 \u2264 \u221230%, compile not worse; subset-only alone was hit -5.0pt / compile_ok 32/33",
+    "criteria": {
+      "property_hit_gain_threshold_pt": 10.0,
+      "token_p95_reduction_threshold": -0.3,
+      "full_compile_ok": 33,
+      "full_property_hit": 0.825,
+      "full_near_dup_picked": 0,
+      "subset_only": {
+        "property_hit_gain_pt": -5.0,
+        "token_p95_rel_change": -0.909,
+        "compile_not_worse": false,
+        "arm_compile_ok": 32,
+        "arm_property_hit": 0.775,
+        "arm_fallback_rate": 0.0,
+        "invent_without_seeing_rate": 0.0,
+        "near_dup_picked": 0
+      },
+      "subset_fallback": {
+        "property_hit_gain_pt": 12.5,
+        "token_p95_rel_change": -0.909,
+        "compile_not_worse": true,
+        "arm_compile_ok": 40,
+        "arm_property_hit": 0.95,
+        "arm_fallback_rate": 0.175,
+        "invent_without_seeing_rate": 0.0,
+        "near_dup_picked": 0
+      }
+    },
+    "caveat": "Live OpenAI-compatible extractor (temperature=0). Primary verdict is on subset_fallback (schema_policy=auto), the production path from #45. subset-only is reported for ablation. invent_without_seeing counts near-duplicate picks absent from the final prompt property vocabulary. Mechanical H1 remains the prompt-vocab control experiment."
+  },
+  "results": [
+    {
+      "profile": "mid",
+      "ontology": {
+        "profile_name": "mid",
+        "properties": 200,
+        "distractor_properties": 184,
+        "distractor_classes": 7,
+        "near_duplicates": 32
+      },
+      "n_cases": 40,
+      "conditions": {
+        "full": {
+          "n": 40,
+          "property_hit_mean": 0.8875,
+          "soft_prop_f1_mean": 0.8917,
+          "compile_ok": 36,
+          "compile_fail": 4,
+          "distractor_visible": 40,
+          "near_dup_picked": 0,
+          "invent_without_seeing": 0,
+          "invent_without_seeing_rate": 0.0,
+          "fallback_rate": 0.0,
+          "mean_llm_calls": 0.9,
+          "prompt_approx_tokens_p50": 2417,
+          "prompt_approx_tokens_p95": 2460
+        },
+        "subset": {
+          "n": 40,
+          "property_hit_mean": 0.7375,
+          "soft_prop_f1_mean": 0.7417,
+          "compile_ok": 30,
+          "compile_fail": 10,
+          "distractor_visible": 0,
+          "near_dup_picked": 0,
+          "invent_without_seeing": 0,
+          "invent_without_seeing_rate": 0.0,
+          "fallback_rate": 0.0,
+          "mean_llm_calls": 0.75,
+          "prompt_approx_tokens_p50": 1174,
+          "prompt_approx_tokens_p95": 1247
+        },
+        "subset_fallback": {
+          "n": 40,
+          "property_hit_mean": 0.95,
+          "soft_prop_f1_mean": 0.9667,
+          "compile_ok": 40,
+          "compile_fail": 0,
+          "distractor_visible": 0,
+          "near_dup_picked": 0,
+          "invent_without_seeing": 0,
+          "invent_without_seeing_rate": 0.0,
+          "fallback_rate": 0.15,
+          "mean_llm_calls": 1.15,
+          "prompt_approx_tokens_p50": 1174,
+          "prompt_approx_tokens_p95": 1247
+        }
+      },
+      "deltas_vs_full": {
+        "subset_minus_full_property_hit_pt": -15.0,
+        "subset_token_p95_rel_change": -0.4931,
+        "subset_compile_ok_delta": -6
+      },
+      "qualitative_full_errors": []
+    },
+    {
+      "profile": "large",
+      "ontology": {
+        "profile_name": "large",
+        "properties": 2000,
+        "distractor_properties": 1984,
+        "distractor_classes": 7,
+        "near_duplicates": 32
+      },
+      "n_cases": 40,
+      "conditions": {
+        "full": {
+          "n": 40,
+          "property_hit_mean": 0.825,
+          "soft_prop_f1_mean": 0.82,
+          "compile_ok": 33,
+          "compile_fail": 7,
+          "distractor_visible": 40,
+          "near_dup_picked": 0,
+          "invent_without_seeing": 0,
+          "invent_without_seeing_rate": 0.0,
+          "fallback_rate": 0.0,
+          "mean_llm_calls": 0.825,
+          "prompt_approx_tokens_p50": 13667,
+          "prompt_approx_tokens_p95": 13710
+        },
+        "subset": {
+          "n": 40,
+          "property_hit_mean": 0.775,
+          "soft_prop_f1_mean": 0.7792,
+          "compile_ok": 32,
+          "compile_fail": 8,
+          "distractor_visible": 0,
+          "near_dup_picked": 0,
+          "invent_without_seeing": 0,
+          "invent_without_seeing_rate": 0.0,
+          "fallback_rate": 0.0,
+          "mean_llm_calls": 0.8,
+          "prompt_approx_tokens_p50": 1174,
+          "prompt_approx_tokens_p95": 1247
+        },
+        "subset_fallback": {
+          "n": 40,
+          "property_hit_mean": 0.95,
+          "soft_prop_f1_mean": 0.9667,
+          "compile_ok": 40,
+          "compile_fail": 0,
+          "distractor_visible": 0,
+          "near_dup_picked": 0,
+          "invent_without_seeing": 0,
+          "invent_without_seeing_rate": 0.0,
+          "fallback_rate": 0.175,
+          "mean_llm_calls": 1.175,
+          "prompt_approx_tokens_p50": 1174,
+          "prompt_approx_tokens_p95": 1247
+        }
+      },
+      "deltas_vs_full": {
+        "subset_minus_full_property_hit_pt": -5.0,
+        "subset_token_p95_rel_change": -0.909,
+        "subset_compile_ok_delta": -1
+      },
+      "qualitative_full_errors": []
+    }
+  ]
+}
