@@ -100,6 +100,12 @@ def main() -> int:
         help="Skip json_schema response_format (for older local models)",
     )
     parser.add_argument("--dialect", default="cypher25", choices=["cypher25", "cypher5", "gql"])
+    parser.add_argument(
+        "--schema-policy",
+        choices=["auto", "subset", "full"],
+        default="auto",
+        help="Intent prompt schema: auto=exact-match subset then full fallback (issue #45)",
+    )
     parser.add_argument("--uri", default=os.environ.get("NEO4J_URI", "bolt://localhost:7687"))
     parser.add_argument("--user", default=os.environ.get("NEO4J_USER", "neo4j"))
     parser.add_argument("--password", default=os.environ.get("NEO4J_PASSWORD"))
@@ -139,25 +145,34 @@ def main() -> int:
     print(f"=== Question ===\n{args.question}\n")
 
     try:
-        intent, result = extract_validated_intent(
+        outcome = extract_validated_intent(
             engine,
             extractor,
             args.question,
             schema,
             ontology=ontology,
             dialect=args.dialect,
+            schema_policy=args.schema_policy,
         )
     except Exception as exc:  # noqa: BLE001
         print(f"Intent extraction/validation failed: {exc}", file=sys.stderr)
         return 1
 
+    print(
+        f"=== Schema policy: {args.schema_policy} "
+        f"(used={outcome.schema_mode}, fallback={outcome.used_fallback}) ==="
+    )
+    if outcome.subset_stats:
+        print(f"=== Subset stats: {outcome.subset_stats} ===")
+
     print("=== Intent JSON ===")
-    print(json.dumps(intent, ensure_ascii=False, indent=2))
+    print(json.dumps(outcome.intent, ensure_ascii=False, indent=2))
 
     print("\n=== Generated query ===")
-    print(result["query"])
+    print(outcome.result["query"])
     print("\n=== Parameters ===")
-    print(json.dumps(result["params"], ensure_ascii=False, indent=2))
+    print(json.dumps(outcome.result["params"], ensure_ascii=False, indent=2))
+    result = outcome.result
 
     if not args.execute:
         print("\n(dry-run: pass --execute to run against Neo4j)")

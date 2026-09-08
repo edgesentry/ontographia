@@ -10,19 +10,17 @@ Offline experiments for the **app / agent Intent layer** (not the Rust Cypher em
 
 Manufacturing gold Intents (40) are compiled as-is, then each is corrupted to a near-duplicate distractor property (for example `Plant.name` → `PlantName`). Ontologies: `small` (base), `mid` (~200 properties), `large` (~2000 properties).
 
-### Full-schema baseline
+### Full-schema baseline (+ subset prompt size)
 
-Recorded `2026-09-03T11:20:01Z` (git `bfe7336`). Machine-readable copy: [`examples/llm/eval/baselines/track_a_full_schema.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_full_schema.json).
+Recorded `2026-09-08T09:11:27Z` (git `0563c07`). Machine-readable copy: [`examples/llm/eval/baselines/track_a_full_schema.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_full_schema.json).
 
-| profile | properties | gold compile OK | silent-wrong OK | silent-wrong fail | mean prop hit (wrong vs gold) | prompt ≈tokens p50 |
-|---------|------------:|----------------:|----------------:|------------------:|------------------------------:|-------------------:|
-| small | 16 | 40 | 0 | 40 | 0.50 | 1,359 |
-| mid | 200 | 40 | 40 | 0 | 0.50 | 2,460 |
-| large | 2,000 | 40 | 40 | 0 | 0.50 | 13,710 |
+| profile | properties | gold compile OK | silent-wrong OK | silent-wrong fail | mean prop hit (wrong vs gold) | prompt ≈tokens full | prompt ≈tokens subset |
+|---------|------------:|----------------:|----------------:|------------------:|------------------------------:|--------------------:|----------------------:|
+| small | 16 | 40 | 0 | 40 | 0.50 | 1,359 | 1,246 |
+| mid | 200 | 40 | 40 | 0 | 0.50 | 2,460 | 1,247 |
+| large | 2,000 | 40 | 40 | 0 | 0.50 | 13,710 | 1,247 |
 
-**Reading:** On `mid` / `large`, silent-wrong Intents compile as often as gold — ontology validation cannot see that the field is the wrong *semantic* choice. On `small`, distractors are absent, so the same wrong Intents fail. Prompt size grows with the full vocabulary dump in `build_initial_user_message`.
-
-This is the failure mode motivating schema subsetting for Intent prompts ([issue #45](https://github.com/edgesentry/ontographia/issues/45)); comparative arms land in [issue #51](https://github.com/edgesentry/ontographia/issues/51).
+**Reading:** On `mid` / `large`, silent-wrong Intents compile as often as gold — ontology validation cannot see that the field is the wrong *semantic* choice. On `small`, distractors are absent, so the same wrong Intents fail. Full-schema prompt size grows with the vocabulary dump in `build_initial_user_message`; **exact-match subset prompts** ([issue #45](https://github.com/edgesentry/ontographia/issues/45), [`examples/llm/subset.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/subset.py)) stay ~1.2k tokens even at 2k properties. Comparative Intent quality (full vs subset vs fallback) is still [issue #51](https://github.com/edgesentry/ontographia/issues/51).
 
 ### Reproduce / refresh
 

@@ -1,13 +1,13 @@
 {
   "meta": {
-    "recorded_at": "2026-09-03T11:20:01Z",
-    "git_rev": "bfe7336",
+    "recorded_at": "2026-09-08T09:11:27Z",
+    "git_rev": "0563c07",
     "profiles": [
       "small",
       "mid",
       "large"
     ],
-    "condition": "full_schema",
+    "condition": "full_schema_compile_plus_subset_prompt_size",
     "harness": "examples/llm/eval/run_track_a.py"
   },
   "results": [
@@ -30,7 +30,10 @@
       "silent_wrong_prop_f1_mean": 0.5,
       "prompt_chars_p50": 5436,
       "prompt_approx_tokens_p50": 1359,
-      "prompt_approx_tokens_max": 1359
+      "prompt_approx_tokens_max": 1359,
+      "prompt_approx_tokens_subset_p50": 1246,
+      "prompt_subset_empty_in_sample": 0,
+      "prompt_sample_n": 5
     },
     {
       "profile": "mid",
@@ -51,7 +54,10 @@
       "silent_wrong_prop_f1_mean": 0.5,
       "prompt_chars_p50": 9839,
       "prompt_approx_tokens_p50": 2460,
-      "prompt_approx_tokens_max": 2460
+      "prompt_approx_tokens_max": 2460,
+      "prompt_approx_tokens_subset_p50": 1247,
+      "prompt_subset_empty_in_sample": 0,
+      "prompt_sample_n": 5
     },
     {
       "profile": "large",
@@ -72,7 +78,10 @@
       "silent_wrong_prop_f1_mean": 0.5,
       "prompt_chars_p50": 54839,
       "prompt_approx_tokens_p50": 13710,
-      "prompt_approx_tokens_max": 13710
+      "prompt_approx_tokens_max": 13710,
+      "prompt_approx_tokens_subset_p50": 1247,
+      "prompt_subset_empty_in_sample": 0,
+      "prompt_sample_n": 5
     }
   ]
 }
