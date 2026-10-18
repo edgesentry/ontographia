@@ -20,7 +20,7 @@ Recorded `2026-09-08T09:11:27Z` (git `0563c07`). Machine-readable copy: [`exampl
 | mid | 200 | 40 | 40 | 0 | 0.50 | 2,460 | 1,247 |
 | large | 2,000 | 40 | 40 | 0 | 0.50 | 13,710 | 1,247 |
 
-**Reading:** On `mid` / `large`, silent-wrong Intents compile as often as gold — ontology validation cannot see that the field is the wrong *semantic* choice. On `small`, distractors are absent, so the same wrong Intents fail. Full-schema prompt size grows with the vocabulary dump in `build_initial_user_message`; **exact-match subset prompts** ([issue #45](https://github.com/edgesentry/ontographia/issues/45), [`examples/llm/subset.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/subset.py)) stay ~1.2k tokens even at 2k properties.
+**Reading:** On `mid` / `large`, silent-wrong Intents compile as often as gold — ontology validation cannot see that the field is the wrong *semantic* choice. On `small`, distractors are absent, so the same wrong Intents fail. Full-schema prompt size grows with the vocabulary dump in `build_initial_user_message`; **exact-match subset prompts** ([issue #45](https://github.com/edgesentry/ontographia/issues/45), `ontographia.llm.subset` — [Intent layer](llm.md)) stay ~1.2k tokens even at 2k properties.
 
 ### H1 study — full vs subset vs subset+fallback
 

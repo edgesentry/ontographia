@@ -381,7 +381,7 @@ natural language → IntentExtractor (mock | openai-compatible) → Intent JSON
     → (optional --refine-on-exec) empty/error → Intent correction → recompile
 ```
 
-Extractor implementations live in [`examples/llm/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/). Add a new backend by implementing the `IntentExtractor` protocol in `extractors.py` — the Ontographia core stays LLM-agnostic.
+Extractor implementations live in [`ontographia.llm`](llm.md) (`pip install "ontographia[llm]"`); thin demos under [`examples/llm/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/). Add a new transport by implementing the `LLMBackend` protocol (or pass any OpenAI-compatible `base_url`) — the Ontographia core stays LLM-agnostic.
 
 **LiteLLM (OpenAI + Gemini + Cursor via proxy):** see [litellm-local.md](litellm-local.md).
 

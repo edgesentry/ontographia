@@ -6,6 +6,8 @@ Directory index for the monorepo. Tutorials and usage guides live in this docs s
 |------|----------|
 | [`crates/`](https://github.com/edgesentry/ontographia/tree/main/crates) | Rust engine: core, adapters, schema, FFI, CLI — see [Rust](rust.md) |
 | [`bindings/`](https://github.com/edgesentry/ontographia/tree/main/bindings) | [Python](python.md) (PyO3) and [Go](go.md) (cgo) bindings |
+| [`python/ontographia/`](https://github.com/edgesentry/ontographia/tree/main/python/ontographia) | Pure-Python package surface (incl. experimental [`llm`](llm.md) extra) |
+| [`tests/python/llm/`](https://github.com/edgesentry/ontographia/tree/main/tests/python/llm) | CI unit tests for `ontographia[llm]` (fake backends) |
 | [`examples/`](https://github.com/edgesentry/ontographia/tree/main/examples) | Sample ontologies, Neo4j seed, demo scripts |
 | [`schemas/`](https://github.com/edgesentry/ontographia/tree/main/schemas) | COM and native ontology JSON Schemas |
 | [`scripts/`](https://github.com/edgesentry/ontographia/tree/main/scripts) | Neo4j setup, CI tests, LiteLLM helpers, release scripts |
@@ -29,8 +31,8 @@ Directory index for the monorepo. Tutorials and usage guides live in this docs s
 | `neo4j/seed.cypher` | Cypher 25 seed graph |
 | `neo4j/schema.json`, `constraints.cypher` | Expected graph catalog and UNIQUE constraints |
 | `run_neo4j_demo.py` | Intent → Cypher → optional Neo4j execute |
-| `run_llm_e2e.py` | Local-only LLM Intent extraction E2E |
-| `llm/` | Provider-agnostic Intent extraction (not used in CI) |
+| `run_llm_e2e.py` | Local-only LLM Intent extraction E2E (uses `ontographia.llm`) |
+| `llm/` | Thin demos / eval harnesses on top of [`ontographia[llm]`](llm.md) |
 
 Details: [Neo4j walkthrough](end-to-end-neo4j.md), [Ontology & graph alignment](ontology-graph-alignment.md).
 

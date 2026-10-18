@@ -58,10 +58,8 @@ EXAMPLES = ROOT / "examples"
 DEFAULT_ONTOLOGY = EXAMPLES / "manufacturing.native.yaml"
 SEED_FILE = EXAMPLES / "neo4j/seed.cypher"
 
-sys.path.insert(0, str(EXAMPLES))
-
-from llm.extractors import create_extractor  # noqa: E402
-from llm.pipeline import extract_validated_intent, refine_intent_after_execution  # noqa: E402
+from ontographia.llm.extractors import create_extractor
+from ontographia.llm.pipeline import extract_validated_intent, refine_intent_after_execution
 
 
 def parse_cypher25_seed(path: Path) -> list[str]:

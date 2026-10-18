@@ -38,8 +38,8 @@ from llm.eval.schema_convert import (  # noqa: E402
     extract_cypher_vocab,
     vocab_coverage,
 )
-from llm.extractors import create_extractor  # noqa: E402
-from llm.pipeline import extract_validated_intent  # noqa: E402
+from ontographia.llm.extractors import create_extractor  # noqa: E402
+from ontographia.llm.pipeline import extract_validated_intent  # noqa: E402
 
 DEFAULT_REFS = (
     "neo4jlabs_demo_db_movies",

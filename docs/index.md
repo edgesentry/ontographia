@@ -29,7 +29,7 @@ Intent JSON is produced outside the core (LLM or hand-authored), constrained by 
 |--------|---------|
 | CLI | `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap)), `cargo install ontographia-cli`, or [GitHub Releases](https://github.com/edgesentry/ontographia/releases) |
 | Rust libs | `ontographia-core`, `ontographia-adapters`, `ontographia-schema` on [crates.io](https://crates.io) |
-| Python | `pip install ontographia` (wheels for 3.11–3.13 on Linux, macOS arm64, Windows) |
+| Python | `pip install ontographia` (wheels for 3.11–3.13 on Linux, macOS arm64, Windows); optional Intent layer: `pip install "ontographia[llm]"` ([docs](llm.md)) |
 | Go | `go get github.com/edgesentry/ontographia/bindings/go@v0.1.5` (+ FFI lib from Releases) |
 
 Release process: [Release](release.md).
@@ -73,6 +73,7 @@ Detection and routing: `crates/ontographia-adapters/src/registry.rs`.
 | Go bindings (cgo / FFI) | [Go](go.md) |
 | Pipeline, COM, validation, emitters | [Architecture](architecture.md) |
 | Related Text2Cypher / adaptive-decoding work | [Related work](related-work.md) |
+| Intent layer (`ontographia[llm]`, experimental) | [Intent layer (LLM)](llm.md) |
 | Intent-layer evaluation (Track A baselines) | [Evaluation](evaluation.md) |
 | Neo4j seed data + execute queries | [Neo4j walkthrough](end-to-end-neo4j.md) |
 | Ontology ↔ Neo4j schema alignment | [Ontology & graph alignment](ontology-graph-alignment.md) |

@@ -1,5 +1,8 @@
 """Issue #48: mapping-driven repair / semantic_validate parity tests."""
 
+# CI location: tests/python/llm/ (preferred). This script remains runnable.
+
+
 from __future__ import annotations
 
 import sys
@@ -9,9 +12,9 @@ from pathlib import Path
 EXAMPLES = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(EXAMPLES))
 
-from llm.mapping_loader import MAPPINGS_DIR, load_repair_mapping  # noqa: E402
-from llm.repair import repair_intent  # noqa: E402
-from llm.semantic_validate import semantic_validate_intent  # noqa: E402
+from ontographia.llm.mapping_loader import MAPPINGS_DIR, load_repair_mapping  # noqa: E402
+from ontographia.llm.repair import repair_intent  # noqa: E402
+from ontographia.llm.semantic_validate import semantic_validate_intent  # noqa: E402
 
 
 class RepairMappingTests(unittest.TestCase):

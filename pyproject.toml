@@ -27,13 +27,25 @@ Homepage = "https://github.com/edgesentry/ontographia"
 Repository = "https://github.com/edgesentry/ontographia"
 Documentation = "https://edgesentry.github.io/ontographia/"
 
+[project.optional-dependencies]
+llm = [
+    "openai>=1.40",
+    "pyyaml>=6.0",
+]
+# Reserved for a future LiteLLM-backed LLMBackend (not implemented yet).
+# litellm = ["litellm>=1.67"]
+
 [dependency-groups]
 dev = [
     "maturin>=1.7,<2.0",
     "neo4j>=5",
     "mkdocs-material>=9.5,<10",
+    "pytest>=8",
+    "openai>=1.40",
+    "pyyaml>=6.0",
 ]
-llm = [
+# Local LiteLLM proxy tooling for docs/litellm-local.md (not the package extra).
+litellm = [
     "litellm[proxy]>=1.67",
 ]
 
@@ -42,3 +54,8 @@ manifest-path = "bindings/python/Cargo.toml"
 module-name = "ontographia"
 python-source = "python"
 features = ["pyo3/extension-module"]
+# Pure-Python ontographia.llm (incl. mapping YAML) ships via python-source.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["examples"]
