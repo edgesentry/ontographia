@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **MCP server** (`ontographia[mcp]`): optional extra with FastMCP-style tools
+  `list_ontology`, `intent_schema`, `build_cypher`, and read-only `execute`;
+  console entry point `ontographia-mcp` (stdio); Neo4j via CLI/env; write-query
+  rejection (Intent-only execution, `READ_ACCESS` / `execute_read`, Cypher deny
+  list). Docs: [docs/mcp.md](docs/mcp.md). Epic #85.
+- **Intent layer** (`ontographia[llm]`): package former `examples/llm/` helpers as
+  an optional extra (`openai` + `pyyaml`) with `ImportError` guidance when the
+  extra is missing; docs: [docs/llm.md](docs/llm.md). Epic #84 (#93).
+
 ## [0.1.5] - 2026-10-18
 
 Pre-1.0 patch release. Intent JSON and dialect handling below are **breaking**. A patch bump is used because the project is still before 1.0.

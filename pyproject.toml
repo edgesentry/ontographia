@@ -32,8 +32,16 @@ llm = [
     "openai>=1.40",
     "pyyaml>=6.0",
 ]
+mcp = [
+    # FastMCP-style API: mcp 1.x (`FastMCP`) or mcp 2.x (`MCPServer` rename).
+    "mcp>=1.9,<3",
+    "neo4j>=5",
+]
 # Reserved for a future LiteLLM-backed LLMBackend (not implemented yet).
 # litellm = ["litellm>=1.67"]
+
+[project.scripts]
+ontographia-mcp = "ontographia.mcp.__main__:main"
 
 [dependency-groups]
 dev = [
@@ -43,6 +51,7 @@ dev = [
     "pytest>=8",
     "openai>=1.40",
     "pyyaml>=6.0",
+    "mcp>=1.9,<3",
 ]
 # Local LiteLLM proxy tooling for docs/litellm-local.md (not the package extra).
 litellm = [
@@ -54,7 +63,7 @@ manifest-path = "bindings/python/Cargo.toml"
 module-name = "ontographia"
 python-source = "python"
 features = ["pyo3/extension-module"]
-# Pure-Python ontographia.llm (incl. mapping YAML) ships via python-source.
+# Pure-Python ontographia.llm / ontographia.mcp ship via python-source.
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
