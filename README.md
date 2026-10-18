@@ -16,6 +16,7 @@ Ontology → COM → validate(Intent) → AST → Cypher 25 + $params
 | **Overview & golden rules** | [docs/index.md](docs/index.md) |
 | **How the pipeline works** | [docs/architecture.md](docs/architecture.md) |
 | **AI coding agents** | [AGENTS.md](AGENTS.md) (routes to `docs/`; do not treat this README as the manual) |
+| **Roadmap** | [docs/roadmap.md](docs/roadmap.md) |
 
 ## Docs map (short)
 

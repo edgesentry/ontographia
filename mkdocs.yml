@@ -54,6 +54,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Roadmap: roadmap.md
   - Getting started:
     - Rust: rust.md
     - Python: python.md

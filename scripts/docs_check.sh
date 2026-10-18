@@ -52,5 +52,6 @@ fi
 assert_mermaid_page architecture
 assert_mermaid_page end-to-end-neo4j
 assert_mermaid_page release
+assert_mermaid_page roadmap
 
 echo "docs check ok"
