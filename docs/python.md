@@ -60,7 +60,9 @@ print(result["params"])
 | `build(intent, dialect="cypher25")` | Validate Intent and return `{"query", "params"}` |
 | `ontology_json()` | Serialized COM for debugging |
 
-Dialects: `"cypher25"` (default), `"cypher5"`, `"gql"`.
+Dialects: `"cypher25"` (default), `"cypher5"`, `"gql"`. An unknown dialect raises `ValueError` (no silent fallback).
+
+Intent JSON is strict: unknown keys (for example `"filters"` instead of `"filter"`) raise `ValueError` naming the field, and `intent_json_schema()` sets `additionalProperties: false`.
 
 ## Neo4j execution
 

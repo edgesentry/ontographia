@@ -78,7 +78,7 @@ func main() {
 | `BuildCypherFromFiles(ontologyPath, intentJSON, dialect)` | Load ontology from disk, parse Intent JSON, return query + params |
 | `BuildCypher(ontologyJSON, intentJSON, dialect)` | Same with ontology bytes/JSON already in memory |
 
-Dialect strings: `"cypher25"`, `"cypher5"`, `"gql"`.
+Dialect strings: `"cypher25"`, `"cypher5"`, `"gql"`. An unknown dialect or an unknown Intent key returns an error.
 
 ## Deployment notes
 

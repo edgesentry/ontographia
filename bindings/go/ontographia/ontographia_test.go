@@ -62,3 +62,28 @@ func TestBuildCypherFromFiles_Cypher5Dialect(t *testing.T) {
 		t.Fatalf("expected WHERE clause for cypher5, got: %s", result.Query)
 	}
 }
+
+// Issue #81: unknown dialect must be an error, not a silent cypher25 fallback.
+func TestBuildCypherFromFiles_UnknownDialectIsError(t *testing.T) {
+	ontology := filepath.Join(repoRoot(t), "examples", "manufacturing.native.yaml")
+	_, err := ontographia.BuildCypherFromFiles(ontology, manufacturingSupplierIntent(), "cyhper5")
+	if err == nil {
+		t.Fatal("expected error for unknown dialect")
+	}
+	if !strings.Contains(err.Error(), "unknown dialect 'cyhper5'") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// Issue #81: unknown Intent keys must be rejected, not silently ignored.
+func TestBuildCypherFromFiles_UnknownIntentKeyIsError(t *testing.T) {
+	ontology := filepath.Join(repoRoot(t), "examples", "manufacturing.native.yaml")
+	intent := strings.Replace(manufacturingSupplierIntent(), `"filter":`, `"filters":`, 1)
+	_, err := ontographia.BuildCypherFromFiles(ontology, intent, "cypher25")
+	if err == nil {
+		t.Fatal("expected error for unknown Intent key")
+	}
+	if !strings.Contains(err.Error(), "unknown field") || !strings.Contains(err.Error(), "filters") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
