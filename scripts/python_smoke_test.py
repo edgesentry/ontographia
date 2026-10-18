@@ -27,8 +27,40 @@ def main() -> int:
         print(f"unexpected query prefix: {result['query']!r}", file=sys.stderr)
         return 1
 
+    # Issue #81: unknown Intent keys must be rejected, not silently ignored.
+    bad_intent = dict(intent)
+    bad_intent["filters"] = bad_intent.pop("filter")
+    if not _raises_value_error(engine.build, bad_intent, "unknown field `filters`"):
+        return 1
+
+    # Issue #81: unknown dialect must raise, not fall back to cypher25.
+    if not _raises_value_error(
+        lambda i: engine.build(i, dialect="cyhper5"), intent, "unknown dialect 'cyhper5'"
+    ):
+        return 1
+    if not engine.build(intent, dialect="cypher5")["query"].startswith("CYPHER 5"):
+        print("cypher5 dialect not honoured", file=sys.stderr)
+        return 1
+
+    schema = engine.intent_json_schema()
+    if schema.get("additionalProperties") is not False:
+        print("Intent JSON Schema must set additionalProperties: false", file=sys.stderr)
+        return 1
+
     print("ok")
     return 0
+
+
+def _raises_value_error(fn, arg, expected: str) -> bool:
+    try:
+        fn(arg)
+    except ValueError as exc:
+        if expected not in str(exc):
+            print(f"expected {expected!r} in error, got {exc!r}", file=sys.stderr)
+            return False
+        return True
+    print(f"expected ValueError containing {expected!r}", file=sys.stderr)
+    return False
 
 
 if __name__ == "__main__":

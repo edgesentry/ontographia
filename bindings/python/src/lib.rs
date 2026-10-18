@@ -45,7 +45,7 @@ impl PyEngine {
         let intent_json = py_to_json(intent)?;
         let intent: Intent = serde_json::from_value(intent_json)
             .map_err(|e| PyValueError::new_err(e.to_string()))?;
-        let dialect = parse_dialect(dialect);
+        let dialect = parse_dialect(dialect)?;
         let emitted = self
             .inner
             .build(intent, dialect)
@@ -63,12 +63,11 @@ impl PyEngine {
     }
 }
 
-fn parse_dialect(dialect: Option<&str>) -> Dialect {
-    match dialect.unwrap_or("cypher25") {
-        "cypher5" => Dialect::Cypher5,
-        "gql" => Dialect::Gql,
-        _ => Dialect::Cypher25,
-    }
+fn parse_dialect(dialect: Option<&str>) -> PyResult<Dialect> {
+    dialect
+        .unwrap_or("cypher25")
+        .parse::<Dialect>()
+        .map_err(PyValueError::new_err)
 }
 
 fn py_to_json(value: &Bound<'_, PyAny>) -> PyResult<serde_json::Value> {

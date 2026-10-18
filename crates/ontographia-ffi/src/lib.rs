@@ -46,11 +46,7 @@ pub unsafe extern "C" fn ontographia_build_cypher_from_json(
                 .to_str()
                 .map_err(|e| e.to_string())?
         };
-        let dialect = match dialect_str {
-            "cypher5" => Dialect::Cypher5,
-            "gql" => Dialect::Gql,
-            _ => Dialect::Cypher25,
-        };
+        let dialect = dialect_str.parse::<Dialect>()?;
 
         let ontology = load_ontology(ontology_slice, path_hint).map_err(|e| e.to_string())?;
         let engine = Engine::new(ontology);
@@ -83,5 +79,54 @@ pub unsafe extern "C" fn ontographia_free_string(s: *mut c_char) {
         unsafe {
             let _ = CString::from_raw(s);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn build(intent: &str, dialect: Option<&str>) -> serde_json::Value {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/manufacturing.native.yaml");
+        let ontology = std::fs::read(path).unwrap();
+        let hint = CString::new(path).unwrap();
+        let intent = CString::new(intent).unwrap();
+        let dialect = dialect.map(|d| CString::new(d).unwrap());
+        unsafe {
+            let out = ontographia_build_cypher_from_json(
+                ontology.as_ptr(),
+                ontology.len(),
+                hint.as_ptr(),
+                intent.as_ptr(),
+                dialect.as_ref().map_or(std::ptr::null(), |d| d.as_ptr()),
+            );
+            let s = CStr::from_ptr(out).to_str().unwrap().to_owned();
+            ontographia_free_string(out);
+            serde_json::from_str(&s).unwrap()
+        }
+    }
+
+    const INTENT: &str = r#"{"start":{"class":"Product","alias":"p"},"return":[{"alias":"p"}]}"#;
+
+    #[test]
+    fn known_and_default_dialects() {
+        assert!(build(INTENT, None)["query"].as_str().unwrap().starts_with("CYPHER 25"));
+        assert!(build(INTENT, Some("cypher5"))["query"].as_str().unwrap().starts_with("CYPHER 5"));
+    }
+
+    #[test]
+    fn unknown_dialect_is_error() {
+        let out = build(INTENT, Some("cyhper5"));
+        let err = out["error"].as_str().expect("error expected");
+        assert!(err.contains("unknown dialect 'cyhper5'"), "{err}");
+        assert!(out.get("query").is_none());
+    }
+
+    #[test]
+    fn unknown_intent_key_is_error() {
+        let intent = r#"{"start":{"class":"Product","alias":"p"},"filters":[],"return":[{"alias":"p"}]}"#;
+        let out = build(intent, None);
+        let err = out["error"].as_str().expect("error expected");
+        assert!(err.contains("unknown field"), "{err}");
     }
 }

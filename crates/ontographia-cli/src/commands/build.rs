@@ -61,12 +61,5 @@ pub fn run(args: BuildArgs) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn parse_dialect(name: &str) -> Result<Dialect, String> {
-    match name.to_ascii_lowercase().as_str() {
-        "cypher25" | "cypher-25" => Ok(Dialect::Cypher25),
-        "cypher5" | "cypher-5" => Ok(Dialect::Cypher5),
-        "gql" => Ok(Dialect::Gql),
-        other => Err(format!(
-            "unknown dialect '{other}' (expected cypher25, cypher5, or gql)"
-        )),
-    }
+    name.parse::<Dialect>()
 }

@@ -117,4 +117,17 @@ mod tests {
             .expect("relationship enum");
         assert!(rel_enum.contains(&serde_json::json!("located_at")));
     }
+
+    #[test]
+    fn schema_disallows_additional_properties() {
+        let schema = intent_json_schema(&sample_ontology());
+        assert_eq!(schema["additionalProperties"], serde_json::json!(false), "Intent");
+        for def in ["NodeRef", "TraverseStep", "FilterExpr", "ReturnItem", "OrderBy"] {
+            assert_eq!(
+                schema["$defs"][def]["additionalProperties"],
+                serde_json::json!(false),
+                "{def}"
+            );
+        }
+    }
 }
