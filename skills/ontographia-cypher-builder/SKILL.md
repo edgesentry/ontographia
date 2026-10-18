@@ -9,6 +9,17 @@ description: Build deterministic Cypher 25 queries from ontology-backed intent J
 
 Follow [AGENTS.md](../../AGENTS.md) for repository rules and [docs/end-to-end-neo4j.md](../../docs/end-to-end-neo4j.md) for Neo4j execution steps.
 
+When an **Ontographia MCP server** is available (`ontographia[mcp]` /
+`ontographia-mcp`; see [docs/mcp.md](../../docs/mcp.md)), prefer its tools over
+hand-rolling Python:
+
+1. `list_ontology` — allowed class / relationship / property names  
+2. `intent_schema` — JSON Schema the model must satisfy  
+3. Emit **Intent JSON only** (never Cypher)  
+4. `build_cypher` to validate and get Cypher + params, or `execute` for read-only Neo4j rows  
+
+The MCP server never accepts raw Cypher and never calls an LLM itself.
+
 ## Manufacturing domain (default examples)
 
 Classes: `Product`, `Part`, `Supplier`, `Plant`, `Line`, `Lot`, `DefectType`  
@@ -55,6 +66,9 @@ intent = ...  # from LLM
 result = engine.build(intent)
 cypher, params = result["query"], result["params"]
 ```
+
+Optional Intent-extraction helpers (still no Cypher from the model):
+`pip install "ontographia[llm]"` — see [docs/llm.md](../../docs/llm.md).
 
 ## Ontology format hints
 

@@ -2018,10 +2018,15 @@ llm = [
     { name = "openai" },
     { name = "pyyaml" },
 ]
+mcp = [
+    { name = "mcp" },
+    { name = "neo4j" },
+]
 
 [package.dev-dependencies]
 dev = [
     { name = "maturin" },
+    { name = "mcp" },
     { name = "mkdocs-material" },
     { name = "neo4j" },
     { name = "openai" },
@@ -2034,14 +2039,17 @@ litellm = [
 
 [package.metadata]
 requires-dist = [
+    { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.9,<3" },
+    { name = "neo4j", marker = "extra == 'mcp'", specifier = ">=5" },
     { name = "openai", marker = "extra == 'llm'", specifier = ">=1.40" },
     { name = "pyyaml", marker = "extra == 'llm'", specifier = ">=6.0" },
 ]
-provides-extras = ["llm"]
+provides-extras = ["llm", "mcp"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "maturin", specifier = ">=1.7,<2.0" },
+    { name = "mcp", specifier = ">=1.9,<3" },
     { name = "mkdocs-material", specifier = ">=9.5,<10" },
     { name = "neo4j", specifier = ">=5" },
     { name = "openai", specifier = ">=1.40" },

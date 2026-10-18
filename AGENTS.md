@@ -25,6 +25,7 @@ Ontographia converts **ontology definitions** + **Intent JSON** into **determini
 | Graph schema DDL + offline catalog diff | [docs/architecture.md](docs/architecture.md) (Graph schema governance), [docs/ontology-graph-alignment.md](docs/ontology-graph-alignment.md) |
 | Neo4j setup, seed data, execution | [docs/end-to-end-neo4j.md](docs/end-to-end-neo4j.md) |
 | LLM / agent Intent extraction | [docs/llm.md](docs/llm.md) (`ontographia[llm]`), [skills/ontographia-cypher-builder/SKILL.md](skills/ontographia-cypher-builder/SKILL.md) |
+| MCP server for agents | [docs/mcp.md](docs/mcp.md) (`ontographia[mcp]`, `ontographia-mcp`) |
 | LiteLLM local setup | [docs/litellm-local.md](docs/litellm-local.md) |
 | Release | [docs/release.md](docs/release.md) |
 | CodeQL | [docs/codeql-setup.md](docs/codeql-setup.md) |
