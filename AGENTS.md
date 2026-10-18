@@ -24,7 +24,7 @@ Ontographia converts **ontology definitions** + **Intent JSON** into **determini
 | Intent-layer evaluation baselines | [docs/evaluation.md](docs/evaluation.md) |
 | Graph schema DDL + offline catalog diff | [docs/architecture.md](docs/architecture.md) (Graph schema governance), [docs/ontology-graph-alignment.md](docs/ontology-graph-alignment.md) |
 | Neo4j setup, seed data, execution | [docs/end-to-end-neo4j.md](docs/end-to-end-neo4j.md) |
-| LLM / agent Intent extraction | [skills/ontographia-cypher-builder/SKILL.md](skills/ontographia-cypher-builder/SKILL.md) |
+| LLM / agent Intent extraction | [docs/llm.md](docs/llm.md) (`ontographia[llm]`), [skills/ontographia-cypher-builder/SKILL.md](skills/ontographia-cypher-builder/SKILL.md) |
 | LiteLLM local setup | [docs/litellm-local.md](docs/litellm-local.md) |
 | Release | [docs/release.md](docs/release.md) |
 | CodeQL | [docs/codeql-setup.md](docs/codeql-setup.md) |
@@ -76,7 +76,7 @@ When changing emitters or validation, run `cargo test --workspace`.
 
 ## Out of scope for agents (unless explicitly requested)
 
-- LLM API calls, prompt subsetting, and execution→Intent loops **inside** the Rust/Python core — those stay in the app/agent layer (`examples/llm/`). Rationale: [docs/architecture.md](docs/architecture.md#what-is-intentionally-outside-the-core).
+- LLM API calls, prompt subsetting, and execution→Intent loops **inside** the Rust core / Cypher emitters — those stay in the optional Python Intent layer (`ontographia[llm]`, demos under `examples/llm/`). Rationale: [docs/architecture.md](docs/architecture.md#what-is-intentionally-outside-the-core), [docs/llm.md](docs/llm.md).
 - RDF reification / full OWL reasoning.
 - Neo4j live introspection or migration execution (`ontographia-schema` is offline DDL + catalog diff only).
 - Duplicating tutorial content into new markdown files.

@@ -35,8 +35,8 @@ from llm.eval.distractor import (  # noqa: E402
 )
 from llm.eval.gold import build_gold_cases, make_silent_wrong_intent  # noqa: E402
 from llm.eval.metrics import approx_tokens, intent_soft_f1, property_hit  # noqa: E402
-from llm.prompt import build_initial_user_message  # noqa: E402
-from llm.subset import prompt_views_for_question  # noqa: E402
+from ontographia.llm.prompt import build_initial_user_message  # noqa: E402
+from ontographia.llm.subset import prompt_views_for_question  # noqa: E402
 
 
 def _mean(xs: list[float]) -> float:

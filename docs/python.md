@@ -76,14 +76,23 @@ python examples/run_neo4j_demo.py --ontology examples/manufacturing.native.yaml 
 
 Step-by-step tutorial: [Neo4j walkthrough](end-to-end-neo4j.md).
 
-## LLM end-to-end (local)
+## Intent layer (`ontographia[llm]`)
 
-For Intent extraction via a real LLM on your machine, clone the repo for `examples/run_llm_e2e.py` and install Ontographia from PyPI:
+Optional helpers for LLM → Intent JSON (subset prompts, fallback, execution refine).
+**Experimental / 0.x** — full API: [Intent layer (LLM)](llm.md).
 
 ```bash
-pip install ontographia
-git clone https://github.com/edgesentry/ontographia.git && cd ontographia
-pip install neo4j openai   # or use repo dev deps — see contributor section
+pip install "ontographia[llm]"
+```
+
+```python
+from ontographia.llm import OpenAICompatibleBackend, IntentExtractorClient, extract_validated_intent
+```
+
+CLI demo (clone optional for examples):
+
+```bash
+pip install "ontographia[llm]" neo4j
 python examples/run_llm_e2e.py --ontology examples/manufacturing.native.yaml
 ```
 
@@ -108,6 +117,7 @@ uv python pin 3.12   # or 3.11 / 3.13
 
 ```bash
 uv run python scripts/python_smoke_test.py
+uv run pytest tests/python/llm -q   # Intent layer (fake backends; needs openai/pyyaml from dev group)
 # Neo4j integration (requires running Neo4j)
 NEO4J_URI=bolt://localhost:7687 NEO4J_USER=neo4j NEO4J_PASSWORD=ontographia \
   uv run python scripts/neo4j_integration_test.py

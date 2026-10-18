@@ -4,6 +4,9 @@ Run from repo root:
   uv run python examples/llm/eval/test_exec_feedback.py
 """
 
+# CI location: tests/python/llm/ (preferred). This script remains runnable.
+
+
 from __future__ import annotations
 
 import copy
@@ -16,8 +19,8 @@ EXAMPLES = ROOT / "examples"
 sys.path.insert(0, str(EXAMPLES))
 
 from llm.eval.gold import build_gold_cases  # noqa: E402
-from llm.exec_feedback import assess_execution, format_execution_feedback  # noqa: E402
-from llm.pipeline import (  # noqa: E402
+from ontographia.llm.exec_feedback import assess_execution, format_execution_feedback  # noqa: E402
+from ontographia.llm.pipeline import (  # noqa: E402
     ExtractOutcome,
     extract_validated_intent,
     refine_intent_after_execution,

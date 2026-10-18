@@ -46,6 +46,8 @@ jobs:
         run: uv run --python "$(command -v python3)" maturin develop --release
       - name: smoke test
         run: uv run --python "$(command -v python3)" python scripts/python_smoke_test.py
+      - name: Intent layer unit tests (ontographia[llm])
+        run: uv run --python "$(command -v python3)" pytest tests/python/llm -q
 
   neo4j-integration:
     name: neo4j-integration (${{ matrix.python-version }})

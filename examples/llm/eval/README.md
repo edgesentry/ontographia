@@ -1,6 +1,6 @@
 # Intent-layer evaluation harness
 
-Offline experiments under `examples/llm/eval/`. Published summaries: [docs/evaluation.md](../../../docs/evaluation.md).
+Offline experiments under `examples/llm/eval/`. Harnesses import the packaged module `ontographia.llm` (`pip install "ontographia[llm]"`). Published summaries: [docs/evaluation.md](../../../docs/evaluation.md). Unit tests for the Intent layer live in `tests/python/llm/` (CI).
 
 ## Track A — distractor ontology stress test (Issues #49 / #50)
 

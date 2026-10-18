@@ -43,7 +43,7 @@ BASELINES_DIR = EVAL_DIR / "baselines"
 sys.path.insert(0, str(EXAMPLES))
 
 from llm.eval.gold import GoldCase, build_gold_cases  # noqa: E402
-from llm.pipeline import ExtractOutcome, refine_intent_after_execution  # noqa: E402
+from ontographia.llm.pipeline import ExtractOutcome, refine_intent_after_execution  # noqa: E402
 
 Condition = Literal["no_refine", "with_refine"]
 CONDITIONS: tuple[Condition, ...] = ("no_refine", "with_refine")

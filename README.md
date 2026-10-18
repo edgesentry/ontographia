@@ -24,7 +24,7 @@ Ontology → COM → validate(Intent) → AST → Cypher 25 + $params
 |------|-----|
 | Install (CLI / Rust / Python / Go) | [docs/index.md](docs/index.md#install-released-versions) · [Rust](docs/rust.md) · [Python](docs/python.md) · [Go](docs/go.md) |
 | End-to-end with Neo4j | [docs/end-to-end-neo4j.md](docs/end-to-end-neo4j.md) |
-| LLM / Intent layer (examples only) | [docs/architecture.md](docs/architecture.md#what-is-intentionally-outside-the-core) · [`examples/llm/`](examples/llm/) |
+| LLM / Intent layer (`ontographia[llm]`, experimental) | [docs/llm.md](docs/llm.md) · [`examples/llm/`](examples/llm/) |
 | Evaluation baselines | [docs/evaluation.md](docs/evaluation.md) |
 | Related Text2Cypher work | [docs/related-work.md](docs/related-work.md) |
 | Repo layout | [docs/repository-layout.md](docs/repository-layout.md) |

@@ -43,8 +43,8 @@ sys.path.insert(0, str(EXAMPLES))
 from llm.eval.distractor import generate_distractor_ontology, iter_profiles  # noqa: E402
 from llm.eval.gold import GoldCase, build_gold_cases, make_silent_wrong_intent  # noqa: E402
 from llm.eval.metrics import approx_tokens, property_hit  # noqa: E402
-from llm.prompt import build_initial_user_message  # noqa: E402
-from llm.subset import prompt_views_for_question, subset_ontology  # noqa: E402
+from ontographia.llm.prompt import build_initial_user_message  # noqa: E402
+from ontographia.llm.subset import prompt_views_for_question, subset_ontology  # noqa: E402
 
 Condition = Literal["full", "subset", "subset_fallback"]
 CONDITIONS: tuple[Condition, ...] = ("full", "subset", "subset_fallback")
