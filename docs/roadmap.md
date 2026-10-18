@@ -4,7 +4,7 @@ This roadmap describes where Ontographia is heading. It is organized into phases
 
 Ontographia's core principle stays fixed throughout: the LLM produces only **Intent JSON**; a deterministic, ontology-constrained pipeline in the Rust core validates it and emits **parameter-bound Cypher**. The LLM never writes Cypher.
 
-> Evaluation results referenced by this roadmap are published in [docs/evaluation.md](https://edgesentry.github.io/ontographia/evaluation/). The roadmap itself makes no performance claims.
+> Evaluation results referenced by this roadmap are published in [evaluation.md](evaluation.md). The roadmap itself makes no performance claims.
 
 ## Overview
 
@@ -87,4 +87,4 @@ flowchart LR
 
 ## Contributing
 
-Pick an open sub-issue under any epic, or open a new issue and reference the relevant epic. See [AGENTS.md](https://github.com/edgesentry/ontographia/blob/main/AGENTS.md) and the [docs](https://edgesentry.github.io/ontographia/) for repository conventions.
+Pick an open sub-issue under any epic, or open a new issue and reference the relevant epic. See [AGENTS.md](https://github.com/edgesentry/ontographia/blob/main/AGENTS.md) and the [docs](index.md) for repository conventions.
