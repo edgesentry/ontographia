@@ -7,16 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-10-21
+
+Pre-1.0 patch release. Ships the Phase 1 optional Python extras (`ontographia[llm]` and `ontographia[mcp]`). Issues [#84](https://github.com/edgesentry/ontographia/issues/84) and [#85](https://github.com/edgesentry/ontographia/issues/85) remain open until this release is cut; they are expected to close after publish.
+
 ### Added
 
-- **MCP server** (`ontographia[mcp]`): optional extra with FastMCP-style tools
-  `list_ontology`, `intent_schema`, `build_cypher`, and read-only `execute`;
-  console entry point `ontographia-mcp` (stdio); Neo4j via CLI/env; write-query
-  rejection (Intent-only execution, `READ_ACCESS` / `execute_read`, Cypher deny
-  list). Docs: [docs/mcp.md](docs/mcp.md). Epic #85.
-- **Intent layer** (`ontographia[llm]`): package former `examples/llm/` helpers as
-  an optional extra (`openai` + `pyyaml`) with `ImportError` guidance when the
-  extra is missing; docs: [docs/llm.md](docs/llm.md). Epic #84 (#93).
+- **Intent layer** (`ontographia[llm]`): package former `examples/llm/` helpers as an optional extra (`openai` + `pyyaml`) with a pluggable OpenAI-compatible `LLMBackend`, `ImportError` guidance when the extra is missing, and CI unit tests under `tests/python/llm/`. Docs: [docs/llm.md](docs/llm.md). Epic [#84](https://github.com/edgesentry/ontographia/issues/84) ([#93](https://github.com/edgesentry/ontographia/pull/93)).
+- **MCP server** (`ontographia[mcp]`): optional extra with FastMCP-style tools `list_ontology`, `intent_schema`, `build_cypher`, and read-only `execute`; console entry point `ontographia-mcp` (stdio); Neo4j via CLI/env; write-query rejection (Intent-only execution, `READ_ACCESS` / `execute_read`, Cypher deny list). Docs: [docs/mcp.md](docs/mcp.md). Epic [#85](https://github.com/edgesentry/ontographia/issues/85) ([#94](https://github.com/edgesentry/ontographia/pull/94)).
+
+### Dependencies
+
+- `mcp` 1.29.1 → 1.30.0 (and related uv lockfile updates: `aiohttp`, `multidict`, `pyjwt`, `urllib3`) ([#95](https://github.com/edgesentry/ontographia/pull/95))
+- `certifi` 2026.7.22 → 2026.10.19 in the uv lockfile ([#97](https://github.com/edgesentry/ontographia/pull/97))
 
 ## [0.1.5] - 2026-10-18
 
@@ -57,5 +60,6 @@ Pre-1.0 patch release. Intent JSON and dialect handling below are **breaking**. 
 - `actions/upload-pages-artifact` 4 → 5 (#61)
 - `softprops/action-gh-release` 2 → 3 (#60)
 
-[Unreleased]: https://github.com/edgesentry/ontographia/compare/v0.1.5...HEAD
+[Unreleased]: https://github.com/edgesentry/ontographia/compare/v0.1.6...HEAD
+[0.1.6]: https://github.com/edgesentry/ontographia/compare/v0.1.5...v0.1.6
 [0.1.5]: https://github.com/edgesentry/ontographia/compare/v0.1.4...v0.1.5

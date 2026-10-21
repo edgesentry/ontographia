@@ -30,7 +30,7 @@ Intent JSON is produced outside the core (LLM or hand-authored), constrained by 
 | CLI | `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap)), `cargo install ontographia-cli`, or [GitHub Releases](https://github.com/edgesentry/ontographia/releases) |
 | Rust libs | `ontographia-core`, `ontographia-adapters`, `ontographia-schema` on [crates.io](https://crates.io) |
 | Python | `pip install ontographia` (wheels for 3.11–3.13 on Linux, macOS arm64, Windows); optional Intent layer: `pip install "ontographia[llm]"` ([docs](llm.md)); optional MCP server: `pip install "ontographia[mcp]"` ([docs](mcp.md)) |
-| Go | `go get github.com/edgesentry/ontographia/bindings/go@v0.1.5` (+ FFI lib from Releases) |
+| Go | `go get github.com/edgesentry/ontographia/bindings/go@v0.1.6` (+ FFI lib from Releases) |
 
 Release process: [Release](release.md).
 

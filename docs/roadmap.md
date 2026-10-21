@@ -42,15 +42,17 @@ flowchart LR
 
 ## Phase 1 — pip-installable and agent-ready
 
+Shipped in **v0.1.6** (code merged in [#93](https://github.com/edgesentry/ontographia/pull/93) and [#94](https://github.com/edgesentry/ontographia/pull/94)). Epics [#84](https://github.com/edgesentry/ontographia/issues/84) and [#85](https://github.com/edgesentry/ontographia/issues/85) stay open until that release is published.
+
 ### Intent layer packaging (`ontographia[llm]`) — [#84](https://github.com/edgesentry/ontographia/issues/84)
-- Promote the Intent layer from `examples/llm/` (ontology subset prompts with full-schema fallback, execution-feedback refinement, difficulty-adaptive spend) into an optional extra, e.g. `pip install "ontographia[llm]"`
-- Pluggable LLM backend (LiteLLM or any OpenAI-compatible endpoint)
-- Move the related tests into the main test suite
+- ~~Promote the Intent layer from `examples/llm/` (ontology subset prompts with full-schema fallback, execution-feedback refinement, difficulty-adaptive spend) into an optional extra, e.g. `pip install "ontographia[llm]"`~~ (done in v0.1.6 / [#93](https://github.com/edgesentry/ontographia/pull/93))
+- ~~Pluggable LLM backend (OpenAI-compatible endpoint via `openai` SDK; LiteLLM extra reserved, not implemented)~~ (done in v0.1.6 / [#93](https://github.com/edgesentry/ontographia/pull/93))
+- ~~Move the related tests into the main test suite~~ (done in v0.1.6 / [#93](https://github.com/edgesentry/ontographia/pull/93))
 
 ### MCP server — [#85](https://github.com/edgesentry/ontographia/issues/85)
-- Candidate tools: `intent_schema`, `build_cypher`, `execute` (read-only), `list_ontology`
-- Neo4j connection settings; launch via `uvx`; configuration examples for Claude Desktop and Cursor
-- Policy that rejects write queries; consistent with the existing [Agent Skill](https://github.com/edgesentry/ontographia/blob/main/skills/ontographia-cypher-builder/SKILL.md)
+- ~~Tools: `intent_schema`, `build_cypher`, `execute` (read-only), `list_ontology`~~ (done in v0.1.6 / [#94](https://github.com/edgesentry/ontographia/pull/94))
+- ~~Neo4j connection settings; launch via `uvx`; configuration examples for Claude Desktop and Cursor~~ (done in v0.1.6 / [#94](https://github.com/edgesentry/ontographia/pull/94))
+- ~~Policy that rejects write queries; consistent with the existing [Agent Skill](https://github.com/edgesentry/ontographia/blob/main/skills/ontographia-cypher-builder/SKILL.md)~~ (done in v0.1.6 / [#94](https://github.com/edgesentry/ontographia/pull/94))
 
 ## Phase 2 — Familiar demos
 
