@@ -16,6 +16,10 @@ Pre-1.0 patch release. Ships the Phase 1 optional Python extras (`ontographia[ll
 - **Intent layer** (`ontographia[llm]`): package former `examples/llm/` helpers as an optional extra (`openai` + `pyyaml`) with a pluggable OpenAI-compatible `LLMBackend`, `ImportError` guidance when the extra is missing, and CI unit tests under `tests/python/llm/`. Docs: [docs/llm.md](docs/llm.md). Epic [#84](https://github.com/edgesentry/ontographia/issues/84) ([#93](https://github.com/edgesentry/ontographia/pull/93)).
 - **MCP server** (`ontographia[mcp]`): optional extra with FastMCP-style tools `list_ontology`, `intent_schema`, `build_cypher`, and read-only `execute`; console entry point `ontographia-mcp` (stdio); Neo4j via CLI/env; write-query rejection (Intent-only execution, `READ_ACCESS` / `execute_read`, Cypher deny list). Docs: [docs/mcp.md](docs/mcp.md). Epic [#85](https://github.com/edgesentry/ontographia/issues/85) ([#94](https://github.com/edgesentry/ontographia/pull/94)).
 
+### Testing / CI
+
+- CI `neo4j-integration` job runs MCP tools end-to-end against a live Neo4j service, including read-only enforcement for `execute` ([#99](https://github.com/edgesentry/ontographia/pull/99)).
+
 ### Dependencies
 
 - `mcp` 1.29.1 → 1.30.0 (and related uv lockfile updates: `aiohttp`, `multidict`, `pyjwt`, `urllib3`) ([#95](https://github.com/edgesentry/ontographia/pull/95))
