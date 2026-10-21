@@ -37,6 +37,10 @@ Tutorials and tables live under [`docs/`](docs/) — this file is an index only.
 
 ```bash
 # After install (see docs/index.md)
+pip install ontographia
+pip install "ontographia[llm]"   # optional Intent layer — docs/llm.md
+pip install "ontographia[mcp]"   # optional MCP server — docs/mcp.md
+
 ontographia build --ontology examples/manufacturing.native.yaml \
   --intent examples/sample_intent.json --json
 ```
