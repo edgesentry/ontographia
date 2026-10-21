@@ -68,3 +68,6 @@ features = ["pyo3/extension-module"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["examples"]
+markers = [
+    "neo4j: live Neo4j integration (skipped unless NEO4J_URI is set)",
+]
