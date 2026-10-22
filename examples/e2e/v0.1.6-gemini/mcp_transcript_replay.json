@@ -1,0 +1,293 @@
+{
+  "started_at": "2026-10-22T03:10:10Z",
+  "question": "List suppliers for parts in product SKU SPX-100",
+  "ontographia_version": "0.1.6",
+  "mcp_sdk_version": "2.3.0",
+  "intent_source": "examples/e2e/v0.1.6-gemini/intent.json",
+  "llm": {
+    "backend": "openai",
+    "model_alias": "ontographia-gemini",
+    "base_url": "http://127.0.0.1:4000/v1"
+  },
+  "server": {
+    "command": "ontographia-mcp",
+    "args": [
+      "--ontology",
+      "examples/manufacturing.native.yaml"
+    ]
+  },
+  "steps": [
+    {
+      "step": "tools/list",
+      "tools": [
+        "list_ontology",
+        "intent_schema",
+        "build_cypher",
+        "execute"
+      ]
+    },
+    {
+      "step": "tools/call list_ontology",
+      "response_summary": {
+        "class_names": [
+          "Product",
+          "Part",
+          "Supplier",
+          "Plant",
+          "Line",
+          "Lot",
+          "DefectType"
+        ],
+        "relationship_names": [
+          "has_part",
+          "has_sub_part",
+          "supplied_by",
+          "located_at",
+          "produced_on",
+          "contains_part",
+          "has_defect"
+        ],
+        "n_properties": 16
+      }
+    },
+    {
+      "step": "tools/call intent_schema",
+      "response_summary": {
+        "title": "Intent",
+        "top_level_properties": [
+          "filter",
+          "limit",
+          "optional",
+          "order_by",
+          "return",
+          "skip",
+          "start",
+          "traverse"
+        ]
+      }
+    },
+    {
+      "step": "saved intent",
+      "path": "examples/e2e/v0.1.6-gemini/intent.json",
+      "intent": {
+        "start": {
+          "class": "Product",
+          "alias": "product"
+        },
+        "return": [
+          {
+            "alias": "supplier",
+            "property": "name",
+            "as_name": "supplier_name"
+          }
+        ],
+        "filter": [
+          {
+            "alias": "product",
+            "property": "sku",
+            "op": "eq",
+            "value": "SPX-100"
+          }
+        ],
+        "limit": 20,
+        "traverse": [
+          {
+            "relationship": "has_part",
+            "direction": "out",
+            "to": {
+              "class": "Part",
+              "alias": "part"
+            }
+          },
+          {
+            "relationship": "supplied_by",
+            "direction": "out",
+            "to": {
+              "class": "Supplier",
+              "alias": "supplier"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "step": "tools/call build_cypher",
+      "arguments": {
+        "intent": {
+          "start": {
+            "class": "Product",
+            "alias": "product"
+          },
+          "return": [
+            {
+              "alias": "supplier",
+              "property": "name",
+              "as_name": "supplier_name"
+            }
+          ],
+          "filter": [
+            {
+              "alias": "product",
+              "property": "sku",
+              "op": "eq",
+              "value": "SPX-100"
+            }
+          ],
+          "limit": 20,
+          "traverse": [
+            {
+              "relationship": "has_part",
+              "direction": "out",
+              "to": {
+                "class": "Part",
+                "alias": "part"
+              }
+            },
+            {
+              "relationship": "supplied_by",
+              "direction": "out",
+              "to": {
+                "class": "Supplier",
+                "alias": "supplier"
+              }
+            }
+          ]
+        }
+      },
+      "response": {
+        "ok": true,
+        "query": "CYPHER 25\nMATCH (product:Product)-[:has_part]->(part:Part)-[:supplied_by]->(supplier:Supplier)\nFILTER product.sku = $param_0\nRETURN supplier.name AS supplier_name\nLIMIT 20",
+        "params": {
+          "param_0": "SPX-100"
+        },
+        "dialect": "cypher25"
+      }
+    },
+    {
+      "step": "tools/call execute",
+      "arguments": {
+        "intent": {
+          "start": {
+            "class": "Product",
+            "alias": "product"
+          },
+          "return": [
+            {
+              "alias": "supplier",
+              "property": "name",
+              "as_name": "supplier_name"
+            }
+          ],
+          "filter": [
+            {
+              "alias": "product",
+              "property": "sku",
+              "op": "eq",
+              "value": "SPX-100"
+            }
+          ],
+          "limit": 20,
+          "traverse": [
+            {
+              "relationship": "has_part",
+              "direction": "out",
+              "to": {
+                "class": "Part",
+                "alias": "part"
+              }
+            },
+            {
+              "relationship": "supplied_by",
+              "direction": "out",
+              "to": {
+                "class": "Supplier",
+                "alias": "supplier"
+              }
+            }
+          ]
+        }
+      },
+      "response": {
+        "ok": true,
+        "query": "CYPHER 25\nMATCH (product:Product)-[:has_part]->(part:Part)-[:supplied_by]->(supplier:Supplier)\nFILTER product.sku = $param_0\nRETURN supplier.name AS supplier_name\nLIMIT 20",
+        "params": {
+          "param_0": "SPX-100"
+        },
+        "rows": [
+          {
+            "supplier_name": "MikroMotors"
+          },
+          {
+            "supplier_name": "FormTech"
+          }
+        ],
+        "row_count": 2,
+        "row_limit": 100,
+        "truncated": false
+      }
+    }
+  ],
+  "server_info": {
+    "name": "ontographia",
+    "version": "",
+    "protocol_version": "2025-11-25"
+  },
+  "final": {
+    "intent": {
+      "start": {
+        "class": "Product",
+        "alias": "product"
+      },
+      "return": [
+        {
+          "alias": "supplier",
+          "property": "name",
+          "as_name": "supplier_name"
+        }
+      ],
+      "filter": [
+        {
+          "alias": "product",
+          "property": "sku",
+          "op": "eq",
+          "value": "SPX-100"
+        }
+      ],
+      "limit": 20,
+      "traverse": [
+        {
+          "relationship": "has_part",
+          "direction": "out",
+          "to": {
+            "class": "Part",
+            "alias": "part"
+          }
+        },
+        {
+          "relationship": "supplied_by",
+          "direction": "out",
+          "to": {
+            "class": "Supplier",
+            "alias": "supplier"
+          }
+        }
+      ]
+    },
+    "query": "CYPHER 25\nMATCH (product:Product)-[:has_part]->(part:Part)-[:supplied_by]->(supplier:Supplier)\nFILTER product.sku = $param_0\nRETURN supplier.name AS supplier_name\nLIMIT 20",
+    "params": {
+      "param_0": "SPX-100"
+    },
+    "execute_ok": true,
+    "rows": [
+      {
+        "supplier_name": "MikroMotors"
+      },
+      {
+        "supplier_name": "FormTech"
+      }
+    ],
+    "row_count": 2,
+    "errors": null
+  },
+  "finished_at": "2026-10-22T03:10:11Z"
+}

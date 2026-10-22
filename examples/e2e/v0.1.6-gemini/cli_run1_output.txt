@@ -1,0 +1,68 @@
+=== LLM backend: openai ===
+=== Question ===
+List suppliers for parts in product SKU SPX-100
+
+=== Schema policy: auto (used=full, fallback=True, phases=['subset', 'full'], llm_calls=2) ===
+=== Intent JSON ===
+{
+  "start": {
+    "class": "Product",
+    "alias": "product"
+  },
+  "return": [
+    {
+      "alias": "supplier",
+      "property": "name",
+      "as_name": "supplier_name"
+    }
+  ],
+  "filter": [
+    {
+      "alias": "product",
+      "property": "sku",
+      "op": "eq",
+      "value": "SPX-100"
+    }
+  ],
+  "limit": 20,
+  "traverse": [
+    {
+      "relationship": "has_part",
+      "direction": "out",
+      "to": {
+        "class": "Part",
+        "alias": "part"
+      }
+    },
+    {
+      "relationship": "supplied_by",
+      "direction": "out",
+      "to": {
+        "class": "Supplier",
+        "alias": "supplier"
+      }
+    }
+  ]
+}
+
+=== Generated query ===
+CYPHER 25
+MATCH (product:Product)-[:has_part]->(part:Part)-[:supplied_by]->(supplier:Supplier)
+FILTER product.sku = $param_0
+RETURN supplier.name AS supplier_name
+LIMIT 20
+
+=== Parameters ===
+{
+  "param_0": "SPX-100"
+}
+
+=== Query result ===
+[
+  {
+    "supplier_name": "MikroMotors"
+  },
+  {
+    "supplier_name": "FormTech"
+  }
+]

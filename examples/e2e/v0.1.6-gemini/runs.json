@@ -1,0 +1,48 @@
+{
+  "question": "List suppliers for parts in product SKU SPX-100",
+  "ontographia_package": "ontographia[llm,mcp]==0.1.6 (PyPI wheel cp312-cp312-macosx_11_0_arm64)",
+  "llm": "LiteLLM 1.98.0 alias ontographia-gemini -> gemini/gemini-3.7-flash, temperature=0",
+  "neo4j": "neo4j:2025.06 local container, seeded with examples/neo4j/seed.cypher",
+  "runs": [
+    {
+      "id": "cli_run1",
+      "started_at": "2026-10-22T02:42:54Z",
+      "path": "examples/run_llm_e2e.py --backend openai --execute (schema_policy auto)",
+      "output": "cli_run1_output.txt",
+      "build_ok": true,
+      "executed": true,
+      "row_count": 2,
+      "note": "schema used=full, fallback=True, phases=[subset, full], llm_calls=2; artifacts split into intent.json / query.cypher / params.json / rows.json"
+    },
+    {
+      "id": "cli_run2",
+      "started_at": "2026-10-22T02:56:43Z",
+      "path": "examples/run_llm_e2e.py --backend openai --execute (schema_policy auto)",
+      "output": "cli_run2_output.txt",
+      "build_ok": false,
+      "executed": false,
+      "row_count": null,
+      "note": "LLM emitted a garbled property ('name Chad - wait, fix to name: supplier_name'); validation rejected it after the retry budget, no Cypher was emitted"
+    },
+    {
+      "id": "mcp_llm",
+      "started_at": "2026-10-22T03:00:30Z",
+      "path": "mcp_client.py (ontographia-mcp over stdio; LLM emits Intent; 1 correction round)",
+      "output": "mcp_transcript_llm.json",
+      "build_ok": false,
+      "executed": false,
+      "row_count": null,
+      "note": "LLM omitted traverse and emitted property 'name激as_name'; build_cypher returned ok=false ('return alias not in pattern: supplier'); the correction round returned the same Intent, so execute was not called"
+    },
+    {
+      "id": "mcp_replay",
+      "started_at": "2026-10-22T03:10:10Z",
+      "path": "mcp_client.py --intent-file intent.json (no LLM; replays the cli_run1 Intent through build_cypher / execute)",
+      "output": "mcp_transcript_replay.json",
+      "build_ok": true,
+      "executed": true,
+      "row_count": 2
+    }
+  ],
+  "not_recorded": "A first mcp_client.py attempt at ~2026-10-22T02:57Z crashed on the client side before any tool call (mcp 2.x renamed InitializeResult.serverInfo -> server_info); the script was fixed and re-run as mcp_llm."
+}
