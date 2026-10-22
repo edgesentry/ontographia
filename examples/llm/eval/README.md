@@ -27,7 +27,7 @@ Baselines: [`baselines/track_a_h1.md`](baselines/track_a_h1.md). Summary: [docs/
 ### Live LLM arm (Issue #68)
 
 ```bash
-source scripts/litellm/use-provider.sh gemini   # or any OpenAI-compatible backend
+source scripts/litellm/use-provider.sh gemini-3.7   # or any OpenAI-compatible backend
 uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --record
 ```
 
@@ -75,7 +75,7 @@ Converter module: [`schema_convert.py`](schema_convert.py) (also best-effort JSO
 ### Exec Match spot (Issue #53 remainder)
 
 ```bash
-source scripts/litellm/use-provider.sh gemini
+source scripts/litellm/use-provider.sh gemini-3.7
 uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py --record
 ```
 

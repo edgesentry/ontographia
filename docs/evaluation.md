@@ -54,7 +54,7 @@ Recorded in [`examples/llm/eval/baselines/track_a_h1.json`](https://github.com/e
 
 **Question:** Do the H1 gains hold with a real OpenAI-compatible LLM (not a mechanical inducer)?
 
-**Harness:** [`examples/llm/eval/run_track_a_h1_live.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h1_live.py). Recorded `2026-09-08T14:42:52Z` via LiteLLM alias `ontographia-gemini` → upstream **Gemini 3.7 Flash** (`gemini-3.7-flash`), `temperature=0`, 40 gold × mid/large × three policies. Machine-readable: [`examples/llm/eval/baselines/track_a_h1_live.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live.json).
+**Harness:** [`examples/llm/eval/run_track_a_h1_live.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h1_live.py). Recorded `2026-09-08T14:42:52Z` via LiteLLM alias `ontographia-gemini-3.7` (recorded as `ontographia-gemini` before #106) → upstream **Gemini 3.7 Flash** (`gemini-3.7-flash`), `temperature=0`, 40 gold × mid/large × three policies. Machine-readable: [`examples/llm/eval/baselines/track_a_h1_live.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live.json).
 
 | profile | condition | Property Hit | compile OK | near-dup picks | invent-without-seeing | fallback | ≈tok p95 |
 |---------|-----------|-------------:|-----------:|---------------:|----------------------:|---------:|---------:|
@@ -68,7 +68,7 @@ Recorded in [`examples/llm/eval/baselines/track_a_h1.json`](https://github.com/e
 **H1 live verdict: support** on the **recommended production policy** (`subset_fallback` / `schema_policy=auto`): on `large`, Property Hit +12.5pt vs full (0.82 → 0.95), tokens p95 ≈ −91%, compile 40/40 (better than full). Ablation: **subset-only** can under-cover vocabulary (−5pt hit, slightly worse compile) — exact-match pruning needs the full-schema fallback. Invent-without-seeing rate was **0** on this run; preferred near-duplicates were not selected even under `full`.
 
 ```bash
-source scripts/litellm/use-provider.sh gemini   # or any OpenAI-compatible backend
+source scripts/litellm/use-provider.sh gemini-3.7   # or any OpenAI-compatible backend
 uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --record
 ```
 
@@ -156,7 +156,7 @@ Recorded `2026-09-03T11:29:09Z` (git `9b3c7cf`). Machine-readable: [`examples/ll
 
 **Question:** On public demo DBs, can Question → LLM Intent → `Engine.build` → Neo4j rows match gold Cypher execution?
 
-**Harness:** [`examples/llm/eval/run_track_b_exec.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_b_exec.py). Recorded `2026-09-08T15:10:33Z` (LiteLLM `ontographia-gemini` → **Gemini 3.7 Flash** / `gemini-3.7-flash`), n=60 (seed=53) on `movies` + `recommendations` via `neo4j+s://demo.neo4jlabs.com`. HF gold Cypher literal `\n` sequences are normalized; write golds are skipped. Baseline: [`track_b_exec_spot.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_exec_spot.md).
+**Harness:** [`examples/llm/eval/run_track_b_exec.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_b_exec.py). Recorded `2026-09-08T15:10:33Z` (LiteLLM `ontographia-gemini-3.7`, recorded as `ontographia-gemini` before #106 → **Gemini 3.7 Flash** / `gemini-3.7-flash`), n=60 (seed=53) on `movies` + `recommendations` via `neo4j+s://demo.neo4jlabs.com`. HF gold Cypher literal `\n` sequences are normalized; write golds are skipped. Baseline: [`track_b_exec_spot.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_exec_spot.md).
 
 | metric | value |
 |--------|------:|
@@ -169,7 +169,7 @@ Recorded `2026-09-03T11:29:09Z` (git `9b3c7cf`). Machine-readable: [`examples/ll
 **Reading:** Schema ingest remains strong; live Intent→emit often compiles (~68%) and structure overlap is moderate, but **exact Exec Match against gold Cypher is rare**. HF gold is Cypher (not Intent), so mismatches mix Intent extraction error, ontology conversion gaps, and legitimate Cypher paraphrases. This spot closes external-validity measurement; it does **not** claim Text2Cypher SOTA or Track A H1-level field-selection proof.
 
 ```bash
-source scripts/litellm/use-provider.sh gemini
+source scripts/litellm/use-provider.sh gemini-3.7
 uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py --record
 ```
 

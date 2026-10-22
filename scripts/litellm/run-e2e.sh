@@ -3,7 +3,7 @@
 #
 # Usage:
 #   ./scripts/litellm/run-e2e.sh openai "List suppliers for parts in product SKU SPX-100"
-#   ./scripts/litellm/run-e2e.sh gemini "Which plant hosts production Line-1?"
+#   ./scripts/litellm/run-e2e.sh gemini-3.7 "Which plant hosts production Line-1?"
 #   ./scripts/litellm/run-e2e.sh cursor "Which defect codes affect quarantined lots?"
 #
 # Start the proxy first: ./scripts/litellm/start.sh
@@ -17,7 +17,7 @@ shift 2 || true
 EXTRA_ARGS=("$@")
 
 if [[ -z "$PROVIDER" || -z "$QUESTION" ]]; then
-  echo "usage: $0 {openai|gemini|cursor} \"<question>\" [--execute] [--password ...]" >&2
+  echo "usage: $0 {openai|gemini-3.7|gemini-3.8|cursor} \"<question>\" [--execute] [--password ...]" >&2
   exit 1
 fi
 

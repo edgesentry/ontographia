@@ -32,8 +32,6 @@ fi
 
 export LITELLM_MASTER_KEY="${LITELLM_MASTER_KEY:-sk-litellm-local-dev}"
 export LITELLM_PORT="$PORT"
-export GEMINI_MODEL="${GEMINI_MODEL:-gemini-3.7-flash}"
-export GEMINI_LITELLM_MODEL="gemini/${GEMINI_MODEL}"
 
 if [[ "${1:-}" == "--docker" ]]; then
   exec docker run --rm \
@@ -41,7 +39,6 @@ if [[ "${1:-}" == "--docker" ]]; then
     -v "$CONFIG:/app/config.yaml:ro" \
     -e OPENAI_API_KEY \
     -e GEMINI_API_KEY \
-    -e GEMINI_LITELLM_MODEL \
     -e ANTHROPIC_API_KEY \
     -e CURSOR_API_KEY \
     -e LITELLM_MASTER_KEY \
@@ -55,5 +52,5 @@ if ! command -v uv >/dev/null 2>&1; then
   exit 1
 fi
 
-echo "Starting LiteLLM on http://127.0.0.1:${PORT} (config: ${CONFIG#"$ROOT/"}, gemini: ${GEMINI_LITELLM_MODEL})"
+echo "Starting LiteLLM on http://127.0.0.1:${PORT} (config: ${CONFIG#"$ROOT/"})"
 exec uv run --group llm litellm --config "$CONFIG" --port "$PORT" --host 127.0.0.1

@@ -6,7 +6,7 @@ compared to gold Cypher execution (row-set Jaccard).
 Default scope: neo4jlabs movies (+ optional recommendations), 50–100 questions.
 
 Usage:
-  source scripts/litellm/use-provider.sh gemini
+  source scripts/litellm/use-provider.sh gemini-3.7
   uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py --record
 """
 

@@ -10,7 +10,8 @@ Ontographia still only accepts **Intent JSON** from the LLM layer; LiteLLM is a 
 Natural language
     → LiteLLM proxy (OpenAI-compatible /v1/chat/completions)
         ├─ ontographia-openai  → OpenAI gpt-4o-mini
-        ├─ ontographia-gemini  → Google Gemini
+        ├─ ontographia-gemini-3.7 → Google Gemini 3.7 Flash
+        ├─ ontographia-gemini-3.8 → Google Gemini 3.8 Flash
         └─ ontographia-cursor  → Anthropic Claude (typical Cursor IDE backend via LiteLLM)
     → Intent JSON
     → Ontographia Engine.build()
@@ -75,8 +76,13 @@ Default virtual key: `sk-litellm-local-dev` (set `LITELLM_MASTER_KEY` in `.env`)
   "List suppliers for parts in product SKU SPX-100" \
   --execute --password ontographia
 
-# Gemini via LiteLLM
-./scripts/litellm/run-e2e.sh gemini \
+# Gemini 3.7 Flash via LiteLLM
+./scripts/litellm/run-e2e.sh gemini-3.7 \
+  "Which plant hosts production Line-1?" \
+  --execute --password ontographia
+
+# Gemini 3.8 Flash via LiteLLM
+./scripts/litellm/run-e2e.sh gemini-3.8 \
   "Which plant hosts production Line-1?" \
   --execute --password ontographia
 
@@ -89,7 +95,7 @@ Default virtual key: `sk-litellm-local-dev` (set `LITELLM_MASTER_KEY` in `.env`)
 Manual env export (same as the helper scripts):
 
 ```bash
-source scripts/litellm/use-provider.sh gemini
+source scripts/litellm/use-provider.sh gemini-3.7
 uv run python examples/run_llm_e2e.py \
   --question "Which plant hosts production Line-1?" \
   --execute --password ontographia
@@ -130,11 +136,25 @@ For the Cursor Cloud Agents API (`/v0/agents`), set `CURSOR_API_KEY` in `.env`. 
 | Alias | Upstream | Required env |
 |-------|----------|--------------|
 | `ontographia-openai` | `openai/gpt-4o-mini` | `OPENAI_API_KEY` |
-| `ontographia-gemini` | `gemini/${GEMINI_MODEL}` (default `gemini-3.7-flash`) | `GEMINI_API_KEY`, `GEMINI_MODEL` |
+| `ontographia-gemini-3.7` | `gemini/gemini-3.7-flash` | `GEMINI_API_KEY` |
+| `ontographia-gemini-3.8` | `gemini/gemini-3.8-flash` | `GEMINI_API_KEY` |
 | `ontographia-cursor` | `anthropic/claude-sonnet-4-20250514` | `ANTHROPIC_API_KEY` |
 | `litellm-claude-sonnet` | same Anthropic model | `ANTHROPIC_API_KEY` (for Cursor IDE custom model name) |
 
 Edit `config.yaml` to change models or add aliases. Restart the proxy after changes.
+
+### Running several Gemini versions side by side
+
+Gemini aliases are always versioned, so several Gemini versions can be used side by side (much like testing against several Python versions) without editing `.env` or restarting the proxy:
+
+```bash
+source scripts/litellm/use-provider.sh gemini-3.7   # OPENAI_MODEL=ontographia-gemini-3.7
+source scripts/litellm/use-provider.sh gemini-3.8   # OPENAI_MODEL=ontographia-gemini-3.8
+```
+
+Both aliases share `GEMINI_API_KEY`. Add a new `ontographia-gemini-<version>` entry to `config.yaml` when a new Gemini version is evaluated.
+
+> **Breaking change (#106):** the unversioned `ontographia-gemini` alias, the `gemini` provider in `use-provider.sh` / `run-e2e.sh`, and the `GEMINI_MODEL` env variable were removed. Use `ontographia-gemini-3.7` (the previous default upstream) or `ontographia-gemini-3.8`. Baselines recorded before #106 still show `ontographia-gemini` in their `meta`; that alias pointed to `gemini/gemini-3.7-flash`. Live eval baselines record the alias and upstream model id in their `meta` (see [Evaluation](evaluation.md)).
 
 ## Troubleshooting
 

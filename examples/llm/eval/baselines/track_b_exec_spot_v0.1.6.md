@@ -35,7 +35,7 @@
 Close to the baseline: compile 39/60 vs 41/60, Exec Match 1/36 vs 1/38. Exact Exec Match against HF gold Cypher remains rare. This is a single run with no re-runs. The run took ~2 h wall-clock (slow LLM / demo DB round-trips; the local machine was also briefly unreachable during the run).
 
 ```bash
-source scripts/litellm/use-provider.sh gemini
+source scripts/litellm/use-provider.sh gemini-3.7
 /path/to/venv-0.1.6/bin/python examples/llm/eval/run_track_b_exec.py --n 60 --seed 53 \
   --json-out examples/llm/eval/baselines/track_b_exec_spot_v0.1.6.json
 # (datasets + neo4j installed in the same venv)

@@ -2,7 +2,11 @@
 #
 # Public model aliases (use as OPENAI_MODEL when calling http://127.0.0.1:4000/v1):
 #   ontographia-openai   → openai/gpt-4o-mini
-#   ontographia-gemini   → gemini/${GEMINI_MODEL} (default: gemini-3.7-flash)
+#   ontographia-gemini-3.7 → gemini/gemini-3.7-flash (Part 3 / v0.1.6 baselines)
+#   ontographia-gemini-3.8 → gemini/gemini-3.8-flash (issue #106)
+#
+# Gemini aliases are always versioned (no unversioned ontographia-gemini alias since #106),
+# so 3.7 and 3.8 can be used side by side, like testing several Python versions.
 #   ontographia-cursor   → anthropic/claude-sonnet-4-20250514 (typical Cursor stack via LiteLLM)
 #
 # Cursor IDE routes through LiteLLM at /cursor (see docs/litellm-local.md).
@@ -14,9 +18,14 @@ model_list:
       model: openai/gpt-4o-mini
       api_key: os.environ/OPENAI_API_KEY
 
-  - model_name: ontographia-gemini
+  - model_name: ontographia-gemini-3.7
     litellm_params:
-      model: os.environ/GEMINI_LITELLM_MODEL
+      model: gemini/gemini-3.7-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: ontographia-gemini-3.8
+    litellm_params:
+      model: gemini/gemini-3.8-flash
       api_key: os.environ/GEMINI_API_KEY
 
   - model_name: ontographia-cursor
