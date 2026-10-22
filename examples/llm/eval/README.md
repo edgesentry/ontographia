@@ -27,11 +27,11 @@ Baselines: [`baselines/track_a_h1.md`](baselines/track_a_h1.md). Summary: [docs/
 ### Live LLM arm (Issue #68)
 
 ```bash
-source scripts/litellm/use-provider.sh gemini   # or any OpenAI-compatible backend
+source scripts/litellm/use-provider.sh gemini-3.7   # or gemini-3.8 / any OpenAI-compatible backend
 uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --record
 ```
 
-Baselines: [`baselines/track_a_h1_live.md`](baselines/track_a_h1_live.md).
+Baselines: [`baselines/track_a_h1_live.md`](baselines/track_a_h1_live.md) (Part 3). v0.1.6 re-runs: [`track_a_h1_live_v0.1.6.md`](baselines/track_a_h1_live_v0.1.6.md) (Gemini 3.7), [`track_a_h1_live_v0.1.6_gemini-3.8.md`](baselines/track_a_h1_live_v0.1.6_gemini-3.8.md) (Gemini 3.8). Comparison: [`gemini_3.7_vs_3.8_v0.1.6.md`](baselines/gemini_3.7_vs_3.8_v0.1.6.md) ([#106](https://github.com/edgesentry/ontographia/issues/106)).
 
 ## H2 — execution feedback Intent refine (Issue #55)
 
@@ -75,11 +75,11 @@ Converter module: [`schema_convert.py`](schema_convert.py) (also best-effort JSO
 ### Exec Match spot (Issue #53 remainder)
 
 ```bash
-source scripts/litellm/use-provider.sh gemini
+source scripts/litellm/use-provider.sh gemini-3.7   # or gemini-3.8
 uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py --record
 ```
 
-Runs Intent → emit → `demo.neo4jlabs.com` vs gold Cypher row Jaccard on movies (+ recommendations). Baseline: [`baselines/track_b_exec_spot.md`](baselines/track_b_exec_spot.md).
+Runs Intent → emit → `demo.neo4jlabs.com` vs gold Cypher row Jaccard on movies (+ recommendations). Baseline: [`baselines/track_b_exec_spot.md`](baselines/track_b_exec_spot.md). v0.1.6 re-runs: [`track_b_exec_spot_v0.1.6.md`](baselines/track_b_exec_spot_v0.1.6.md) (Gemini 3.7), [`track_b_exec_spot_v0.1.6_gemini-3.8.md`](baselines/track_b_exec_spot_v0.1.6_gemini-3.8.md) (Gemini 3.8). Comparison: [`gemini_3.7_vs_3.8_v0.1.6.md`](baselines/gemini_3.7_vs_3.8_v0.1.6.md).
 
 ## Repair mapping (Issue #48)
 
@@ -104,3 +104,4 @@ Manufacturing heuristics live in [`../mappings/manufacturing.repair.yaml`](../ma
 - H3 adaptive spend: [#47](https://github.com/edgesentry/ontographia/issues/47), [#54](https://github.com/edgesentry/ontographia/issues/54)
 - Track B: [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53)
 - Repair mapping: [#48](https://github.com/edgesentry/ontographia/issues/48)
+- Gemini 3.7 vs 3.8 v0.1.6 live: [#106](https://github.com/edgesentry/ontographia/issues/106)

@@ -41,7 +41,7 @@ LIMIT 20
 ## Environment
 
 - `ontographia[llm,mcp]==0.1.6` from PyPI (wheel `cp312-cp312-macosx_11_0_arm64`), plus `mcp 2.3.0`, `neo4j 6.4.1`, `openai 3.36.0`
-- LiteLLM proxy `1.98.0` with [`scripts/litellm/config.yaml`](../../../scripts/litellm/config.yaml); alias `ontographia-gemini` → `gemini/gemini-3.7-flash`; `temperature=0`
+- LiteLLM proxy `1.98.0` with [`scripts/litellm/config.yaml`](../../../scripts/litellm/config.yaml); alias `ontographia-gemini-3.7` → `gemini/gemini-3.7-flash` (the transcripts record the pre-#106 alias name `ontographia-gemini`); `temperature=0`
 - Neo4j `neo4j:2025.06` (Docker via colima), seeded with [`examples/neo4j/seed.cypher`](../../neo4j/seed.cypher)
 
 ## Reproduce
@@ -57,7 +57,7 @@ export PATH="$PWD/.venv-0.1.6/bin:$PATH"
 
 # 3. LiteLLM proxy (see docs/litellm-local.md; needs GEMINI_API_KEY in scripts/litellm/.env)
 #    e.g. a separate venv with "litellm[proxy]==1.98.0", started with scripts/litellm/config.yaml
-source scripts/litellm/use-provider.sh gemini
+source scripts/litellm/use-provider.sh gemini-3.7
 export NEO4J_URI=bolt://localhost:7687 NEO4J_USER=neo4j NEO4J_PASSWORD=ontographia
 
 # 4a. CLI pipeline

@@ -65,8 +65,8 @@
 ```bash
 uv venv --python 3.12 /path/to/venv-0.1.6
 uv pip install --python /path/to/venv-0.1.6/bin/python "ontographia[llm]==0.1.6"
-# LiteLLM proxy per docs/litellm-local.md (alias ontographia-gemini → gemini/gemini-3.7-flash)
-source scripts/litellm/use-provider.sh gemini
+# LiteLLM proxy per docs/litellm-local.md (alias ontographia-gemini-3.7 → gemini/gemini-3.7-flash; recorded as ontographia-gemini before #106)
+source scripts/litellm/use-provider.sh gemini-3.7
 /path/to/venv-0.1.6/bin/python examples/llm/eval/run_track_a_h1_live.py \
   --profiles mid,large --json-out examples/llm/eval/baselines/track_a_h1_live_v0.1.6.json
 ```

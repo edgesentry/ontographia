@@ -3,7 +3,8 @@
 #
 # Usage (source, do not execute):
 #   source scripts/litellm/use-provider.sh openai
-#   source scripts/litellm/use-provider.sh gemini
+#   source scripts/litellm/use-provider.sh gemini-3.7
+#   source scripts/litellm/use-provider.sh gemini-3.8
 #   source scripts/litellm/use-provider.sh cursor
 #
 # Loads scripts/litellm/.env when present, then sets OPENAI_MODEL to the LiteLLM alias.
@@ -35,13 +36,20 @@ use_provider() {
       export OPENAI_MODEL=ontographia-openai
       ;;
     gemini)
-      export OPENAI_MODEL=ontographia-gemini
+      echo "provider 'gemini' was removed in #106; use gemini-3.7 or gemini-3.8" >&2
+      return 1
+      ;;
+    gemini-3.7)
+      export OPENAI_MODEL=ontographia-gemini-3.7
+      ;;
+    gemini-3.8)
+      export OPENAI_MODEL=ontographia-gemini-3.8
       ;;
     cursor)
       export OPENAI_MODEL=ontographia-cursor
       ;;
     *)
-      echo "usage: source scripts/litellm/use-provider.sh {openai|gemini|cursor}" >&2
+      echo "usage: source scripts/litellm/use-provider.sh {openai|gemini-3.7|gemini-3.8|cursor}" >&2
       return 1
       ;;
   esac

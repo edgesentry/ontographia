@@ -4,14 +4,14 @@
 Flow (the LLM never writes Cypher):
 
   list_ontology + intent_schema (MCP)
-    -> LLM (OpenAI-compatible, e.g. LiteLLM alias ontographia-gemini) emits Intent JSON
+    -> LLM (OpenAI-compatible, e.g. LiteLLM alias ontographia-gemini-3.7) emits Intent JSON
     -> build_cypher (MCP)  [one Intent correction round if ok=false]
     -> execute (MCP, read-only)
 
 Writes a JSON transcript of every MCP call and LLM output.
 
 Usage:
-  source scripts/litellm/use-provider.sh gemini
+  source scripts/litellm/use-provider.sh gemini-3.7
   export NEO4J_URI=bolt://localhost:7687 NEO4J_USER=neo4j NEO4J_PASSWORD=ontographia
   python examples/e2e/v0.1.6-gemini/mcp_client.py \\
     --question "List suppliers for parts in product SKU SPX-100" \\
