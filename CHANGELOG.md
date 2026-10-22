@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Intent Cypher identifiers:** `alias`, `as_name`, `order_by` (and related property names used as identifiers) must match `^[A-Za-z_][A-Za-z0-9_]*$`. Hostile fragments (backticks, spaces, comments, extra clauses) are rejected at validation. The Cypher 25 emitter also backtick-quotes any unsafe identifier as defense in depth. `order_by` must reference a projected return alias/`as_name`, and direction remains ASC/DESC only (boolean `descending`).
+- **MCP `execute` row_limit:** Client `row_limit` is clamped with `min(client_or_default, config.row_limit)`. Intents without `limit` (or with a larger `limit`) get a Cypher `LIMIT` of at most that effective maximum, so Neo4j is not asked for an unbounded result that is only truncated client-side.
+
 ## [0.1.6] - 2026-10-21
 
 Pre-1.0 patch release. Ships the Phase 1 optional Python extras (`ontographia[llm]` and `ontographia[mcp]`). Issues [#84](https://github.com/edgesentry/ontographia/issues/84) and [#85](https://github.com/edgesentry/ontographia/issues/85) remain open until this release is cut; they are expected to close after publish.

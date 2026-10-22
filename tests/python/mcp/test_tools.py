@@ -78,6 +78,55 @@ def test_execute_respects_row_limit(mcp_tools) -> None:
     assert result["ok"] is True
     assert result["row_count"] == 3
     assert result["truncated"] is True
+    assert result["row_limit"] == 3
+    assert "LIMIT 3" in result["query"]
+
+
+def test_execute_clamps_client_row_limit_to_server_max(mcp_tools) -> None:
+    """Client row_limit must not exceed configured McpConfig.row_limit (50)."""
+    mcp_tools._fake_runner.rows = [{"i": i} for i in range(100)]
+    result = mcp_tools.execute(SAMPLE_INTENT, row_limit=10_000)
+    assert result["ok"] is True
+    assert result["row_limit"] == 50
+    assert mcp_tools._fake_runner.calls[-1]["row_limit"] == 50
+    # Cypher LIMIT also clamped (Intent had limit=20; client asked 10000 → 50,
+    # but Intent limit 20 is lower so emitted LIMIT is 20).
+    assert "LIMIT 20" in result["query"]
+
+
+def test_execute_injects_cypher_limit_when_intent_omits_limit(mcp_tools) -> None:
+    """Intent without limit must get Cypher LIMIT = effective server row_limit."""
+    intent = {k: v for k, v in SAMPLE_INTENT.items() if k != "limit"}
+    assert "limit" not in intent
+    result = mcp_tools.execute(intent)
+    assert result["ok"] is True
+    assert result["row_limit"] == 50
+    assert "LIMIT 50" in result["query"]
+    assert mcp_tools._fake_runner.calls[-1]["row_limit"] == 50
+
+
+def test_execute_clamps_intent_limit_above_server_max(mcp_tools) -> None:
+    intent = {**SAMPLE_INTENT, "limit": 9999}
+    result = mcp_tools.execute(intent)
+    assert result["ok"] is True
+    assert result["row_limit"] == 50
+    assert "LIMIT 50" in result["query"]
+
+
+def test_build_cypher_rejects_hostile_as_name(mcp_tools) -> None:
+    hostile = {
+        **SAMPLE_INTENT,
+        "return": [
+            {
+                "alias": "supplier",
+                "property": "name",
+                "as_name": "n` RETURN 1 //",
+            }
+        ],
+    }
+    result = mcp_tools.build_cypher(hostile)
+    assert result["ok"] is False
+    assert any("identifier" in e["message"].lower() for e in result["errors"])
 
 
 def test_execute_without_neo4j(manufacturing_engine) -> None:

@@ -168,6 +168,36 @@ class OntographiaMcp:
         except Exception as exc:  # ValueError from bindings / intent parse
             return {"ok": False, "errors": [{"message": str(exc)}]}
 
+    def _clamp_row_limit(self, row_limit: int | None) -> int:
+        """Client-supplied limit cannot exceed the configured server maximum."""
+        requested = self.config.row_limit if row_limit is None else int(row_limit)
+        if requested < 0:
+            requested = 0
+        return min(requested, self.config.row_limit)
+
+    @staticmethod
+    def _intent_with_server_limit(
+        intent: dict[str, Any] | str,
+        *,
+        server_limit: int,
+    ) -> dict[str, Any]:
+        """Ensure emitted Cypher carries a LIMIT ≤ server_limit.
+
+        An Intent without ``limit`` must not become an unbounded Neo4j fetch
+        that is only truncated client-side.
+        """
+        intent_obj = dict(_parse_intent(intent))
+        intent_limit = intent_obj.get("limit")
+        if intent_limit is None:
+            cypher_limit = server_limit
+        else:
+            try:
+                cypher_limit = min(int(intent_limit), server_limit)
+            except (TypeError, ValueError):
+                cypher_limit = server_limit
+        intent_obj["limit"] = cypher_limit
+        return intent_obj
+
     def execute(
         self,
         intent: dict[str, Any] | str,
@@ -182,6 +212,8 @@ class OntographiaMcp:
         1. Only Ontographia-generated Cypher is executed (never client Cypher).
         2. Neo4j session uses READ access mode / ``execute_read``.
         3. Generated query is deny-checked for write clauses before run.
+        4. ``row_limit`` is clamped to the configured server maximum, and the
+           Intent always gets a Cypher ``LIMIT`` of at most that maximum.
         """
         if self._runner is None:
             return {
@@ -198,13 +230,18 @@ class OntographiaMcp:
                 ],
             }
 
-        built = self.build_cypher(intent, dialect=dialect)
+        limit = self._clamp_row_limit(row_limit)
+        try:
+            bounded_intent = self._intent_with_server_limit(intent, server_limit=limit)
+        except ValueError as exc:
+            return {"ok": False, "errors": [{"message": str(exc)}]}
+
+        built = self.build_cypher(bounded_intent, dialect=dialect)
         if not built.get("ok"):
             return built
 
         query = built["query"]
         params = built["params"]
-        limit = row_limit if row_limit is not None else self.config.row_limit
         try:
             assert_read_only_cypher(query)
             rows = self._runner.run_read(
