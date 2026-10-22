@@ -54,8 +54,9 @@ dev = [
     "mcp>=1.9,<3",
 ]
 # Local LiteLLM proxy tooling for docs/litellm-local.md (not the package extra).
+# Exclude 1.107.0: malicious PyPI release reported 2026-10-21 (lockfile pins 1.98.0).
 litellm = [
-    "litellm[proxy]>=1.67",
+    "litellm[proxy]>=1.67,!=1.107.0",
 ]
 
 [tool.maturin]

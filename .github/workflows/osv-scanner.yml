@@ -1,0 +1,43 @@
+# Weekly + PR dependency vulnerability scanning via Google's OSV-Scanner.
+# Uses official reusable workflows from google/osv-scanner-action (pinned).
+#
+# Note: If the org Actions allowlist does not include google/osv-scanner-action,
+# this workflow may fail with startup_failure until that action is permitted.
+name: OSV-Scanner
+
+on:
+  schedule:
+    # Wednesday 00:00 UTC == Wednesday 08:00 SGT
+    - cron: "0 0 * * 3"
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan-scheduled:
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0
+    with:
+      upload-sarif: true
+      scan-args: |-
+        -r
+        ./
+
+  scan-pr:
+    if: ${{ github.event_name == 'pull_request' }}
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable-pr.yml@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0
+    with:
+      upload-sarif: true
+      scan-args: |-
+        -r
+        ./
