@@ -36,7 +36,7 @@ cp scripts/litellm/env.example scripts/litellm/.env
 # Edit scripts/litellm/.env — set keys for providers you use:
 #   OPENAI_API_KEY, GEMINI_API_KEY, ANTHROPIC_API_KEY, CURSOR_API_KEY (optional)
 
-uv sync --group dev --group llm
+uv sync --group dev --group litellm
 uv run maturin develop --release
 chmod +x scripts/litellm/*.sh
 ```

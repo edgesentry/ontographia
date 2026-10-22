@@ -64,6 +64,11 @@ jobs:
         run: uv python pin ${{ matrix.python-version }}
       - name: install python dependencies
         run: uv sync --group dev
+      - name: Resolve litellm dependency group (dry-run, no install)
+        # Catch --group name drift vs pyproject [dependency-groups] without pulling LLM APIs.
+        run: uv sync --group litellm --frozen --dry-run
+      - name: Verify uv --group refs in scripts/docs
+        run: uv run --python "$(command -v python3)" pytest tests/python/test_uv_dependency_groups.py -q
       - name: build and install bindings
         run: uv run --python "$(command -v python3)" maturin develop --release
       - name: smoke test
