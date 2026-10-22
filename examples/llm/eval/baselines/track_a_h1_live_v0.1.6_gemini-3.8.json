@@ -18,11 +18,15 @@
     "base_url": "http://127.0.0.1:4000/v1",
     "study": "h1_live_llm",
     "issue": 68,
-    "harness": "examples/llm/eval/run_track_a_h1_live.py"
+    "harness": "examples/llm/eval/run_track_a_h1_live.py",
+    "upstream_model": "gemini-3.8-flash",
+    "model_note": "LiteLLM alias ontographia-gemini-3.8 → gemini/gemini-3.8-flash (LiteLLM 1.98.0)",
+    "ontographia_package": "ontographia[llm]==0.1.6 (PyPI wheel, not an editable/local build)",
+    "annotation_note": "upstream_model / model_note / ontographia_package added after the run; all metrics are unmodified harness output"
   },
   "verdict": {
     "verdict": "support",
-    "reason": "live large subset_fallback (recommended policy): Property Hit \u2265 +10pt vs full, tokens p95 \u2264 \u221230%, compile not worse; subset-only alone was hit +2.5pt / compile_ok 31/30",
+    "reason": "live large subset_fallback (recommended policy): Property Hit ≥ +10pt vs full, tokens p95 ≤ −30%, compile not worse; subset-only alone was hit +2.5pt / compile_ok 31/30",
     "criteria": {
       "property_hit_gain_threshold_pt": 10.0,
       "token_p95_reduction_threshold": -0.3,

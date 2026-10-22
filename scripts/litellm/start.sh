@@ -10,7 +10,7 @@
 #   # edit .env with provider API keys
 #
 # Then in another terminal:
-#   source scripts/litellm/use-provider.sh openai   # or gemini | cursor
+#   source scripts/litellm/use-provider.sh openai   # or gemini-3.7 | gemini-3.8 | cursor
 #   uv run python examples/run_llm_e2e.py --question "..." --execute --password ontographia
 
 set -euo pipefail

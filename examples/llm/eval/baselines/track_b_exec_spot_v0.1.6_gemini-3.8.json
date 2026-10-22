@@ -16,9 +16,13 @@
     "model": "ontographia-gemini-3.8",
     "neo4j_uri": "neo4j+s://demo.neo4jlabs.com",
     "skip_exec": false,
-    "repair_mapping_path": "/Users/yoheionishi/work/ontographia-gemini38/examples/llm/mappings/movies.repair.yaml",
+    "repair_mapping_path": "examples/llm/mappings/movies.repair.yaml",
     "selection": "HF neo4j/text2cypher-2025v1 test; Node properties only; refs=['neo4jlabs_demo_db_movies', 'neo4jlabs_demo_db_recommendations']; stratified sample n=60 seed=53",
-    "license_note": "Dataset neo4j/text2cypher-2025v1 \u2014 check HF card before redistribution"
+    "license_note": "Dataset neo4j/text2cypher-2025v1 — check HF card before redistribution",
+    "upstream_model": "gemini-3.8-flash",
+    "model_note": "LiteLLM alias ontographia-gemini-3.8 → gemini/gemini-3.8-flash (LiteLLM 1.98.0)",
+    "ontographia_package": "ontographia[llm]==0.1.6 (PyPI wheel, not an editable/local build)",
+    "annotation_note": "upstream_model / model_note / ontographia_package added after the run; repair_mapping_path made repo-relative (was an absolute local path); summary metrics are unmodified harness output"
   },
   "results": {
     "summary": {

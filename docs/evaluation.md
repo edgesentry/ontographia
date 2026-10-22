@@ -68,9 +68,19 @@ Recorded in [`examples/llm/eval/baselines/track_a_h1.json`](https://github.com/e
 **H1 live verdict: support** on the **recommended production policy** (`subset_fallback` / `schema_policy=auto`): on `large`, Property Hit +12.5pt vs full (0.82 → 0.95), tokens p95 ≈ −91%, compile 40/40 (better than full). Ablation: **subset-only** can under-cover vocabulary (−5pt hit, slightly worse compile) — exact-match pruning needs the full-schema fallback. Invent-without-seeing rate was **0** on this run; preferred near-duplicates were not selected even under `full`.
 
 ```bash
-source scripts/litellm/use-provider.sh gemini-3.7   # or any OpenAI-compatible backend
+source scripts/litellm/use-provider.sh gemini-3.7   # or gemini-3.8 / any OpenAI-compatible backend
 uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --record
 ```
+
+#### v0.1.6 live re-runs (Gemini 3.7 / 3.8, issue #106)
+
+Published-package re-runs (`ontographia[llm]==0.1.6` from PyPI, LiteLLM `1.98.0`, `temperature=0`). Part 3 baselines above are unchanged (`--json-out`).
+
+| artifact | model | recorded_at | notes |
+|----------|-------|-------------|-------|
+| [`track_a_h1_live_v0.1.6.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live_v0.1.6.md) / [`.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live_v0.1.6.json) | alias recorded as `ontographia-gemini` → `gemini-3.7-flash` | `2026-10-22T03:09:33Z` | harness verdict **support**; see file for per-arm table |
+| [`track_a_h1_live_v0.1.6_gemini-3.8.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live_v0.1.6_gemini-3.8.md) / [`.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live_v0.1.6_gemini-3.8.json) | `ontographia-gemini-3.8` → `gemini-3.8-flash` | `2026-10-22T05:43:55Z` | harness verdict **support** |
+| [`gemini_3.7_vs_3.8_v0.1.6.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/gemini_3.7_vs_3.8_v0.1.6.md) | — | — | Part 3 vs v0.1.6 3.7 vs v0.1.6 3.8 (Track A + Track B) |
 
 ### H2 study — execution feedback Intent refine
 
@@ -169,9 +179,20 @@ Recorded `2026-09-03T11:29:09Z` (git `9b3c7cf`). Machine-readable: [`examples/ll
 **Reading:** Schema ingest remains strong; live Intent→emit often compiles (~68%) and structure overlap is moderate, but **exact Exec Match against gold Cypher is rare**. HF gold is Cypher (not Intent), so mismatches mix Intent extraction error, ontology conversion gaps, and legitimate Cypher paraphrases. This spot closes external-validity measurement; it does **not** claim Text2Cypher SOTA or Track A H1-level field-selection proof.
 
 ```bash
-source scripts/litellm/use-provider.sh gemini-3.7
+source scripts/litellm/use-provider.sh gemini-3.7   # or gemini-3.8
 uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py --record
 ```
+
+#### v0.1.6 Exec Match re-runs (Gemini 3.7 / 3.8, issue #106)
+
+Same package / LiteLLM / seed / refs as above; Part 3 [`track_b_exec_spot.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_exec_spot.json) unchanged.
+
+| artifact | model | recorded_at | compile_ok | exec_match |
+|----------|-------|-------------|------------:|-----------:|
+| [`track_b_exec_spot_v0.1.6.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_exec_spot_v0.1.6.md) / [`.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_exec_spot_v0.1.6.json) | `ontographia-gemini` → `gemini-3.7-flash` | `2026-10-22T05:05:32Z` | 39/60 | 1/36 |
+| [`track_b_exec_spot_v0.1.6_gemini-3.8.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_exec_spot_v0.1.6_gemini-3.8.md) / [`.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_exec_spot_v0.1.6_gemini-3.8.json) | `ontographia-gemini-3.8` → `gemini-3.8-flash` | `2026-10-22T07:57:21Z` | 36/60 | 1/33 |
+
+Three-way table (incl. structure F1): [`gemini_3.7_vs_3.8_v0.1.6.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/gemini_3.7_vs_3.8_v0.1.6.md).
 
 ### Reproduce / refresh
 
@@ -185,4 +206,4 @@ Check the Hugging Face dataset card for license before redistributing samples.
 
 - [Related work](related-work.md)
 - [Architecture](architecture.md)
-- Issues [#45](https://github.com/edgesentry/ontographia/issues/45), [#46](https://github.com/edgesentry/ontographia/issues/46), [#47](https://github.com/edgesentry/ontographia/issues/47), [#48](https://github.com/edgesentry/ontographia/issues/48), [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53), [#54](https://github.com/edgesentry/ontographia/issues/54), [#55](https://github.com/edgesentry/ontographia/issues/55), [#68](https://github.com/edgesentry/ontographia/issues/68)
+- Issues [#45](https://github.com/edgesentry/ontographia/issues/45), [#46](https://github.com/edgesentry/ontographia/issues/46), [#47](https://github.com/edgesentry/ontographia/issues/47), [#48](https://github.com/edgesentry/ontographia/issues/48), [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53), [#54](https://github.com/edgesentry/ontographia/issues/54), [#55](https://github.com/edgesentry/ontographia/issues/55), [#68](https://github.com/edgesentry/ontographia/issues/68), [#106](https://github.com/edgesentry/ontographia/issues/106)
