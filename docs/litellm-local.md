@@ -1,6 +1,6 @@
 # LiteLLM local setup (OpenAI, Gemini, Cursor)
 
-Local-only guide for routing LLM calls through [LiteLLM](https://docs.litellm.ai/) before Ontographia Intent extraction. **Not run in CI.**
+Local-only guide for routing LLM calls through [LiteLLM](https://docs.litellm.ai/) before Ontographia Intent extraction. **Not run in CI** (except a dotenvx ciphertext guard / optional decrypt smoke).
 
 Ontographia still only accepts **Intent JSON** from the LLM layer; LiteLLM is a separate proxy that unifies provider credentials and model routing.
 
@@ -29,16 +29,128 @@ Cursor appears in three different roles — keep them separate:
 
 Cursor does **not** expose a general chat-completions API for Intent extraction. The `ontographia-cursor` alias routes to **Anthropic** — the same class of models Cursor IDE often uses when pointed at LiteLLM.
 
+## Secrets layout (dotenvx)
+
+Provider API keys are **not** kept as plaintext in git.
+
+| Path | Role | Commit? |
+|------|------|---------|
+| [`scripts/litellm/.env.encrypted`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/.env.encrypted) | dotenvx ciphertext (values start with `encrypted:`) + public key | **Yes** (when present) |
+| `~/.config/ontographia/dotenv.keys` | Private decryption key(s) | **Never** (outside the repo) |
+| `scripts/litellm/.env` | Optional local plaintext scratch (legacy) | **Never** (gitignored; scripts do **not** load it) |
+| `.env.keys` / `*.keys` | Generated key files | **Never** (gitignored) |
+
+Scripts load env with:
+
+```bash
+dotenvx run -f scripts/litellm/.env.encrypted \
+  -fk ~/.config/ontographia/dotenv.keys -- <command>
+```
+
+Overrides: `LITELLM_ENV_FILE` (ciphertext path), `DOTENV_KEYS_FILE` or `LITELLM_DOTENV_KEYS` (private key path).
+
+There is **no** plaintext-`.env` fallback in `start.sh` / `use-provider.sh` / `run-e2e.sh`. Missing dotenvx or the key file is a hard error with install/setup hints.
+
+### Install dotenvx
+
+OS-independent installer ([docs](https://dotenvx.com/docs/install/)):
+
+```bash
+curl -sfS https://dotenvx.sh | sh
+# ensure ~/.local/bin (or the install path) is on PATH
+```
+
+macOS (Homebrew):
+
+```bash
+brew tap dotenvx/brew
+brew trust dotenvx/brew
+brew install dotenvx
+```
+
+### First-time encryption (maintainer)
+
+If you already have a plaintext `scripts/litellm/.env` on disk:
+
+```bash
+# 1) Install dotenvx (see above)
+
+# 2) Copy plaintext into the committed ciphertext path
+#    Note: on many macOS zsh setups `cp` is aliased to `cp -i` — answer y if prompted.
+unalias cp 2>/dev/null || true
+cp scripts/litellm/.env scripts/litellm/.env.encrypted
+
+# 3) Encrypt in place (creates scripts/litellm/.env.keys next to the file)
+dotenvx encrypt -f scripts/litellm/.env.encrypted
+
+# 4) Move the private key outside the repo
+mkdir -p ~/.config/ontographia
+mv scripts/litellm/.env.keys ~/.config/ontographia/dotenv.keys
+chmod 600 ~/.config/ontographia/dotenv.keys
+
+# 5) Verify (should start the proxy with injected secrets)
+./scripts/litellm/start.sh
+
+# 6) Commit only the ciphertext (never .env.keys / plaintext .env)
+git add scripts/litellm/.env.encrypted
+git status   # confirm .env.keys and scripts/litellm/.env are not staged
+```
+
+From `env.example` instead of an existing `.env`:
+
+```bash
+cp scripts/litellm/env.example scripts/litellm/.env.encrypted
+# edit scripts/litellm/.env.encrypted — set provider keys
+dotenvx encrypt -f scripts/litellm/.env.encrypted
+mkdir -p ~/.config/ontographia
+mv scripts/litellm/.env.keys ~/.config/ontographia/dotenv.keys
+chmod 600 ~/.config/ontographia/dotenv.keys
+```
+
+### Add or update a secret
+
+```bash
+dotenvx set GEMINI_API_KEY 'your-new-value' \
+  -f scripts/litellm/.env.encrypted \
+  -fk ~/.config/ontographia/dotenv.keys
+git add scripts/litellm/.env.encrypted
+```
+
+### Rotate the private key (keypair leak or scheduled rotation)
+
+This repository is **public**: ciphertext committed today remains in git history forever. If `~/.config/ontographia/dotenv.keys` (or `DOTENV_PRIVATE_KEY`) leaks, treat every upstream API key as compromised:
+
+1. **Rotate all provider keys** (OpenAI, Gemini, Anthropic, Cursor, `LITELLM_MASTER_KEY`, …) at each vendor.
+2. Decrypt locally (optional backup), then re-encrypt with a fresh keypair:
+
+```bash
+dotenvx decrypt -f scripts/litellm/.env.encrypted \
+  -fk ~/.config/ontographia/dotenv.keys
+rm -f ~/.config/ontographia/dotenv.keys scripts/litellm/.env.keys
+dotenvx encrypt -f scripts/litellm/.env.encrypted
+mv scripts/litellm/.env.keys ~/.config/ontographia/dotenv.keys
+chmod 600 ~/.config/ontographia/dotenv.keys
+# set the new plaintext values to the rotated API keys, then:
+dotenvx encrypt -f scripts/litellm/.env.encrypted \
+  -fk ~/.config/ontographia/dotenv.keys
+```
+
+3. Commit the new `.env.encrypted`. Update any CI `DOTENV_PRIVATE_KEY` secret to the new private key if used.
+
+### Guards
+
+- CI job `litellm-dotenvx` runs [`scripts/litellm/check_encrypted_env.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/check_encrypted_env.sh): tracked LiteLLM env files must not contain plaintext values (every secret value must start with `encrypted:`).
+- Optional: if repository secret `DOTENV_PRIVATE_KEY` is set, CI decrypts `.env.encrypted` as a smoke test; if unset, that step skips. **Do not** add the secret from automation — maintainers set it manually if desired.
+- Optional local hook: `git config core.hooksPath .githooks` (runs the same check).
+
 ## 1. One-time setup
 
 ```bash
-cp scripts/litellm/env.example scripts/litellm/.env
-# Edit scripts/litellm/.env — set keys for providers you use:
-#   OPENAI_API_KEY, GEMINI_API_KEY, ANTHROPIC_API_KEY, CURSOR_API_KEY (optional)
+# Install dotenvx + create scripts/litellm/.env.encrypted (see Secrets layout above)
 
 uv sync --group dev --group litellm
 uv run maturin develop --release
-chmod +x scripts/litellm/*.sh
+chmod +x scripts/litellm/*.sh .githooks/pre-commit
 ```
 
 ## 2. Start LiteLLM proxy
@@ -62,7 +174,7 @@ Verify:
 ```
 
 Default URL: `http://127.0.0.1:4000`  
-Default virtual key: `sk-litellm-local-dev` (set `LITELLM_MASTER_KEY` in `.env`).
+Default virtual key: `sk-litellm-local-dev` (set `LITELLM_MASTER_KEY` in `.env.encrypted`).
 
 ## 3. Run Ontographia LLM E2E
 
@@ -108,7 +220,7 @@ Use this when you want Cursor itself to call models through the same proxy (logg
 1. Start LiteLLM (`./scripts/litellm/start.sh`).
 2. In Cursor → **Settings → Models**:
    - Enable **Override OpenAI Base URL**: `http://127.0.0.1:4000/cursor`
-   - **OpenAI API Key**: your `LITELLM_MASTER_KEY` from `.env`
+   - **OpenAI API Key**: your `LITELLM_MASTER_KEY` from `.env.encrypted`
 3. **Add Custom Model**: `litellm-claude-sonnet` (defined in `scripts/litellm/config.yaml` — distinct from built-in names).
 4. Select that model in Ask/Agent mode.
 
@@ -118,18 +230,20 @@ If **Override OpenAI Base URL** is missing in your Cursor build, use the Azure O
 
 ## 5. Cursor Cloud Agents (optional)
 
-For the Cursor Cloud Agents API (`/v0/agents`), set `CURSOR_API_KEY` in `.env`. LiteLLM forwards `/cursor/*` to `api.cursor.com`. This is **not** used by `run_llm_e2e.py`; see [Cursor Cloud Agents pass-through](https://docs.litellm.ai/docs/pass_through/cursor).
+For the Cursor Cloud Agents API (`/v0/agents`), set `CURSOR_API_KEY` in `.env.encrypted`. LiteLLM forwards `/cursor/*` to `api.cursor.com`. This is **not** used by `run_llm_e2e.py`; see [Cursor Cloud Agents pass-through](https://docs.litellm.ai/docs/pass_through/cursor).
 
 ## Configuration reference
 
 | File | Purpose |
 |------|---------|
 | [`scripts/litellm/config.yaml`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/config.yaml) | Model aliases and upstream routing |
-| [`scripts/litellm/env.example`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/env.example) | Environment template (copy to `.env`) |
-| [`scripts/litellm/start.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/start.sh) | Start proxy (uv or `--docker`) |
+| [`scripts/litellm/env.example`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/env.example) | Plaintext template (copy → encrypt → `.env.encrypted`) |
+| [`scripts/litellm/.env.encrypted`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/.env.encrypted) | Committed dotenvx ciphertext (maintainer-created) |
+| [`scripts/litellm/start.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/start.sh) | Start proxy via `dotenvx run` (uv or `--docker`) |
 | [`scripts/litellm/use-provider.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/use-provider.sh) | `source` to set `OPENAI_*` for a provider |
 | [`scripts/litellm/run-e2e.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/run-e2e.sh) | One-shot E2E through LiteLLM |
 | [`scripts/litellm/healthcheck.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/healthcheck.sh) | Proxy liveness + model list |
+| [`scripts/litellm/check_encrypted_env.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/check_encrypted_env.sh) | CI / pre-commit: reject plaintext in tracked env files |
 
 ### Model aliases (`config.yaml`)
 
@@ -145,7 +259,7 @@ Edit `config.yaml` to change models or add aliases. Restart the proxy after chan
 
 ### Running several Gemini versions side by side
 
-Gemini aliases are always versioned, so several Gemini versions can be used side by side (much like testing against several Python versions) without editing `.env` or restarting the proxy:
+Gemini aliases are always versioned, so several Gemini versions can be used side by side (much like testing against several Python versions) without editing `.env.encrypted` or restarting the proxy:
 
 ```bash
 source scripts/litellm/use-provider.sh gemini-3.7   # OPENAI_MODEL=ontographia-gemini-3.7
@@ -160,9 +274,12 @@ Both aliases share `GEMINI_API_KEY`. Add a new `ontographia-gemini-<version>` en
 
 | Symptom | Fix |
 |---------|-----|
+| `dotenvx not found` | Install via `curl -sfS https://dotenvx.sh \| sh` (or Homebrew); ensure PATH |
+| `private key file not found` | Place keys at `~/.config/ontographia/dotenv.keys` (`chmod 600`) |
+| `encrypted env file not found` | Create/commit `scripts/litellm/.env.encrypted` (see Secrets layout) |
 | `Connection refused` on port 4000 | Start `./scripts/litellm/start.sh` first |
 | `401` from proxy | `OPENAI_API_KEY` in E2E must match `LITELLM_MASTER_KEY` |
-| `no healthy deployments` / model error | Provider API key missing in `.env` for that alias |
+| `no healthy deployments` / model error | Provider API key missing in `.env.encrypted` for that alias |
 | Gemini / Anthropic errors | Confirm key is set; check LiteLLM logs in Terminal A |
 | Cursor IDE model collision | Use `litellm-claude-sonnet`, not built-in model names |
 | Older local model rejects `json_schema` | Add `--no-json-schema` to `run_llm_e2e.py` |

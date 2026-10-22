@@ -69,6 +69,8 @@ jobs:
         run: uv sync --group litellm --frozen --dry-run
       - name: Verify uv --group refs in scripts/docs
         run: uv run --python "$(command -v python3)" pytest tests/python/test_uv_dependency_groups.py -q
+      - name: LiteLLM dotenvx env guard unit tests
+        run: uv run --python "$(command -v python3)" pytest tests/python/test_litellm_dotenvx_guard.py -q
       - name: build and install bindings
         run: uv run --python "$(command -v python3)" maturin develop --release
       - name: smoke test
@@ -77,6 +79,34 @@ jobs:
         run: uv run --python "$(command -v python3)" pytest tests/python/llm -q
       - name: MCP server unit tests (ontographia[mcp])
         run: uv run --python "$(command -v python3)" pytest tests/python/mcp -q
+
+  # Guard + optional decrypt for scripts/litellm/.env.encrypted (issue #105).
+  # Does not add repository secrets; skips decrypt when DOTENV_PRIVATE_KEY is unset.
+  litellm-dotenvx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Reject plaintext in tracked LiteLLM env files
+        run: bash scripts/litellm/check_encrypted_env.sh
+      - name: Install dotenvx
+        run: |
+          curl -sfS https://dotenvx.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Optional decrypt smoke (requires DOTENV_PRIVATE_KEY secret)
+        env:
+          DOTENV_PRIVATE_KEY: ${{ secrets.DOTENV_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${DOTENV_PRIVATE_KEY:-}" ]]; then
+            echo "DOTENV_PRIVATE_KEY secret not set; skipping decrypt smoke"
+            exit 0
+          fi
+          if [[ ! -f scripts/litellm/.env.encrypted ]]; then
+            echo "scripts/litellm/.env.encrypted not present; skipping decrypt smoke"
+            exit 0
+          fi
+          dotenvx get -f scripts/litellm/.env.encrypted --format json >/dev/null
+          echo "ok: decrypted scripts/litellm/.env.encrypted with DOTENV_PRIVATE_KEY"
 
   neo4j-integration:
     name: neo4j-integration (${{ matrix.python-version }})

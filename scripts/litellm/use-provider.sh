@@ -7,22 +7,23 @@
 #   source scripts/litellm/use-provider.sh gemini-3.8
 #   source scripts/litellm/use-provider.sh cursor
 #
-# Loads scripts/litellm/.env when present, then sets OPENAI_MODEL to the LiteLLM alias.
+# Loads scripts/litellm/.env.encrypted via dotenvx (private key at
+# ~/.config/ontographia/dotenv.keys), then sets OPENAI_MODEL to the LiteLLM alias.
 
 use_provider() {
   local provider="${1:-}"
-  local dir root env_file port master_key
+  local dir port master_key
 
   dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-  root="$(cd "$dir/../.." && pwd)"
-  env_file="${LITELLM_ENV_FILE:-$dir/.env}"
 
-  if [[ -f "$env_file" ]]; then
-    set -a
-    # shellcheck disable=SC1090
-    source "$env_file"
-    set +a
-  fi
+  # shellcheck disable=SC1091
+  source "$dir/_lib.sh"
+
+  # Inject decrypted env into this shell (sourced script; not a child process).
+  local exports
+  exports="$(litellm_dotenvx_eval_export)" || return 1
+  # shellcheck disable=SC1090
+  eval "$exports"
 
   port="${LITELLM_PORT:-4000}"
   master_key="${LITELLM_MASTER_KEY:-sk-litellm-local-dev}"

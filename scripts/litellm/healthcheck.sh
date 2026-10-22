@@ -3,17 +3,22 @@
 #
 # Usage:
 #   ./scripts/litellm/healthcheck.sh
+#
+# Loads LITELLM_MASTER_KEY from scripts/litellm/.env.encrypted via dotenvx
+# when available; otherwise falls back to the local-dev default virtual key.
 
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENV_FILE="${LITELLM_ENV_FILE:-$DIR/.env}"
 
-if [[ -f "$ENV_FILE" ]]; then
-  set -a
+# shellcheck disable=SC1091
+source "$DIR/_lib.sh"
+
+if command -v dotenvx >/dev/null 2>&1 \
+  && [[ -f "$(litellm_env_file)" ]] \
+  && [[ -f "$(litellm_keys_file)" ]]; then
   # shellcheck disable=SC1090
-  source "$ENV_FILE"
-  set +a
+  eval "$(litellm_dotenvx_eval_export)"
 fi
 
 PORT="${LITELLM_PORT:-4000}"

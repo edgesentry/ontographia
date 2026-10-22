@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Optional local hook: refuse commits that stage plaintext LiteLLM env values.
+# Enable with:  git config core.hooksPath .githooks
+set -euo pipefail
+ROOT="$(git rev-parse --show-toplevel)"
+exec bash "$ROOT/scripts/litellm/check_encrypted_env.sh"

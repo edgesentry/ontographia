@@ -5,9 +5,11 @@
 #   ./scripts/litellm/start.sh              # uv (recommended)
 #   ./scripts/litellm/start.sh --docker     # Docker image
 #
-# Prerequisites:
-#   cp scripts/litellm/env.example scripts/litellm/.env
-#   # edit .env with provider API keys
+# Prerequisites (dotenvx):
+#   - Install dotenvx: curl -sfS https://dotenvx.sh | sh
+#   - Encrypted env: scripts/litellm/.env.encrypted (committed ciphertext)
+#   - Private key: ~/.config/ontographia/dotenv.keys (never commit)
+#   See docs/litellm-local.md
 #
 # Then in another terminal:
 #   source scripts/litellm/use-provider.sh openai   # or gemini-3.7 | gemini-3.8 | cursor
@@ -17,33 +19,33 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENV_FILE="${LITELLM_ENV_FILE:-$DIR/.env}"
 CONFIG="$DIR/config.yaml"
 PORT="${LITELLM_PORT:-4000}"
 
-if [[ -f "$ENV_FILE" ]]; then
-  set -a
-  # shellcheck disable=SC1090
-  source "$ENV_FILE"
-  set +a
-else
-  echo "hint: copy $DIR/env.example to $DIR/.env and set provider API keys" >&2
-fi
+# shellcheck disable=SC1091
+source "$DIR/_lib.sh"
 
-export LITELLM_MASTER_KEY="${LITELLM_MASTER_KEY:-sk-litellm-local-dev}"
+litellm_require_dotenvx
+litellm_require_env_file
+litellm_require_keys_file
+
 export LITELLM_PORT="$PORT"
 
 if [[ "${1:-}" == "--docker" ]]; then
-  exec docker run --rm \
-    -p "${PORT}:${PORT}" \
-    -v "$CONFIG:/app/config.yaml:ro" \
-    -e OPENAI_API_KEY \
-    -e GEMINI_API_KEY \
-    -e ANTHROPIC_API_KEY \
-    -e CURSOR_API_KEY \
-    -e LITELLM_MASTER_KEY \
-    ghcr.io/berriai/litellm:main-stable \
-    --config /app/config.yaml --port "$PORT" --host 0.0.0.0
+  # dotenvx injects provider keys into this process env; docker run -e forwards them.
+  exec dotenvx run --strict \
+    -f "$(litellm_env_file)" \
+    -fk "$(litellm_keys_file)" \
+    -- docker run --rm \
+      -p "${PORT}:${PORT}" \
+      -v "$CONFIG:/app/config.yaml:ro" \
+      -e OPENAI_API_KEY \
+      -e GEMINI_API_KEY \
+      -e ANTHROPIC_API_KEY \
+      -e CURSOR_API_KEY \
+      -e LITELLM_MASTER_KEY \
+      ghcr.io/berriai/litellm:main-stable \
+      --config /app/config.yaml --port "$PORT" --host 0.0.0.0
 fi
 
 cd "$ROOT"
@@ -53,4 +55,9 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 
 echo "Starting LiteLLM on http://127.0.0.1:${PORT} (config: ${CONFIG#"$ROOT/"})"
-exec uv run --group litellm litellm --config "$CONFIG" --port "$PORT" --host 127.0.0.1
+echo "  env: $(litellm_env_file)"
+echo "  keys: $(litellm_keys_file)"
+exec dotenvx run --strict \
+  -f "$(litellm_env_file)" \
+  -fk "$(litellm_keys_file)" \
+  -- uv run --group litellm litellm --config "$CONFIG" --port "$PORT" --host 127.0.0.1
