@@ -53,4 +53,4 @@ if ! command -v uv >/dev/null 2>&1; then
 fi
 
 echo "Starting LiteLLM on http://127.0.0.1:${PORT} (config: ${CONFIG#"$ROOT/"})"
-exec uv run --group llm litellm --config "$CONFIG" --port "$PORT" --host 127.0.0.1
+exec uv run --group litellm litellm --config "$CONFIG" --port "$PORT" --host 127.0.0.1
