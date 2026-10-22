@@ -9,7 +9,11 @@ __pycache__/
 *.so
 *.pyd
 .DS_Store
+# LiteLLM / dotenvx: never commit private keys or plaintext env.
+.env.keys
+*.keys
 scripts/litellm/.env
+# Committed ciphertext (when present): scripts/litellm/.env.encrypted only.
 _inputs/
 _plan
 examples/llm/eval/out/

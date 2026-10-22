@@ -7,6 +7,8 @@
 #   ./scripts/litellm/run-e2e.sh cursor "Which defect codes affect quarantined lots?"
 #
 # Start the proxy first: ./scripts/litellm/start.sh
+# Env is loaded via dotenvx from scripts/litellm/.env.encrypted
+# (keys: ~/.config/ontographia/dotenv.keys).
 
 set -euo pipefail
 
