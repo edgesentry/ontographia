@@ -1,0 +1,5 @@
+Intent extraction/validation failed: validation error: unknown property 'name Chad - wait, fix to name: supplier_name' on class 'Supplier'
+=== LLM backend: openai ===
+=== Question ===
+List suppliers for parts in product SKU SPX-100
+

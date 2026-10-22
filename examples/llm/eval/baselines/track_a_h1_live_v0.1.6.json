@@ -1,0 +1,190 @@
+{
+  "meta": {
+    "recorded_at": "2026-10-22T03:09:33Z",
+    "git_rev": "1624a2d",
+    "profiles": [
+      "mid",
+      "large"
+    ],
+    "conditions": [
+      "full",
+      "subset",
+      "subset_fallback"
+    ],
+    "n_cases": 40,
+    "max_retries": 1,
+    "backend": "openai",
+    "model": "ontographia-gemini",
+    "base_url": "http://127.0.0.1:4000/v1",
+    "study": "h1_live_llm",
+    "issue": 68,
+    "harness": "examples/llm/eval/run_track_a_h1_live.py",
+    "upstream_model": "gemini-3.7-flash",
+    "model_note": "LiteLLM alias ontographia-gemini → gemini/gemini-3.7-flash (LiteLLM 1.98.0)",
+    "ontographia_package": "ontographia[llm]==0.1.6 (PyPI wheel, not an editable/local build)",
+    "run_started_at": "2026-10-22T02:43:57Z",
+    "annotation_note": "upstream_model / model_note / ontographia_package / run_started_at added after the run; all metrics are unmodified harness output"
+  },
+  "verdict": {
+    "verdict": "support",
+    "reason": "live large subset_fallback (recommended policy): Property Hit ≥ +10pt vs full, tokens p95 ≤ −30%, compile not worse; subset-only alone was hit -3.8pt / compile_ok 25/27",
+    "criteria": {
+      "property_hit_gain_threshold_pt": 10.0,
+      "token_p95_reduction_threshold": -0.3,
+      "full_compile_ok": 27,
+      "full_property_hit": 0.65,
+      "full_near_dup_picked": 0,
+      "subset_only": {
+        "property_hit_gain_pt": -3.75,
+        "token_p95_rel_change": -0.9055,
+        "compile_not_worse": false,
+        "arm_compile_ok": 25,
+        "arm_property_hit": 0.6125,
+        "arm_fallback_rate": 0.0,
+        "invent_without_seeing_rate": 0.0,
+        "near_dup_picked": 0
+      },
+      "subset_fallback": {
+        "property_hit_gain_pt": 30.0,
+        "token_p95_rel_change": -0.9055,
+        "compile_not_worse": true,
+        "arm_compile_ok": 40,
+        "arm_property_hit": 0.95,
+        "arm_fallback_rate": 0.225,
+        "invent_without_seeing_rate": 0.0,
+        "near_dup_picked": 0
+      }
+    },
+    "caveat": "Live OpenAI-compatible extractor (temperature=0). Primary verdict is on subset_fallback (schema_policy=auto), the production path from #45. subset-only is reported for ablation. invent_without_seeing counts near-duplicate picks absent from the final prompt property vocabulary. Mechanical H1 remains the prompt-vocab control experiment."
+  },
+  "results": [
+    {
+      "profile": "mid",
+      "ontology": {
+        "profile_name": "mid",
+        "properties": 200,
+        "distractor_properties": 184,
+        "distractor_classes": 7,
+        "near_duplicates": 32
+      },
+      "n_cases": 40,
+      "conditions": {
+        "full": {
+          "n": 40,
+          "property_hit_mean": 0.75,
+          "soft_prop_f1_mean": 0.775,
+          "compile_ok": 33,
+          "compile_fail": 7,
+          "distractor_visible": 40,
+          "near_dup_picked": 0,
+          "invent_without_seeing": 0,
+          "invent_without_seeing_rate": 0.0,
+          "fallback_rate": 0.0,
+          "mean_llm_calls": 0.825,
+          "prompt_approx_tokens_p50": 2472,
+          "prompt_approx_tokens_p95": 2515
+        },
+        "subset": {
+          "n": 40,
+          "property_hit_mean": 0.5,
+          "soft_prop_f1_mean": 0.5033,
+          "compile_ok": 21,
+          "compile_fail": 19,
+          "distractor_visible": 0,
+          "near_dup_picked": 0,
+          "invent_without_seeing": 0,
+          "invent_without_seeing_rate": 0.0,
+          "fallback_rate": 0.0,
+          "mean_llm_calls": 0.525,
+          "prompt_approx_tokens_p50": 1228,
+          "prompt_approx_tokens_p95": 1301
+        },
+        "subset_fallback": {
+          "n": 40,
+          "property_hit_mean": 0.95,
+          "soft_prop_f1_mean": 0.9667,
+          "compile_ok": 40,
+          "compile_fail": 0,
+          "distractor_visible": 0,
+          "near_dup_picked": 0,
+          "invent_without_seeing": 0,
+          "invent_without_seeing_rate": 0.0,
+          "fallback_rate": 0.1,
+          "mean_llm_calls": 1.1,
+          "prompt_approx_tokens_p50": 1228,
+          "prompt_approx_tokens_p95": 1301
+        }
+      },
+      "deltas_vs_full": {
+        "subset_minus_full_property_hit_pt": -25.0,
+        "subset_token_p95_rel_change": -0.4827,
+        "subset_compile_ok_delta": -12
+      },
+      "qualitative_full_errors": []
+    },
+    {
+      "profile": "large",
+      "ontology": {
+        "profile_name": "large",
+        "properties": 2000,
+        "distractor_properties": 1984,
+        "distractor_classes": 7,
+        "near_duplicates": 32
+      },
+      "n_cases": 40,
+      "conditions": {
+        "full": {
+          "n": 40,
+          "property_hit_mean": 0.65,
+          "soft_prop_f1_mean": 0.6533,
+          "compile_ok": 27,
+          "compile_fail": 13,
+          "distractor_visible": 40,
+          "near_dup_picked": 0,
+          "invent_without_seeing": 0,
+          "invent_without_seeing_rate": 0.0,
+          "fallback_rate": 0.0,
+          "mean_llm_calls": 0.675,
+          "prompt_approx_tokens_p50": 13722,
+          "prompt_approx_tokens_p95": 13765
+        },
+        "subset": {
+          "n": 40,
+          "property_hit_mean": 0.6125,
+          "soft_prop_f1_mean": 0.6167,
+          "compile_ok": 25,
+          "compile_fail": 15,
+          "distractor_visible": 0,
+          "near_dup_picked": 0,
+          "invent_without_seeing": 0,
+          "invent_without_seeing_rate": 0.0,
+          "fallback_rate": 0.0,
+          "mean_llm_calls": 0.625,
+          "prompt_approx_tokens_p50": 1228,
+          "prompt_approx_tokens_p95": 1301
+        },
+        "subset_fallback": {
+          "n": 40,
+          "property_hit_mean": 0.95,
+          "soft_prop_f1_mean": 0.9667,
+          "compile_ok": 40,
+          "compile_fail": 0,
+          "distractor_visible": 0,
+          "near_dup_picked": 0,
+          "invent_without_seeing": 0,
+          "invent_without_seeing_rate": 0.0,
+          "fallback_rate": 0.225,
+          "mean_llm_calls": 1.225,
+          "prompt_approx_tokens_p50": 1228,
+          "prompt_approx_tokens_p95": 1301
+        }
+      },
+      "deltas_vs_full": {
+        "subset_minus_full_property_hit_pt": -3.75,
+        "subset_token_p95_rel_change": -0.9055,
+        "subset_compile_ok_delta": -2
+      },
+      "qualitative_full_errors": []
+    }
+  ]
+}
