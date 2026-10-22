@@ -6,6 +6,26 @@ use indexmap::IndexMap;
 
 pub struct Cypher25Emitter;
 
+fn is_safe_unquoted_ident(name: &str) -> bool {
+    let mut chars = name.chars();
+    match chars.next() {
+        Some(c) if c.is_ascii_alphabetic() || c == '_' => {}
+        _ => return false,
+    }
+    chars.all(|c| c.is_ascii_alphanumeric() || c == '_')
+}
+
+/// Emit a Cypher identifier. Safe unquoted names stay unquoted (stable output);
+/// anything else is backtick-quoted with embedded backticks doubled so hostile
+/// Intent fragments cannot break out of identifier positions.
+pub(crate) fn render_ident(name: &str) -> String {
+    if is_safe_unquoted_ident(name) {
+        name.to_string()
+    } else {
+        format!("`{}`", name.replace('`', "``"))
+    }
+}
+
 impl QueryEmitter for Cypher25Emitter {
     fn emit(&self, ast: &QueryAst, params: &IndexMap<String, serde_json::Value>) -> Result<EmittedQuery> {
         let mut parts = vec!["CYPHER 25".to_string()];
@@ -27,10 +47,16 @@ impl QueryEmitter for Cypher25Emitter {
             let prop = order
                 .property
                 .as_ref()
-                .map(|p| format!(".{}", p))
+                .map(|p| format!(".{}", render_ident(p)))
                 .unwrap_or_default();
+            // Direction is only ASC/DESC (from a boolean on the AST).
             let dir = if order.descending { " DESC" } else { " ASC" };
-            parts.push(format!("ORDER BY {}{}{}", order.alias, prop, dir));
+            parts.push(format!(
+                "ORDER BY {}{}{}",
+                render_ident(&order.alias),
+                prop,
+                dir
+            ));
         }
 
         if let Some(skip) = ast.skip {
@@ -72,21 +98,22 @@ fn render_node(node: &NodePattern) -> String {
     let labels = node
         .labels
         .iter()
-        .map(|l| format!(":{}", l))
+        .map(|l| format!(":{}", render_ident(l)))
         .collect::<Vec<_>>()
         .join("");
-    format!("({}{})", node.alias, labels)
+    format!("({}{})", render_ident(&node.alias), labels)
 }
 
 fn render_rel(rel: &RelPattern) -> String {
+    let ty = render_ident(&rel.rel_type);
     let rel_part = if let (Some(min), Some(max)) = (rel.min_hops, rel.max_hops) {
         if min == max && min == 1 {
-            format!(":{}", rel.rel_type)
+            format!(":{}", ty)
         } else {
-            format!(":{}*{}..{}", rel.rel_type, min, max)
+            format!(":{}*{}..{}", ty, min, max)
         }
     } else {
-        format!(":{}", rel.rel_type)
+        format!(":{}", ty)
     };
 
     match rel.direction {
@@ -110,12 +137,13 @@ fn render_filters(filters: &[FilterNode]) -> String {
                 crate::intent::FilterOp::In => "IN",
                 crate::intent::FilterOp::Contains => "CONTAINS",
             };
+            let left = format!("{}.{}", render_ident(&f.alias), render_ident(&f.property));
             if matches!(f.op, crate::intent::FilterOp::In) {
-                format!("{}.{} {} ${}", f.alias, f.property, op, f.param_name)
+                format!("{} {} ${}", left, op, f.param_name)
             } else if matches!(f.op, crate::intent::FilterOp::Contains) {
-                format!("{}.{} CONTAINS ${}", f.alias, f.property, f.param_name)
+                format!("{} CONTAINS ${}", left, f.param_name)
             } else {
-                format!("{}.{} {} ${}", f.alias, f.property, op, f.param_name)
+                format!("{} {} ${}", left, op, f.param_name)
             }
         })
         .collect::<Vec<_>>()
@@ -127,35 +155,36 @@ fn render_returns(returns: &[ReturnNode]) -> String {
         .iter()
         .map(|r| match &r.expr {
             ReturnExpr::Property { alias, property } => {
-                let base = format!("{}.{}", alias, property);
+                let base = format!("{}.{}", render_ident(alias), render_ident(property));
                 r.alias
                     .as_ref()
-                    .map(|a| format!("{} AS {}", base, a))
+                    .map(|a| format!("{} AS {}", base, render_ident(a)))
                     .unwrap_or(base)
             }
             ReturnExpr::Node { alias } => r
                 .alias
                 .as_ref()
-                .map(|a| format!("{} AS {}", alias, a))
-                .unwrap_or_else(|| alias.clone()),
+                .map(|a| format!("{} AS {}", render_ident(alias), render_ident(a)))
+                .unwrap_or_else(|| render_ident(alias)),
             ReturnExpr::Aggregate {
                 func,
                 alias,
                 property,
             } => {
+                let a = render_ident(alias);
                 let inner = match (func, property) {
-                    (crate::intent::AggregateFn::Count, None) => format!("count({})", alias),
+                    (crate::intent::AggregateFn::Count, None) => format!("count({})", a),
                     (crate::intent::AggregateFn::Count, Some(p)) => {
-                        format!("count({}.{})", alias, p)
+                        format!("count({}.{})", a, render_ident(p))
                     }
                     (crate::intent::AggregateFn::Collect, Some(p)) => {
-                        format!("collect({}.{})", alias, p)
+                        format!("collect({}.{})", a, render_ident(p))
                     }
-                    (crate::intent::AggregateFn::Collect, None) => format!("collect({})", alias),
+                    (crate::intent::AggregateFn::Collect, None) => format!("collect({})", a),
                 };
                 r.alias
                     .as_ref()
-                    .map(|a| format!("{} AS {}", inner, a))
+                    .map(|as_name| format!("{} AS {}", inner, render_ident(as_name)))
                     .unwrap_or(inner)
             }
         })
@@ -291,5 +320,72 @@ mod tests {
 
         let emitted = Cypher25Emitter.emit(&ast, &IndexMap::new()).unwrap();
         assert!(emitted.query.contains("count(p) AS total"));
+    }
+
+    /// Defense-in-depth: even if a hostile identifier somehow reaches the
+    /// emitter (bypassing Intent validation), it must be backtick-quoted so
+    /// spaces / comments / RETURN fragments cannot break out of the identifier.
+    #[test]
+    fn quotes_hostile_as_name_and_alias() {
+        let hostile_as = "name` RETURN 1 //";
+        let hostile_alias = "p} //";
+        let ast = QueryAst {
+            match_clause: MatchClause {
+                optional: false,
+                patterns: vec![PatternNode {
+                    nodes: vec![NodePattern {
+                        alias: hostile_alias.into(),
+                        labels: vec!["Person".into()],
+                    }],
+                    relationships: vec![],
+                }],
+            },
+            filters: vec![],
+            returns: vec![ReturnNode {
+                expr: ReturnExpr::Property {
+                    alias: hostile_alias.into(),
+                    property: "name".into(),
+                },
+                alias: Some(hostile_as.into()),
+            }],
+            order_by: Some(crate::ast::OrderByNode {
+                alias: hostile_as.into(),
+                property: None,
+                descending: false,
+            }),
+            limit: Some(1),
+            skip: None,
+        };
+
+        let emitted = Cypher25Emitter.emit(&ast, &IndexMap::new()).unwrap();
+        let q = &emitted.query;
+
+        assert!(
+            q.contains(&format!("({}:Person)", render_ident(hostile_alias))),
+            "alias should be quoted: {q}"
+        );
+        assert!(
+            q.contains(&format!("AS {}", render_ident(hostile_as))),
+            "as_name should be quoted: {q}"
+        );
+        assert!(
+            q.contains(&format!("ORDER BY {} ASC", render_ident(hostile_as))),
+            "order_by should be quoted: {q}"
+        );
+        // Embedded backtick doubled inside the quoted as_name.
+        assert!(q.contains("`name`` RETURN 1 //`"), "{q}");
+        // Unquoted breakout must not appear (would inject a second RETURN clause).
+        assert!(
+            !q.contains("AS name` RETURN 1 //"),
+            "unquoted hostile as_name leaked: {q}"
+        );
+    }
+
+    #[test]
+    fn render_ident_leaves_safe_names_unquoted() {
+        assert_eq!(render_ident("supplier_name"), "supplier_name");
+        assert_eq!(render_ident("p"), "p");
+        assert_eq!(render_ident("a b"), "`a b`");
+        assert_eq!(render_ident("x`y"), "`x``y`");
     }
 }
