@@ -54,9 +54,23 @@ dev = [
     "mcp>=1.9,<3",
 ]
 # Local LiteLLM proxy tooling for docs/litellm-local.md (not the package extra).
-# Exclude 1.107.0: malicious PyPI release reported 2026-10-21 (lockfile pins 1.98.0).
+# Floor is 1.106.5: newest 1.106 patch, which includes the GHSA-7hp6-4w63-5g45
+# fix (1.100.4+) and was published after the 2026-10-21 supply-chain incident.
+# Exclude 1.107.0: malicious PyPI release (and matching Docker tags) on 2026-10-21.
 litellm = [
-    "litellm[proxy]>=1.67,!=1.107.0",
+    "litellm[proxy]>=1.106.5,!=1.107.0",
+]
+
+[tool.uv]
+# dnspython is transitive via email-validator (>=2.0.0); keep it on the GHSA-45c3-73f7-pv4m fix.
+constraint-dependencies = [
+    "dnspython>=2.9.0",
+]
+# litellm>=1.104 caps filelock<4, but the three open filelock GHSAs are fixed only
+# in 4.2.1+. LiteLLM calls FileLock(path, timeout=, mode=) and Timeout, which 4.2
+# still provides (the 4.0 break is the SoftReadWriteLock on-disk protocol).
+override-dependencies = [
+    "filelock>=4.2.4",
 ]
 
 [tool.maturin]
