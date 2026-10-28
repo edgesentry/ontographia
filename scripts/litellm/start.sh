@@ -32,6 +32,8 @@ litellm_require_keys_file
 export LITELLM_PORT="$PORT"
 
 if [[ "${1:-}" == "--docker" ]]; then
+  # Pin v1.106.5 by digest. Do not use main-stable/latest: those tags pointed at
+  # the compromised v1.107.0 image on 2026-10-21. Match the uv litellm floor.
   # dotenvx injects provider keys into this process env; docker run -e forwards them.
   exec dotenvx run --strict \
     -f "$(litellm_env_file)" \
@@ -44,7 +46,7 @@ if [[ "${1:-}" == "--docker" ]]; then
       -e ANTHROPIC_API_KEY \
       -e CURSOR_API_KEY \
       -e LITELLM_MASTER_KEY \
-      ghcr.io/berriai/litellm:main-stable \
+      ghcr.io/berriai/litellm:v1.106.5@sha256:7d6ae6c8d73d1b6aea4cb75d07c4a8a953f0809b0764522b8eab693734c5e905 \
       --config /app/config.yaml --port "$PORT" --host 0.0.0.0
 fi
 

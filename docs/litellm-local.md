@@ -167,6 +167,8 @@ chmod +x scripts/litellm/*.sh .githooks/pre-commit
 ./scripts/litellm/start.sh --docker
 ```
 
+`--docker` pins `ghcr.io/berriai/litellm:v1.106.5` (digest in `scripts/litellm/start.sh`). Leave the floating tags `main-stable` and `latest` unused: they pointed at the compromised `v1.107.0` image on 2026-10-21.
+
 Verify:
 
 ```bash
