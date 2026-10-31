@@ -26,6 +26,7 @@ Ontographia converts **ontology definitions** + **Intent JSON** into **determini
 | Neo4j setup, seed data, execution | [docs/end-to-end-neo4j.md](docs/end-to-end-neo4j.md) |
 | LLM / agent Intent extraction | [docs/llm.md](docs/llm.md) (`ontographia[llm]`), [skills/ontographia-cypher-builder/SKILL.md](skills/ontographia-cypher-builder/SKILL.md) |
 | MCP server for agents | [docs/mcp.md](docs/mcp.md) (`ontographia[mcp]`, `ontographia-mcp`) |
+| Short CLI `otg` (Homebrew, read-only execute) | [docs/otg.md](docs/otg.md) |
 | LiteLLM local setup | [docs/litellm-local.md](docs/litellm-local.md) |
 | Release | [docs/release.md](docs/release.md) |
 | CodeQL | [docs/codeql-setup.md](docs/codeql-setup.md) |

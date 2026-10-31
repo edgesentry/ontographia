@@ -6,9 +6,11 @@ Directory index for the monorepo. Tutorials and usage guides live in this docs s
 |------|----------|
 | [`crates/`](https://github.com/edgesentry/ontographia/tree/main/crates) | Rust engine: core, adapters, schema, FFI, CLI — see [Rust](rust.md) |
 | [`bindings/`](https://github.com/edgesentry/ontographia/tree/main/bindings) | [Python](python.md) (PyO3) and [Go](go.md) (cgo) bindings |
-| [`python/ontographia/`](https://github.com/edgesentry/ontographia/tree/main/python/ontographia) | Pure-Python package surface (experimental [`llm`](llm.md) / [`mcp`](mcp.md) extras) |
+| [`python/ontographia/`](https://github.com/edgesentry/ontographia/tree/main/python/ontographia) | Pure-Python package surface (experimental [`llm`](llm.md) / [`mcp`](mcp.md) / [`otg`](otg.md) CLI) |
+| [`packaging/homebrew/`](https://github.com/edgesentry/ontographia/tree/main/packaging/homebrew) | `otg` Homebrew formula (copied into the tap on release; not bottled) |
 | [`tests/python/llm/`](https://github.com/edgesentry/ontographia/tree/main/tests/python/llm) | CI unit tests for `ontographia[llm]` (fake backends) |
 | [`tests/python/mcp/`](https://github.com/edgesentry/ontographia/tree/main/tests/python/mcp) | CI unit tests for `ontographia[mcp]` (in-process tools, mocked Neo4j) |
+| [`tests/python/cli/`](https://github.com/edgesentry/ontographia/tree/main/tests/python/cli) | CI unit tests for the `otg` CLI |
 | [`examples/`](https://github.com/edgesentry/ontographia/tree/main/examples) | Sample ontologies, Neo4j seed, demo scripts |
 | [`schemas/`](https://github.com/edgesentry/ontographia/tree/main/schemas) | COM and native ontology JSON Schemas |
 | [`scripts/`](https://github.com/edgesentry/ontographia/tree/main/scripts) | Neo4j setup, CI tests, LiteLLM helpers, release scripts |

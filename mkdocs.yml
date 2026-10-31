@@ -59,6 +59,7 @@ nav:
     - Rust: rust.md
     - Python: python.md
     - Go: go.md
+    - otg CLI: otg.md
   - Architecture: architecture.md
   - Related work: related-work.md
   - Intent layer (LLM): llm.md

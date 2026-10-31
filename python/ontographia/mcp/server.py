@@ -6,7 +6,6 @@ to :class:`mcp.server.mcpserver.MCPServer`; the decorator API is the same.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
@@ -20,7 +19,7 @@ except ImportError:  # pragma: no cover - mcp 1.x
 
 from ontographia.mcp.config import McpConfig
 from ontographia.mcp.execute import Neo4jRunner, runner_from_config
-from ontographia.mcp.safety import WriteQueryRejected, assert_read_only_cypher
+from ontographia.mcp.read_only import build_read_only, execute_read_only
 
 
 def _summarize_ontology(ontology: dict[str, Any], *, sources: list[str]) -> dict[str, Any]:
@@ -62,20 +61,6 @@ def _summarize_ontology(ontology: dict[str, Any], *, sources: list[str]) -> dict
         "class_names": [c["name"] for c in classes if c.get("name")],
         "relationship_names": [r["name"] for r in relationships if r.get("name")],
     }
-
-
-def _parse_intent(intent: dict[str, Any] | str) -> dict[str, Any]:
-    if isinstance(intent, str):
-        try:
-            parsed = json.loads(intent)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"intent must be a JSON object string: {exc}") from exc
-        if not isinstance(parsed, dict):
-            raise ValueError("intent JSON must be an object")
-        return parsed
-    if not isinstance(intent, dict):
-        raise ValueError("intent must be a JSON object (dict) or JSON object string")
-    return intent
 
 
 class OntographiaMcp:
@@ -143,60 +128,11 @@ class OntographiaMcp:
 
             {"ok": False, "errors": [{"message": "..."}]}
         """
-        try:
-            intent_obj = _parse_intent(intent)
-            used_dialect = dialect or self.config.dialect
-            result = self.engine.build(intent_obj, dialect=used_dialect)
-            query = result["query"]
-            params = dict(result["params"])
-            # Defense-in-depth even for build-only: surface write detection early.
-            try:
-                assert_read_only_cypher(query)
-            except WriteQueryRejected as exc:
-                return {
-                    "ok": False,
-                    "errors": [{"message": str(exc), "code": "write_rejected"}],
-                    "query": query,
-                    "params": params,
-                }
-            return {
-                "ok": True,
-                "query": query,
-                "params": params,
-                "dialect": used_dialect,
-            }
-        except Exception as exc:  # ValueError from bindings / intent parse
-            return {"ok": False, "errors": [{"message": str(exc)}]}
-
-    def _clamp_row_limit(self, row_limit: int | None) -> int:
-        """Client-supplied limit cannot exceed the configured server maximum."""
-        requested = self.config.row_limit if row_limit is None else int(row_limit)
-        if requested < 0:
-            requested = 0
-        return min(requested, self.config.row_limit)
-
-    @staticmethod
-    def _intent_with_server_limit(
-        intent: dict[str, Any] | str,
-        *,
-        server_limit: int,
-    ) -> dict[str, Any]:
-        """Ensure emitted Cypher carries a LIMIT ≤ server_limit.
-
-        An Intent without ``limit`` must not become an unbounded Neo4j fetch
-        that is only truncated client-side.
-        """
-        intent_obj = dict(_parse_intent(intent))
-        intent_limit = intent_obj.get("limit")
-        if intent_limit is None:
-            cypher_limit = server_limit
-        else:
-            try:
-                cypher_limit = min(int(intent_limit), server_limit)
-            except (TypeError, ValueError):
-                cypher_limit = server_limit
-        intent_obj["limit"] = cypher_limit
-        return intent_obj
+        return build_read_only(
+            self.engine,
+            intent,
+            dialect=dialect or self.config.dialect,
+        )
 
     def execute(
         self,
@@ -215,64 +151,15 @@ class OntographiaMcp:
         4. ``row_limit`` is clamped to the configured server maximum, and the
            Intent always gets a Cypher ``LIMIT`` of at most that maximum.
         """
-        if self._runner is None:
-            return {
-                "ok": False,
-                "errors": [
-                    {
-                        "message": (
-                            "Neo4j is not configured. Set NEO4J_URI, "
-                            "NEO4J_USERNAME (or NEO4J_USER), and NEO4J_PASSWORD "
-                            "(optional NEO4J_DATABASE), or pass matching CLI flags."
-                        ),
-                        "code": "neo4j_not_configured",
-                    }
-                ],
-            }
-
-        limit = self._clamp_row_limit(row_limit)
-        try:
-            bounded_intent = self._intent_with_server_limit(intent, server_limit=limit)
-        except ValueError as exc:
-            return {"ok": False, "errors": [{"message": str(exc)}]}
-
-        built = self.build_cypher(bounded_intent, dialect=dialect)
-        if not built.get("ok"):
-            return built
-
-        query = built["query"]
-        params = built["params"]
-        try:
-            assert_read_only_cypher(query)
-            rows = self._runner.run_read(
-                query,
-                params,
-                database=self.config.neo4j_database,
-                row_limit=limit,
-            )
-            return {
-                "ok": True,
-                "query": query,
-                "params": params,
-                "rows": rows,
-                "row_count": len(rows),
-                "row_limit": limit,
-                "truncated": len(rows) >= limit,
-            }
-        except WriteQueryRejected as exc:
-            return {
-                "ok": False,
-                "errors": [{"message": str(exc), "code": "write_rejected"}],
-                "query": query,
-                "params": params,
-            }
-        except Exception as exc:
-            return {
-                "ok": False,
-                "errors": [{"message": str(exc), "code": "neo4j_error"}],
-                "query": query,
-                "params": params,
-            }
+        return execute_read_only(
+            build_cypher=self.build_cypher,
+            runner=self._runner,
+            intent=intent,
+            dialect=dialect,
+            database=self.config.neo4j_database,
+            row_limit=row_limit,
+            configured_limit=self.config.row_limit,
+        )
 
 
 def create_mcp_server(

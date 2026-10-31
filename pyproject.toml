@@ -32,6 +32,10 @@ llm = [
     "openai>=1.40",
     "pyyaml>=6.0",
 ]
+cli = [
+    # Read-only Neo4j execute for the `otg` console script.
+    "neo4j>=5",
+]
 mcp = [
     # FastMCP-style API: mcp 1.x (`FastMCP`) or mcp 2.x (`MCPServer` rename).
     "mcp>=1.9,<3",
@@ -42,6 +46,7 @@ mcp = [
 
 [project.scripts]
 ontographia-mcp = "ontographia.mcp.__main__:main"
+otg = "ontographia.cli:main"
 
 [dependency-groups]
 dev = [

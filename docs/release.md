@@ -152,6 +152,20 @@ ontographia build --ontology manufacturing.native.yaml --intent intent.json --js
 ontographia schema manufacturing.native.yaml --out constraints.cypher --json-out schema.json
 ```
 
+### `otg` (Python CLI, read-only execute)
+
+Not the Rust binary above. Ships in the `ontographia[cli]` wheel (`neo4j` driver). Homebrew installs that wheel; it does not compile Rust and it does not bottle. The MCP server is not a formula.
+
+When the release that contains `otg` is on PyPI, update [`packaging/homebrew/otg.rb`](https://github.com/edgesentry/ontographia/blob/main/packaging/homebrew/otg.rb) (`url`, `sha256`, `PYPI_SPEC = "ontographia[cli]==X.Y.Z"`) and copy it to `edgesentry/homebrew-tap` as `Formula/otg.rb`.
+
+```bash
+brew tap edgesentry/tap
+brew install otg
+otg --help
+```
+
+Guide: [otg CLI](otg.md).
+
 ### Rust libraries
 
 ```toml
@@ -168,6 +182,7 @@ Supported: **3.11, 3.12, 3.13** (`requires-python = ">=3.11"`). CI runs Python s
 pip install ontographia
 pip install "ontographia[llm]"   # optional Intent layer
 pip install "ontographia[mcp]"   # optional MCP server (ontographia-mcp)
+pip install "ontographia[cli]"   # optional otg CLI (read-only execute)
 ```
 
 ### Go

@@ -98,6 +98,15 @@ python examples/run_llm_e2e.py --ontology examples/manufacturing.native.yaml
 
 LiteLLM proxy setup (OpenAI, Gemini, Cursor): [LiteLLM (local)](litellm-local.md).
 
+## `otg` CLI (`ontographia[cli]`)
+
+Short command: compile Intent JSON and optionally execute it read-only. Full install notes, Homebrew, and the Movies demo: [otg CLI](otg.md).
+
+```bash
+pip install "ontographia[cli]"
+otg build --ontology examples/manufacturing.native.yaml --intent examples/sample_intent.json
+```
+
 ## MCP server (`ontographia[mcp]`)
 
 Optional stdio MCP server for Claude Desktop / Cursor. **Experimental / 0.x** —
@@ -129,6 +138,7 @@ uv python pin 3.12   # or 3.11 / 3.13
 uv run python scripts/python_smoke_test.py
 uv run pytest tests/python/llm -q   # Intent layer (fake backends; needs openai/pyyaml from dev group)
 uv run pytest tests/python/mcp -q   # MCP tools + write-rejection (mocked Neo4j; needs mcp from dev group)
+uv run pytest tests/python/cli -q   # otg smoke + write rejection
 # Neo4j integration (requires running Neo4j)
 NEO4J_URI=bolt://localhost:7687 NEO4J_USER=neo4j NEO4J_PASSWORD=ontographia \
   uv run python scripts/neo4j_integration_test.py

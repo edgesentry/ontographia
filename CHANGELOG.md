@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`otg` CLI** (`ontographia[cli]`): console script that compiles Intent JSON with `Engine.build` and can execute the query read-only against Neo4j. Reuses the MCP read-only path (`safety`, driver `READ_ACCESS` / `execute_read`, row limit). Writes are rejected. Homebrew formula template at `packaging/homebrew/otg.rb` (PyPI wheel via `uv`, no bottle, MCP server not packaged). Movies quickstart: [docs/otg.md](docs/otg.md). Issue [#117](https://github.com/edgesentry/ontographia/issues/117).
+
 ### Security
 
 - **Intent Cypher identifiers:** `alias`, `as_name`, `order_by` (and related property names used as identifiers) must match `^[A-Za-z_][A-Za-z0-9_]*$`. Hostile fragments (backticks, spaces, comments, extra clauses) are rejected at validation. The Cypher 25 emitter also backtick-quotes any unsafe identifier as defense in depth. `order_by` must reference a projected return alias/`as_name`, and direction remains ASC/DESC only (boolean `descending`).
