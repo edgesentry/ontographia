@@ -1,0 +1,40 @@
+# Subset of the Neo4j Labs movies graph for the `otg` quickstart.
+# Labels and relationship names match the public demo database
+# (neo4j+s://demo.neo4jlabs.com, database `movies`).
+# This is not the full sample-graph pack tracked by roadmap issue #86.
+
+namespaces:
+  movies: https://demo.neo4jlabs.com/movies#
+
+classes:
+  - name: Person
+    description: Actor, director, or other person in the movies graph
+  - name: Movie
+    description: Film with a title and release year
+
+relationships:
+  - name: ACTED_IN
+    from_class: Person
+    to_class: Movie
+    direction: out
+  - name: DIRECTED
+    from_class: Person
+    to_class: Movie
+    direction: out
+
+properties:
+  - name: name
+    owner_class: Person
+    datatype: string
+  - name: born
+    owner_class: Person
+    datatype: integer
+  - name: title
+    owner_class: Movie
+    datatype: string
+  - name: released
+    owner_class: Movie
+    datatype: integer
+  - name: tagline
+    owner_class: Movie
+    datatype: string

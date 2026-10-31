@@ -23,6 +23,7 @@ Ontology → COM → validate(Intent) → AST → Cypher 25 + $params
 | Need | Doc |
 |------|-----|
 | Install (CLI / Rust / Python / Go) | [docs/index.md](docs/index.md#install-released-versions) · [Rust](docs/rust.md) · [Python](docs/python.md) · [Go](docs/go.md) |
+| Short CLI `otg` (build + read-only Neo4j, Homebrew) | [docs/otg.md](docs/otg.md) |
 | End-to-end with Neo4j | [docs/end-to-end-neo4j.md](docs/end-to-end-neo4j.md) |
 | LLM / Intent layer (`ontographia[llm]`, experimental) | [docs/llm.md](docs/llm.md) · [`examples/llm/`](examples/llm/) |
 | MCP server (`ontographia[mcp]`, experimental) | [docs/mcp.md](docs/mcp.md) |
@@ -40,6 +41,7 @@ Tutorials and tables live under [`docs/`](docs/) — this file is an index only.
 pip install ontographia
 pip install "ontographia[llm]"   # optional Intent layer — docs/llm.md
 pip install "ontographia[mcp]"   # optional MCP server — docs/mcp.md
+pip install "ontographia[cli]"   # optional `otg` command — docs/otg.md
 
 ontographia build --ontology examples/manufacturing.native.yaml \
   --intent examples/sample_intent.json --json

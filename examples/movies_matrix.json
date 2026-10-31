@@ -1,0 +1,18 @@
+{
+  "start": { "class": "Person", "alias": "person" },
+  "traverse": [
+    {
+      "relationship": "ACTED_IN",
+      "direction": "out",
+      "to": { "class": "Movie", "alias": "movie" }
+    }
+  ],
+  "filter": [
+    { "alias": "movie", "property": "title", "op": "eq", "value": "The Matrix" }
+  ],
+  "return": [
+    { "alias": "person", "property": "name", "as_name": "actor" }
+  ],
+  "order_by": { "alias": "actor" },
+  "limit": 20
+}
