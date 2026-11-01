@@ -213,6 +213,11 @@ jobs:
           NAME="libontographia_ffi-${VERSION}-${{ matrix.artifact }}"
           mkdir -p "dist/${NAME}"
           cp "target/${{ matrix.target }}/release/${{ matrix.lib }}" "dist/${NAME}/"
+          # MSVC import library. MinGW cgo links ontographia_ffi.dll by name;
+          # link.exe needs this file. npm packaging still picks the DLL only.
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            cp "target/${{ matrix.target }}/release/ontographia_ffi.dll.lib" "dist/${NAME}/"
+          fi
           tar -czf "dist/${NAME}.tar.gz" -C dist "${NAME}"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:

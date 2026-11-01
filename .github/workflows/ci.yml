@@ -200,12 +200,13 @@ jobs:
           go-version: "1.22"
       - name: build FFI library
         run: cargo build --release -p ontographia-ffi
-      - name: go test
+      - name: go test (checkout link tag)
         working-directory: bindings/go
         env:
           CGO_ENABLED: "1"
-          LD_LIBRARY_PATH: ${{ github.workspace }}/target/release
-        run: go test -v ./...
+        run: go test -tags ontographia_checkout -count=1 -v ./...
+      - name: go module-consumer smoke
+        run: bash bindings/go/scripts/smoke-module-consumer.sh
 
   # TypeScript binding smoke. 26 is the current LTS; 22 stays supported through 2027-04.
   node:

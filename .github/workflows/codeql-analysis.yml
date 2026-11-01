@@ -68,11 +68,10 @@ jobs:
         if: matrix.language == 'go'
         env:
           CGO_ENABLED: "1"
-          LD_LIBRARY_PATH: ${{ github.workspace }}/target/release
         run: |
           cargo build --release -p ontographia-ffi
           cd bindings/go
-          go test -c ./...
+          go test -tags ontographia_checkout -c ./...
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370  # v4.39.1

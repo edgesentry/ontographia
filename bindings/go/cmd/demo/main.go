@@ -9,7 +9,8 @@ import (
 )
 
 func main() {
-	repoRoot := filepath.Clean(filepath.Join("..", "..", "..", ".."))
+	// go run ./cmd/demo is run from bindings/go (see docs/go.md).
+	repoRoot := filepath.Clean(filepath.Join("..", ".."))
 	ontology := filepath.Join(repoRoot, "examples", "manufacturing.native.yaml")
 
 	intent := `{
