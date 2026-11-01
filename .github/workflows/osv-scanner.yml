@@ -1,5 +1,9 @@
-# Weekly + PR dependency vulnerability scanning via Google's OSV-Scanner.
+# Dependency vulnerability scanning via Google's OSV-Scanner.
 # Uses official reusable workflows from google/osv-scanner-action (pinned).
+#
+# Default-branch Code Scanning alerts close only when a later analysis of that
+# branch no longer reports them. Pull request scans do not close those alerts,
+# so pushes to main upload SARIF in addition to the weekly schedule.
 #
 # Note: If the org Actions allowlist does not include google/osv-scanner-action,
 # this workflow may fail with startup_failure until that action is permitted.
@@ -9,6 +13,8 @@ on:
   schedule:
     # Wednesday 00:00 UTC == Wednesday 08:00 SGT
     - cron: "0 0 * * 3"
+  push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -16,8 +22,10 @@ permissions:
   contents: read
 
 jobs:
+  # Job id stays scan-scheduled so existing check names do not change.
+  # push is limited to main above; that event uploads the default-branch SARIF.
   scan-scheduled:
-    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' }}
     permissions:
       actions: read
       contents: read
