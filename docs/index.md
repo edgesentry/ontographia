@@ -31,7 +31,7 @@ Intent JSON is produced outside the core (LLM or hand-authored), constrained by 
 | CLI (Python entry point) | `uvx --from "ontographia[cli]" otg` or `pip install "ontographia[cli]"`. Same command name on the library extra, including read-only `execute` today. This is the Python install, not the Homebrew install. [otg](otg.md) |
 | Rust libs | `ontographia-core`, `ontographia-adapters`, `ontographia-schema` on [crates.io](https://crates.io). `cargo install ontographia-cli` installs the CLI crate |
 | Python | `pip install ontographia` (wheels for 3.11–3.13 on Linux, macOS arm64, Windows); optional Intent layer: `pip install "ontographia[llm]"` ([docs](llm.md)); optional MCP server: `pip install "ontographia[mcp]"` ([docs](mcp.md)) |
-| Go | `go get github.com/edgesentry/ontographia/bindings/go@v0.1.8` (+ FFI lib from Releases) |
+| Go | `go get github.com/edgesentry/ontographia/bindings/go@v0.1.8` (+ FFI lib from Releases). Link with `LIBRARY_PATH` / `CGO_LDFLAGS`; see [Go](go.md). The published `v0.1.8` module still hardcodes a checkout `target/release` path; this tree does not |
 | TypeScript / JavaScript | `npm install @edgesentry/ontographia` (Node.js 22+). Installs one prebuilt `libontographia_ffi` (Linux x64, Linux arm64, macOS arm64, Windows x64). Published at 0.1.8, including `@edgesentry/ontographia-darwin-arm64`. User guide deferred. |
 
 Release process, including what to run on GitHub Actions and on a Mac before the next Release: [Pre-release checks](release.md#pre-release-checks).

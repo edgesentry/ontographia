@@ -131,25 +131,21 @@ A local Neo4j (`./scripts/start_neo4j.sh --seed`, then the manufacturing intent 
 
 **Go, against the Release dylib.** `go get` does not ship `libontographia_ffi`. Download `libontographia_ffi-<version>-macos-arm64.tar.gz` from the latest [GitHub Release](https://github.com/edgesentry/ontographia/releases).
 
-On `main`, `#cgo LDFLAGS` in `bindings/go/ontographia/ontographia.go` is still:
+This tree's default cgo line is `-lontographia_ffi`. It does not add `-L${SRCDIR}/../../../target/release`. The published module tag `v0.1.8` still has that checkout path; the next `bindings/go` tag is what publishes the new line. The smoke is this checkout, not `@v0.1.8`.
 
-```text
--L${SRCDIR}/../../../target/release -lontographia_ffi -Wl,-rpath,${SRCDIR}/../../../target/release
-```
-
-`${SRCDIR}` is `bindings/go/ontographia`, so the linker looks for `<repo>/target/release/libontographia_ffi.dylib`. `DYLD_LIBRARY_PATH` is the runtime search path ([Go](go.md)). The linker does not read it. That checkout-relative `-L` is the open Go link UX: a Release dylib is not discovered on its own. Place the published library on that path, then test. The file must be the Release archive, not a library you just built with `cargo build`.
+Point `ONTOGRAPHIA_FFI_LIB` at the extracted Release dylib and source `bindings/go/scripts/ffi-env.sh`. That sets `CGO_LDFLAGS`, `LIBRARY_PATH`, and `DYLD_LIBRARY_PATH` ([Go](go.md)). Do not pass `-tags ontographia_checkout` (that tag is the contributor path into `target/release`). Do not substitute a library you just built with `cargo build`.
 
 ```bash
 # from the repository root, under ~/agent-work
 VER=0.1.8   # version already on GitHub Releases
 gh release download "v${VER}" --repo edgesentry/ontographia \
   --pattern "libontographia_ffi-${VER}-macos-arm64.tar.gz" --dir /tmp/otg-ffi --clobber
-mkdir -p target/release /tmp/otg-ffi
+mkdir -p /tmp/otg-ffi
 tar -xzf "/tmp/otg-ffi/libontographia_ffi-${VER}-macos-arm64.tar.gz" -C /tmp/otg-ffi
-cp "/tmp/otg-ffi/libontographia_ffi-${VER}-macos-arm64/libontographia_ffi.dylib" target/release/
-export DYLD_LIBRARY_PATH="$(pwd)/target/release${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+export ONTOGRAPHIA_FFI_LIB="/tmp/otg-ffi/libontographia_ffi-${VER}-macos-arm64/libontographia_ffi.dylib"
+source bindings/go/scripts/ffi-env.sh
 cd bindings/go
-CGO_ENABLED=1 go test ./...
+go test ./...
 ```
 
 **Apple Silicon.** The Homebrew macOS arm64 archive, `@edgesentry/ontographia-darwin-arm64`, and `libontographia_ffi-*-macos-arm64` are the platform checks Linux Release check cannot run.
@@ -412,7 +408,9 @@ uvx --from "ontographia[cli]" otg --help
 go get github.com/edgesentry/ontographia/bindings/go@v0.1.8
 ```
 
-Download the matching `libontographia_ffi-*` archive from GitHub Releases for cgo linking (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`). On `main`, `#cgo LDFLAGS` still passes `-L${SRCDIR}/../../../target/release` (`bindings/go/ontographia/ontographia.go`). `DYLD_LIBRARY_PATH` / `LD_LIBRARY_PATH` cover runtime. The linker looks in that checkout `target/release` directory. Copy the Release library there before `go test`. That path is the open Go link UX. The Mac steps are in [Mac workstation](#mac-workstation).
+Download the matching `libontographia_ffi-*` archive from GitHub Releases (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`). Point `LIBRARY_PATH` and `CGO_LDFLAGS` at the extracted directory (`LD_LIBRARY_PATH` on Linux, `DYLD_LIBRARY_PATH` on macOS, `PATH` on Windows at run time). `ONTOGRAPHIA_FFI_LIB` is the library file or that directory; `bindings/go/scripts/ffi-env.sh` copies it into the linker variables. Exact exports: [Go](go.md). The Mac steps are in [Mac workstation](#mac-workstation).
+
+The published module tag `v0.1.8` still passes `-L${SRCDIR}/../../../target/release`. This tree does not. That link line ships in the next `bindings/go` tag.
 
 The release workflow creates `bindings/go/vX.Y.Z` on the same commit as `vX.Y.Z` (the `main` checkout that created the GitHub Release). The `release-processed/vX.Y.Z` claim uses that same checkout. Neither tag uses the commit that merely started the manual workflow, which can differ when `main` has moved or the run was dispatched from another ref.
 
@@ -444,7 +442,7 @@ User guide (`docs/typescript.md`) is still deferred. Package notes: [bindings/ty
 | Artifact | Contents |
 |----------|----------|
 | `ontographia-{version}-{target}.tar.gz` | CLI binary `otg`, plus a copy named `ontographia` so an older formula that looks up that filename still installs. The v0.1.8 formula prefers `otg`. `--version` prints `otg` |
-| `libontographia_ffi-{version}-{target}.tar.gz` | Shared library for Go/cgo (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`). The npm job consumes these same archives |
+| `libontographia_ffi-{version}-{target}.tar.gz` | Shared library for Go/cgo (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`). The Windows archive also includes `ontographia_ffi.dll.lib` (MSVC import library) starting with the next release. The npm job consumes these same archives and copies the shared library only |
 | `ontographia-{version}-*.whl` | Python package (Linux x86_64/arm64, macOS arm64, Windows x86_64 × Python 3.11–3.13) |
 | `edgesentry-ontographia-{version}.tgz` | npm package `@edgesentry/ontographia` (loader + `optionalDependencies` on the platform packages) |
 | `edgesentry-ontographia-<platform>-{version}.tgz` | Prebuilt `libontographia_ffi` for `linux-x64`, `linux-arm64`, `darwin-arm64`, `win32-x64` |
