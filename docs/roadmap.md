@@ -32,7 +32,7 @@ flowchart LR
 - Close evaluation issues that are already complete
 - Publish this roadmap
 - Use milestones and epics; attach existing issues as sub-issues
-- Keep dependency updates moving; start a `CHANGELOG.md`
+- Keep dependency updates moving; publish release notes on [GitHub Releases](https://github.com/edgesentry/ontographia/releases)
 
 ### Getting started quality — [#83](https://github.com/edgesentry/ontographia/issues/83)
 - 5-minute quickstart: `pip install ontographia` → query the Movies graph
