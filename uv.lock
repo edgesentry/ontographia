@@ -2193,6 +2193,9 @@ name = "ontographia"
 source = { editable = "." }
 
 [package.optional-dependencies]
+cli = [
+    { name = "neo4j" },
+]
 llm = [
     { name = "openai" },
     { name = "pyyaml" },
@@ -2219,11 +2222,12 @@ litellm = [
 [package.metadata]
 requires-dist = [
     { name = "mcp", marker = "extra == 'mcp'", specifier = ">=1.9,<3" },
+    { name = "neo4j", marker = "extra == 'cli'", specifier = ">=5" },
     { name = "neo4j", marker = "extra == 'mcp'", specifier = ">=5" },
     { name = "openai", marker = "extra == 'llm'", specifier = ">=1.40" },
     { name = "pyyaml", marker = "extra == 'llm'", specifier = ">=6.0" },
 ]
-provides-extras = ["llm", "mcp"]
+provides-extras = ["cli", "llm", "mcp"]
 
 [package.metadata.requires-dev]
 dev = [

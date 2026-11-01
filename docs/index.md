@@ -27,7 +27,8 @@ Intent JSON is produced outside the core (LLM or hand-authored), constrained by 
 
 | Target | Install |
 |--------|---------|
-| CLI | `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap)), `cargo install ontographia-cli`, or [GitHub Releases](https://github.com/edgesentry/ontographia/releases) |
+| CLI (`ontographia`, Rust) | `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap)), `cargo install ontographia-cli`, or [GitHub Releases](https://github.com/edgesentry/ontographia/releases). Build and schema only |
+| CLI (`otg`, read-only execute) | `pip install "ontographia[cli]"`; Homebrew `brew install otg` after the tap formula is published ([otg](otg.md)) |
 | Rust libs | `ontographia-core`, `ontographia-adapters`, `ontographia-schema` on [crates.io](https://crates.io) |
 | Python | `pip install ontographia` (wheels for 3.11–3.13 on Linux, macOS arm64, Windows); optional Intent layer: `pip install "ontographia[llm]"` ([docs](llm.md)); optional MCP server: `pip install "ontographia[mcp]"` ([docs](mcp.md)) |
 | Go | `go get github.com/edgesentry/ontographia/bindings/go@v0.1.6` (+ FFI lib from Releases) |
@@ -69,6 +70,7 @@ Detection and routing: `crates/ontographia-adapters/src/registry.rs`.
 |-------|------|
 | Quickstart (install → Neo4j demo) | [Rust](rust.md) / [Python](python.md) / [Go](go.md) → [Neo4j walkthrough](end-to-end-neo4j.md) |
 | Rust library & CLI | [Rust](rust.md) |
+| `otg` (build + read-only Neo4j) | [otg CLI](otg.md) |
 | Python bindings (PyO3) | [Python](python.md) |
 | Go bindings (cgo / FFI) | [Go](go.md) |
 | Pipeline, COM, validation, emitters | [Architecture](architecture.md) |

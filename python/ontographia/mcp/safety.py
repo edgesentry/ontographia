@@ -102,6 +102,6 @@ def assert_read_only_cypher(cypher: str) -> None:
         return
     details = "; ".join(f"{h.pattern!r} near {h.snippet!r}" for h in hits[:5])
     raise WriteQueryRejected(
-        "Refusing to execute write Cypher (Ontographia MCP is read-only). "
+        "Refusing to execute write Cypher (Ontographia is read-only). "
         f"Denied constructs: {details}"
     )

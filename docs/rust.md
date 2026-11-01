@@ -24,7 +24,7 @@ cargo add ontographia-schema
 cargo install ontographia-cli
 ```
 
-Or via Homebrew: `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap)).
+Or via Homebrew: `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap)). That formula is this Rust binary (`build` and `schema`). Read-only Neo4j execute is the separate [`otg`](otg.md) command.
 
 ## Library usage
 

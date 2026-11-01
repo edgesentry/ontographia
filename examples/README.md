@@ -13,6 +13,8 @@ Sample ontologies, Neo4j artifacts, and runnable demos. Manufacturing files shar
 | [`manufacturing.jsonld`](manufacturing.jsonld) | JSON-LD |
 | [`manufacturing.linkml.yaml`](manufacturing.linkml.yaml) | LinkML |
 | [`manufacturing.obo`](manufacturing.obo) | OBO |
+| [`movies.native.yaml`](movies.native.yaml) | Movies subset for the [`otg`](../docs/otg.md) quickstart |
+| [`movies_matrix.json`](movies_matrix.json) | Intent: actors in The Matrix |
 
 ## Neo4j
 

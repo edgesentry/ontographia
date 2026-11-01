@@ -79,6 +79,8 @@ jobs:
         run: uv run --python "$(command -v python3)" pytest tests/python/llm -q
       - name: MCP server unit tests (ontographia[mcp])
         run: uv run --python "$(command -v python3)" pytest tests/python/mcp -q
+      - name: otg CLI unit tests
+        run: uv run --python "$(command -v python3)" pytest tests/python/cli -q
 
   # Guard + optional decrypt for scripts/litellm/.env.encrypted (issue #105).
   # Does not add repository secrets; skips decrypt when DOTENV_PRIVATE_KEY is unset.
