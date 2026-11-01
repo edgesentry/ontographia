@@ -285,7 +285,9 @@ uvx --from "ontographia[cli]" otg --help
 go get github.com/edgesentry/ontographia/bindings/go@v0.1.8
 ```
 
-Download the matching `libontographia_ffi-*` archive from GitHub Releases for cgo linking (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`).
+Download the matching `libontographia_ffi-*` archive from GitHub Releases (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`). Point `LIBRARY_PATH` and `CGO_LDFLAGS` at the extracted directory (`LD_LIBRARY_PATH` on Linux, `DYLD_LIBRARY_PATH` on macOS, `PATH` on Windows at run time). `ONTOGRAPHIA_FFI_LIB` is the library file or that directory; `bindings/go/scripts/ffi-env.sh` copies it into the linker variables. Exact exports: [Go](go.md).
+
+`v0.1.8` of the module still passes `-L${SRCDIR}/../../../target/release`. The tree on `main` does not. That link line ships in the next `bindings/go` tag.
 
 The release workflow creates `bindings/go/vX.Y.Z` on the same commit as `vX.Y.Z` (the `main` checkout that created the GitHub Release). The `release-processed/vX.Y.Z` claim uses that same checkout. Neither tag uses the commit that merely started the manual workflow, which can differ when `main` has moved or the run was dispatched from another ref.
 
@@ -317,7 +319,7 @@ User guide (`docs/typescript.md`) is still deferred. Package notes: [bindings/ty
 | Artifact | Contents |
 |----------|----------|
 | `ontographia-{version}-{target}.tar.gz` | CLI binary `otg`, plus a copy named `ontographia` so the current tap formula keeps installing. `--version` prints `otg`. Drop the copy after the tap installs `otg` |
-| `libontographia_ffi-{version}-{target}.tar.gz` | Shared library for Go/cgo (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`). The npm job consumes these same archives |
+| `libontographia_ffi-{version}-{target}.tar.gz` | Shared library for Go/cgo (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`). The Windows archive also includes `ontographia_ffi.dll.lib` (MSVC import library) starting with the next release. The npm job consumes these same archives and copies the shared library only |
 | `ontographia-{version}-*.whl` | Python package (Linux x86_64/arm64, macOS arm64, Windows x86_64 × Python 3.11–3.13) |
 | `edgesentry-ontographia-{version}.tgz` | npm package `@edgesentry/ontographia` (loader + `optionalDependencies` on the platform packages) |
 | `edgesentry-ontographia-<platform>-{version}.tgz` | Prebuilt `libontographia_ffi` for `linux-x64`, `linux-arm64`, `darwin-arm64`, `win32-x64` |

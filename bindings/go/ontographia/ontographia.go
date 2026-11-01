@@ -1,7 +1,24 @@
+// Package ontographia builds parameter-bound Cypher from an ontology file and
+// Intent JSON by calling libontographia_ffi.
+//
+// The default cgo line is -lontographia_ffi (on Windows, -l:ontographia_ffi.dll).
+// It does not search a checkout-relative target/release directory, so
+// `go build` against the module cache can link a GitHub Release archive.
+// Point LIBRARY_PATH and CGO_LDFLAGS at the directory that contains the
+// shared library. scripts/ffi-env.sh reads ONTOGRAPHIA_FFI_LIB and exports
+// those variables. See the module README.
+//
+// Linux binaries also record an rpath of $ORIGIN so a copy of the shared
+// library next to the executable is found at run time.
+//
+// In a git checkout, -tags ontographia_checkout adds
+// -L${SRCDIR}/../../../target/release after `cargo build --release -p ontographia-ffi`.
 package ontographia
 
 /*
-#cgo LDFLAGS: -L${SRCDIR}/../../../target/release -lontographia_ffi -Wl,-rpath,${SRCDIR}/../../../target/release
+#cgo !windows LDFLAGS: -lontographia_ffi
+#cgo windows LDFLAGS: -l:ontographia_ffi.dll
+#cgo linux LDFLAGS: -Wl,-rpath,$ORIGIN
 #include <stdlib.h>
 
 extern char* ontographia_build_cypher_from_json(
