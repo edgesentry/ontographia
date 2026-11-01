@@ -121,17 +121,49 @@ The release workflow rejects versions that do not match `Cargo.toml` (`scripts/v
 |--------|---------|
 | `CARGO_REGISTRY_TOKEN` | `cargo publish` for `ontographia-core`, `-adapters`, `-schema`, `-cli` |
 | `PYPI_API_TOKEN` | `maturin upload` to PyPI |
-| `NPM_TOKEN` | `npm publish` for `@edgesentry/ontographia` and the four platform packages. The workflow maps this secret to `NODE_AUTH_TOKEN`. Use a granular access token that can publish `@edgesentry/*`, with 2FA bypass for CI, or a classic automation token. A token that still prompts for OTP will fail the job |
 
 | Variable | Purpose |
 |----------|---------|
 | `PUBLISH_TO_REGISTRIES` | Set to `true` to enable crates.io / PyPI / npm publish jobs |
 
+npm does not use an Actions secret. Job `publish-npm` authenticates with [npm Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) (GitHub Actions OIDC). The Release workflow grants `id-token: write`, and the job sets that permission again because a job `permissions` block replaces workflow inheritance. `actions/setup-node` is configured with `registry-url: https://registry.npmjs.org`. The job runs `npm publish` (npm CLI **11.5.1+**). Provenance is attached automatically for this public repository; the command does not pass `--provenance`.
+
+Delete the Actions secret `NPM_TOKEN` if it was added. `scripts/publish-npm.sh` exits when `NPM_TOKEN` or a real `NODE_AUTH_TOKEN` is present, so a granular access token (including one that bypasses MFA) cannot publish.
+
 Without registry settings, the workflow still uploads **GitHub Release assets**, including the npm tarballs.
 
-**npm org.** The scope `@edgesentry` is an npm org, not something GitHub creates. It has to exist on [npmjs.com](https://www.npmjs.com/org/create) before the first publish (`edgesentry`). If the org is missing, the Release job's `npm publish` fails with a scope error. Package names are immutable after the first successful publish, so confirm the scope before running Release with the registry flag on.
+### npm Trusted Publishing (maintainer, once per package)
 
-**Do not publish npm from a laptop or an agent.** `npm publish` is forbidden outside the GitHub Actions workflow named **Release**, job id `publish-npm`. `scripts/publish-npm.sh` exits before it talks to the registry unless `GITHUB_ACTIONS=true`, `GITHUB_WORKFLOW=Release`, and `GITHUB_JOB=publish-npm`. That job still runs only when `PUBLISH_TO_REGISTRIES` is `true`, and it reads secret `NPM_TOKEN`. `bindings/typescript` sets `prepublishOnly` so `npm publish` in that directory fails even if someone points npm at a token. Packing (`scripts/package-npm.mjs` / `npm pack`) does not upload and is the local check.
+The scope `@edgesentry` is an npm organization. Creating the GitHub org does not create it. Package names are immutable after the first publish. Do this on npmjs.com as an owner of that org. Laptops and agents do not upload the Release tarballs.
+
+1. Create the npm organization **`edgesentry`** at [npmjs.com/org/create](https://www.npmjs.com/org/create).
+2. Create these five package names under that org. The Trusted Publisher form is on a package that already exists ([`npm trust` requires the package on the registry](https://docs.npmjs.com/cli/v11/commands/npm-trust/)). A placeholder version such as `0.0.0`, published by you with an interactive login, is enough for the settings page. Use a version other than the workspace version in `Cargo.toml`, so the Release job still publishes the real tarball. Do not upload the Release `.tgz` files and do not run `scripts/publish-npm.sh`.
+   - `@edgesentry/ontographia`
+   - `@edgesentry/ontographia-linux-x64`
+   - `@edgesentry/ontographia-linux-arm64`
+   - `@edgesentry/ontographia-darwin-arm64`
+   - `@edgesentry/ontographia-win32-x64`
+3. On each package, open **Packages → the package → Settings → Trusted publishing** ([docs](https://docs.npmjs.com/trusted-publishers/)). Choose **GitHub Actions** and save one connection with the fields below. The same screen is `https://www.npmjs.com/package/<name>/access`.
+4. On each package, open **Settings → Publishing access**, choose **Require two-factor authentication and disallow tokens**, and save. Trusted Publishing still publishes. An npm token does not.
+5. Set the repository variable `PUBLISH_TO_REGISTRIES` to `true`.
+
+Trusted Publisher fields, same on all five packages:
+
+| Field | Value |
+|-------|--------|
+| Organization or user | `edgesentry` |
+| Repository | `ontographia` |
+| Workflow filename | `release.yml` |
+| Environment name | empty |
+| Allow `npm publish` | on |
+
+The file is `.github/workflows/release.yml`. Its workflow `name:` is **Release**. npm matches the filename `release.yml`, including `.yml`. **Run workflow** starts that file directly, so the filename is `release.yml` and the environment stays empty (the job does not set a GitHub environment).
+
+A trusted publisher created after 2026-09-03 allows `npm stage publish` until you also allow direct `npm publish`. The Release job runs `npm publish`. Turn **Allow npm publish** on.
+
+A new connection must complete its first successful publish within **2 days** or it expires. Save it when you are about to run Release, and run Release inside that window. An expired connection is deleted and created again; it cannot be edited.
+
+**npm publish is allowed only in the Release job `publish-npm`.** `scripts/publish-npm.sh` exits before it talks to the registry unless `GITHUB_ACTIONS=true`, `GITHUB_WORKFLOW=Release`, and `GITHUB_JOB=publish-npm`, and unless the OIDC request variables from `id-token: write` are present. `bindings/typescript` sets `prepublishOnly` so `npm publish` in that directory fails. Packing (`scripts/package-npm.mjs` / `npm pack`) does not upload and is the local check.
 
 ### Re-running a failed Release
 
@@ -139,7 +171,7 @@ If a Release run fails partway through (for example after `ontographia-core` was
 
 - **crates.io:** publish jobs skip crates that already exist at the workspace version.
 - **Go:** the workflow fails fast if `bindings/go/vX.Y.Z` already exists — do not delete that tag; bump the version instead.
-- **npm:** platform packages publish first, then `@edgesentry/ontographia`. Versions already on npm are skipped. npm versions are immutable; replace a bad native by bumping `Cargo.toml` (and the TypeScript `package.json` via `scripts/bump-version.sh`). If `PUBLISH_TO_REGISTRIES` is `true` and `NPM_TOKEN` is missing, the npm job fails the same way a missing `PYPI_API_TOKEN` fails PyPI.
+- **npm:** platform packages publish first, then `@edgesentry/ontographia`. Versions already on npm are skipped. npm versions are immutable; replace a bad native by bumping `Cargo.toml` (and the TypeScript `package.json` via `scripts/bump-version.sh`). A missing trusted publisher, a workflow filename other than `release.yml`, or a publisher that does not allow `npm publish` fails the job (`ENEEDAUTH`).
 - **GitHub Release assets:** the upload step overwrites release files when re-run succeeds.
 
 ## Install after release

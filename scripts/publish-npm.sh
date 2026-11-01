@@ -4,8 +4,9 @@
 # Versions already on the registry are skipped so a Release re-run is safe.
 #
 # Forbidden on laptops, agent sandboxes, and every workflow except Release.
-# The Release job is also gated by PUBLISH_TO_REGISTRIES and NPM_TOKEN.
-# See docs/release.md.
+# The Release job is also gated by PUBLISH_TO_REGISTRIES.
+# Auth is npm Trusted Publishing (GitHub Actions OIDC). No NPM_TOKEN.
+# npm attaches provenance automatically for this public repo. See docs/release.md.
 set -euo pipefail
 
 DIR="${1:-}"
@@ -18,15 +19,57 @@ fi
 if [[ "${GITHUB_ACTIONS:-}" != "true" || "${GITHUB_WORKFLOW:-}" != "Release" || "${GITHUB_JOB:-}" != "publish-npm" ]]; then
   echo "error: npm publish is forbidden outside the GitHub Actions Release job publish-npm." >&2
   echo "Do not publish from a laptop, a cloud agent, or any other workflow." >&2
-  echo "Set repository variable PUBLISH_TO_REGISTRIES=true and secret NPM_TOKEN, then run Release." >&2
+  echo "Configure npm Trusted Publishing for release.yml, set PUBLISH_TO_REGISTRIES=true, then run Release." >&2
   exit 1
 fi
 
-if [[ -z "${NODE_AUTH_TOKEN:-}" ]]; then
-  echo "error: NODE_AUTH_TOKEN is empty. Add the NPM_TOKEN Actions secret." >&2
-  echo "The Release workflow maps secrets.NPM_TOKEN to NODE_AUTH_TOKEN." >&2
+# actions/setup-node with registry-url exports this when no token was passed.
+# It is not an npm credential. A real token would publish without the trusted publisher.
+SETUP_NODE_DUMMY_TOKEN="XXXXX-XXXXX-XXXXX-XXXXX"
+if [[ -n "${NPM_TOKEN:-}" ]]; then
+  echo "error: NPM_TOKEN is set." >&2
+  echo "npm Trusted Publishing uses the GitHub Actions OIDC token. Remove the npm token from this job." >&2
   exit 1
 fi
+if [[ -n "${NODE_AUTH_TOKEN:-}" && "${NODE_AUTH_TOKEN}" != "${SETUP_NODE_DUMMY_TOKEN}" ]]; then
+  echo "error: NODE_AUTH_TOKEN is set." >&2
+  echo "npm Trusted Publishing uses the GitHub Actions OIDC token. Remove the npm token from this job." >&2
+  exit 1
+fi
+unset NODE_AUTH_TOKEN
+
+# Drop the auth line setup-node writes (//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN})
+# so npm publish exchanges the OIDC token instead of sending a placeholder.
+if [[ -n "${NPM_CONFIG_USERCONFIG:-}" && -f "${NPM_CONFIG_USERCONFIG}" ]]; then
+  npmrc_tmp="$(mktemp)"
+  grep -v -E '_authToken=|^always-auth=' "${NPM_CONFIG_USERCONFIG}" > "$npmrc_tmp" || true
+  if ! grep -q '^registry=' "$npmrc_tmp"; then
+    printf 'registry=https://registry.npmjs.org/\n' >> "$npmrc_tmp"
+  fi
+  mv "$npmrc_tmp" "${NPM_CONFIG_USERCONFIG}"
+fi
+
+if [[ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" || -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]]; then
+  echo "error: GitHub Actions OIDC is unavailable." >&2
+  echo "The publish-npm job needs permissions id-token: write so npm can use Trusted Publishing." >&2
+  exit 1
+fi
+
+npm_version="$(npm --version)"
+node --input-type=module -e '
+  const raw = process.argv[1].trim();
+  const parts = raw.split(".").map((part) => Number.parseInt(part, 10));
+  const ok =
+    parts.length >= 3 &&
+    (parts[0] > 11 ||
+      (parts[0] === 11 && (parts[1] > 5 || (parts[1] === 5 && parts[2] >= 1))));
+  if (!ok) {
+    console.error(
+      `error: npm ${raw} cannot use Trusted Publishing. Need npm >= 11.5.1 on Node >= 22.14.`,
+    );
+    process.exit(1);
+  }
+' "$npm_version"
 
 shopt -s nullglob
 tarballs=("$DIR"/*.tgz)
@@ -70,6 +113,7 @@ publish_one() {
     return 0
   fi
   echo "Publishing ${name}@${version}"
+  # OIDC auth. Provenance is generated for a public package from a public repo.
   npm publish "$tgz" --access public
 }
 

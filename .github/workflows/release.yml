@@ -447,6 +447,12 @@ jobs:
     needs: [resolve-version, package-npm]
     runs-on: ubuntu-latest
     if: vars.PUBLISH_TO_REGISTRIES == 'true'
+    # Workflow permissions include id-token: write. A job permissions block
+    # replaces that inheritance, so this job sets id-token: write itself.
+    # npm Trusted Publishing mints its OIDC token from that permission.
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -455,6 +461,15 @@ jobs:
         with:
           node-version: "22"
           registry-url: https://registry.npmjs.org
+      - name: Install npm CLI for Trusted Publishing
+        # registry-url makes setup-node export a placeholder NODE_AUTH_TOKEN.
+        # This install uses a token-free npmrc. publish-npm.sh rejects a real token.
+        env:
+          NODE_AUTH_TOKEN: ""
+        run: |
+          npmrc="${RUNNER_TEMP}/npmrc-install"
+          printf 'registry=https://registry.npmjs.org/\n' > "$npmrc"
+          NPM_CONFIG_USERCONFIG="$npmrc" npm install -g npm@11
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
         with:
           name: npm-tarballs
@@ -462,6 +477,5 @@ jobs:
       - name: Publish to npm
         # publish-npm.sh refuses to run unless GITHUB_JOB is publish-npm
         # (this job id). Do not rename the job id without updating that guard.
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # Do not set NODE_AUTH_TOKEN or NPM_TOKEN. Provenance is automatic.
         run: bash scripts/publish-npm.sh dist/npm

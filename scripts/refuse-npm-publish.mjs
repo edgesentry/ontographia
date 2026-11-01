@@ -6,8 +6,9 @@
 console.error(
   "npm publish is forbidden from this directory, from a laptop, and from an agent.\n" +
     "Only the GitHub Actions Release workflow may publish, and only when\n" +
-    "PUBLISH_TO_REGISTRIES=true and the NPM_TOKEN secret is set.\n" +
-    "That workflow runs scripts/package-npm.mjs (stamps optionalDependencies for the\n" +
+    "PUBLISH_TO_REGISTRIES=true. That job uses npm Trusted Publishing (GitHub Actions OIDC),\n" +
+    "not an NPM_TOKEN secret.\n" +
+    "The workflow runs scripts/package-npm.mjs (stamps optionalDependencies for the\n" +
     "prebuilt platform packages) and then scripts/publish-npm.sh.\n" +
     "See docs/release.md.",
 );

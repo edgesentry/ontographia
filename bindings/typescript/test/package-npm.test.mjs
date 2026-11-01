@@ -13,6 +13,37 @@ const catalog = JSON.parse(
   readFileSync(join(pkgRoot, "npm", "platforms.json"), "utf8"),
 );
 
+function releasePublishEnv(bin) {
+  const env = {
+    ...process.env,
+    PATH: `${bin}:${process.env.PATH ?? ""}`,
+    GITHUB_ACTIONS: "true",
+    GITHUB_WORKFLOW: "Release",
+    GITHUB_JOB: "publish-npm",
+    ACTIONS_ID_TOKEN_REQUEST_URL: "https://example.invalid/oidc",
+    ACTIONS_ID_TOKEN_REQUEST_TOKEN: "oidc-request",
+  };
+  delete env.NODE_AUTH_TOKEN;
+  delete env.NPM_TOKEN;
+  delete env.NPM_CONFIG_USERCONFIG;
+  return env;
+}
+
+function writePackageTarball(destDir, pkg) {
+  const stage = mkdtempSync(join(tmpdir(), "ontographia-tgz-"));
+  try {
+    const root = join(stage, "package");
+    mkdirSync(root);
+    writeFileSync(join(root, "package.json"), JSON.stringify(pkg));
+    const safe = pkg.name.replace(/^@/, "").replace("/", "-");
+    const tgz = join(destDir, `${safe}.tgz`);
+    execFileSync("tar", ["-czf", tgz, "-C", stage, "package"]);
+    return tgz;
+  } finally {
+    rmSync(stage, { recursive: true, force: true });
+  }
+}
+
 function readPackedJson(tgz) {
   const stdout = execFileSync("tar", ["-xOzf", tgz, "package/package.json"], {
     encoding: "utf8",
@@ -46,6 +77,136 @@ describe("npm pack", () => {
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /forbidden outside the GitHub Actions Release/);
     assert.equal(readFileSync(log, "utf8").length, 0);
+    rmSync(work, { recursive: true, force: true });
+  });
+
+  it("refuses a real npm token inside the Release job without calling npm", () => {
+    const work = mkdtempSync(join(tmpdir(), "ontographia-token-"));
+    const bin = join(work, "bin");
+    const log = join(work, "npm.log");
+    mkdirSync(bin);
+    writeFileSync(
+      join(bin, "npm"),
+      `#!/bin/sh\necho "$@" >> ${JSON.stringify(log)}\nexit 99\n`,
+    );
+    chmodSync(join(bin, "npm"), 0o755);
+    mkdirSync(join(work, "tarballs"));
+    writeFileSync(log, "");
+    const env = releasePublishEnv(bin);
+    env.NODE_AUTH_TOKEN = "npm_real_token";
+    const result = spawnSync(
+      "bash",
+      [join(repoRoot, "scripts", "publish-npm.sh"), join(work, "tarballs")],
+      { encoding: "utf8", env },
+    );
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /NODE_AUTH_TOKEN is set/);
+    assert.equal(readFileSync(log, "utf8").length, 0);
+    rmSync(work, { recursive: true, force: true });
+  });
+
+  it("publishes with OIDC after dropping the setup-node placeholder token", () => {
+    const work = mkdtempSync(join(tmpdir(), "ontographia-oidc-"));
+    try {
+      const bin = join(work, "bin");
+      const log = join(work, "npm.log");
+      const tarballs = join(work, "tarballs");
+      const npmrc = join(work, ".npmrc");
+      mkdirSync(bin);
+      mkdirSync(tarballs);
+      writeFileSync(
+        npmrc,
+        "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}\nregistry=https://registry.npmjs.org/\nalways-auth=true\n",
+      );
+      writeFileSync(
+        join(bin, "npm"),
+        `#!/bin/sh
+echo "$@" >> ${JSON.stringify(log)}
+if [ "$1" = "--version" ]; then
+  echo "11.5.1"
+  exit 0
+fi
+if [ "$1" = "view" ]; then
+  exit 1
+fi
+if [ "$1" = "publish" ]; then
+  echo "TOKEN=\${NODE_AUTH_TOKEN-unset}" >> ${JSON.stringify(log)}
+  exit 0
+fi
+exit 99
+`,
+      );
+      chmodSync(join(bin, "npm"), 0o755);
+      writeFileSync(log, "");
+      const version = "9.9.9";
+      const platforms = [
+        "@edgesentry/ontographia-linux-x64",
+        "@edgesentry/ontographia-linux-arm64",
+        "@edgesentry/ontographia-darwin-arm64",
+        "@edgesentry/ontographia-win32-x64",
+      ];
+      for (const name of platforms) {
+        writePackageTarball(tarballs, { name, version });
+      }
+      writePackageTarball(tarballs, {
+        name: "@edgesentry/ontographia",
+        version,
+        optionalDependencies: Object.fromEntries(platforms.map((name) => [name, version])),
+      });
+      const env = releasePublishEnv(bin);
+      env.NODE_AUTH_TOKEN = "XXXXX-XXXXX-XXXXX-XXXXX";
+      env.NPM_CONFIG_USERCONFIG = npmrc;
+      const result = spawnSync(
+        "bash",
+        [join(repoRoot, "scripts", "publish-npm.sh"), tarballs],
+        { encoding: "utf8", env },
+      );
+      assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+      const trace = readFileSync(log, "utf8");
+      assert.match(trace, /--version/);
+      const publishes = trace.split("\n").filter((line) => line.startsWith("publish "));
+      assert.equal(publishes.length, 5);
+      for (const line of publishes) {
+        assert.match(line, /^publish \S+\.tgz --access public$/);
+        assert.equal(line.includes("--provenance"), false);
+      }
+      assert.equal(trace.includes("TOKEN=unset\n") ? trace.split("TOKEN=unset").length - 1 : 0, 5);
+      assert.equal(readFileSync(npmrc, "utf8").includes("_authToken"), false);
+      assert.match(readFileSync(npmrc, "utf8"), /^registry=https:\/\/registry\.npmjs\.org\/$/m);
+      assert.match(result.stdout, /Publishing @edgesentry\/ontographia-linux-x64@9\.9\.9/);
+      assert.match(result.stdout, /Publishing @edgesentry\/ontographia@9\.9\.9/);
+    } finally {
+      rmSync(work, { recursive: true, force: true });
+    }
+  });
+
+  it("refuses npm older than Trusted Publishing support", () => {
+    const work = mkdtempSync(join(tmpdir(), "ontographia-old-npm-"));
+    const bin = join(work, "bin");
+    const log = join(work, "npm.log");
+    mkdirSync(bin);
+    writeFileSync(
+      join(bin, "npm"),
+      `#!/bin/sh
+echo "$@" >> ${JSON.stringify(log)}
+if [ "$1" = "--version" ]; then
+  echo "10.9.2"
+  exit 0
+fi
+exit 99
+`,
+    );
+    chmodSync(join(bin, "npm"), 0o755);
+    mkdirSync(join(work, "tarballs"));
+    writeFileSync(log, "");
+    const result = spawnSync(
+      "bash",
+      [join(repoRoot, "scripts", "publish-npm.sh"), join(work, "tarballs")],
+      { encoding: "utf8", env: releasePublishEnv(bin) },
+    );
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /npm 10\.9\.2 cannot use Trusted Publishing/);
+    assert.equal(readFileSync(log, "utf8").includes("publish "), false);
     rmSync(work, { recursive: true, force: true });
   });
 

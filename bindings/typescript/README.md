@@ -2,7 +2,7 @@
 
 Node.js bindings for Ontographia. They load `libontographia_ffi` with [koffi](https://koffi.dev/) and call `ontographia_build_cypher_from_json`. Validation and Cypher emission stay in the Rust engine. This package does not build query text itself.
 
-npm name: **`@edgesentry/ontographia`**. Scoped so it does not take the unscoped `ontographia` name. Registry upload is the GitHub Actions **Release** workflow only ([docs/release.md](../../docs/release.md)), and only when `PUBLISH_TO_REGISTRIES` is `true` and `NPM_TOKEN` is set. `npm publish` from a laptop, an agent, or this directory is forbidden. The package is not on npm until that workflow runs.
+npm name: **`@edgesentry/ontographia`**. Scoped so it does not take the unscoped `ontographia` name. Registry upload is the GitHub Actions **Release** workflow only ([docs/release.md](../../docs/release.md)), and only when `PUBLISH_TO_REGISTRIES` is `true`. Auth is npm Trusted Publishing (GitHub Actions OIDC), not an `NPM_TOKEN`. `npm publish` from a laptop, an agent, or this directory is forbidden. The package is not on npm until that workflow runs.
 
 User-facing guide (`docs/typescript.md`, mkdocs nav) is intentionally not in this tree yet.
 
