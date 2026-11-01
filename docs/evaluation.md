@@ -202,6 +202,79 @@ uv run --with datasets python examples/llm/eval/run_track_b.py --record
 
 Check the Hugging Face dataset card for license before redistributing samples.
 
+## Reproduce Part 3
+
+Every table on this page is produced by a script in this repository. `--record` rewrites the checked-in files under [`examples/llm/eval/baselines/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/eval/baselines); `--json-out` (and the repeat wrapper below) write a scratch copy instead, which is what remeasure runs use so published numbers stay put.
+
+| Arm | Command | Needs |
+|-----|---------|-------|
+| Track A full schema | `uv run python examples/llm/eval/run_track_a.py --record` | — |
+| H1 mechanical | `uv run python examples/llm/eval/run_track_a_h1.py --record` | — |
+| H1 live, one run | `uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --record` | LiteLLM |
+| H1 live, Part 3 repeats | `scripts/remeasure/run_h1_live_repeats.sh --profiles mid,large --n 3 --out-dir DIR` | LiteLLM |
+| H2 exec feedback | `uv run python examples/llm/eval/run_track_a_h2.py --record` | — |
+| H3 adaptive spend | `uv run python examples/llm/eval/run_track_a_h3.py --record` | — |
+| Track B schema convert | `uv run --with datasets python examples/llm/eval/run_track_b.py --record` | HF `datasets` |
+| Track B Exec Match | `uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py --record` | LiteLLM + `demo.neo4jlabs.com` |
+| Offline fixture check | `python3 scripts/remeasure/dry_run.py` | — |
+
+### Part 3 live repeats
+
+The Part 3 live numbers came from **repeated** H1 live runs, not from a single `--record` invocation. Reproduce the stem with n=3 over `mid,large`, then extend the high-variance `large` arm toward n=5:
+
+```bash
+# once
+uv sync --group dev && uv run maturin develop --release
+scripts/litellm/start.sh
+source scripts/litellm/use-provider.sh gemini-3.8
+
+# n=3 over mid + large
+scripts/remeasure/run_h1_live_repeats.sh --profiles mid,large --n 3 \
+  --out-dir examples/llm/eval/out/part3-$(date -u +%Y%m%d-%H%M)
+
+# +2 large-only repeats (cumulative n=5 on large)
+scripts/remeasure/run_h1_live_repeats.sh --profiles large --n 2 \
+  --out-dir examples/llm/eval/out/part3-ext-$(date -u +%Y%m%d-%H%M)
+```
+
+Each stem holds `meta.txt` (git revision, package version, model alias, base URL, timings), `logs/`, the per-repeat `json/run<N>.json` written by the harness, and `aggregate.json` / `aggregate_index.json` / `aggregate.md`. Options, environment variables, and exit codes: [`scripts/remeasure/README.md`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/README.md). The wrapper never passes `--record`, so baselines are untouched — compare the aggregate by hand before editing any table or JSON above.
+
+`scripts/remeasure/aggregate_h1_live.py --out-dir DIR` re-summarizes an existing stem (repeat count, Property Hit mean and min–max, compile OK, fallback, ≈tokens p95, LLM calls) without calling a model.
+
+## Feature-add checklist: Context Rot lens
+
+[Context Rot (Chroma, July 2025)](https://www.trychroma.com/research/context-rot) reports that model accuracy degrades as input grows, as distractors accumulate, and when the full context is supplied instead of a focused subset. Ontographia has **not** replicated that study (18 models, LongMemEval-style long inputs) and makes no comparable claim. The Track A results above are fixture measurements on Ontographia's own prompts and tasks; this checklist only records which of them to re-run when a feature changes the context the LLM sees.
+
+**When to use:** any roadmap feature that changes prompts (`build_initial_user_message`), schema exposure, subsetting / `subset_fallback` (`schema_policy`), or Intent extraction / repair. Re-run the mapped harnesses below, then refresh the tables and baselines above if numbers move.
+
+| Context Rot dimension | What to re-check | Existing harness (scripted today) |
+|-----------------------|------------------|-----------------------------------|
+| Input length / prompt tokens | full vs subset ≈tokens per profile; p50 / p95 | `run_track_a.py`, `run_track_a_h1.py` (mechanical), `run_track_a_h1_live.py` (live, p95), `run_track_a_h3.py` (total p95) |
+| Distractors / near-duplicates | whether a near-duplicate property is visible in the prompt and gets selected | `run_track_a.py` (silent-wrong), `run_track_a_h1.py` (mechanical induce), `run_track_a_h1_live.py` (near-dup picks, invent-without-seeing) |
+| Full schema vs focused subset (and `subset_fallback`) | Property Hit / compile / fallback rate under `full`, `subset`, `subset_fallback`; escalation spend | `run_track_a_h1.py`, `run_track_a_h1_live.py`, `run_track_a_h3.py` |
+| Intent extraction / repair | Empty@Valid recovery after execution feedback (changes the prompt sequence rather than context length) | `run_track_a_h2.py` |
+
+```bash
+# mechanical: prompt length, distractors, full / subset / subset_fallback, refine loop
+uv run python examples/llm/eval/run_track_a.py --record
+uv run python examples/llm/eval/run_track_a_h1.py --record
+uv run python examples/llm/eval/run_track_a_h3.py --record
+uv run python examples/llm/eval/run_track_a_h2.py --record
+
+# live Intent extraction (needs an OpenAI-compatible backend via LiteLLM)
+source scripts/litellm/use-provider.sh gemini-3.7
+uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --record
+
+# live repeat driver for variance (what Part 3 used)
+scripts/remeasure/run_h1_live_repeats.sh --profiles mid,large --n 3 --out-dir DIR
+```
+
+**Coverage and limits today:**
+
+- Live evidence is the H1 live arm only: 40 gold × `mid`/`large`, one provider alias per run (Gemini 3.7 / 3.8 in the v0.1.6 re-runs), `temperature=0`. There is no long-input sweep, no many-model replication, and no LongMemEval-style study.
+- Track A mechanical, H2, and H3 measure prompt vocabulary and the spend/refine state machines with mock extractors — they do not measure live model accuracy.
+- [`scripts/remeasure/dry_run.py`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/dry_run.py) loads a saved Intent and checks its expected Cypher offline. It is a fixture consistency check only, **not** a live Context Rot / remeasure harness; use [`scripts/remeasure/run_h1_live_repeats.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/run_h1_live_repeats.sh) for live repeats.
+
 ## Related
 
 - [Related work](related-work.md)

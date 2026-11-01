@@ -2,6 +2,10 @@
 
 Offline experiments under `examples/llm/eval/`. Harnesses import the packaged module `ontographia.llm` (`pip install "ontographia[llm]"`). Published summaries: [docs/evaluation.md](../../../docs/evaluation.md). Unit tests for the Intent layer live in `tests/python/llm/` (CI).
 
+## Context Rot lens for feature adds
+
+Changes to prompts, schema exposure, subsetting / `subset_fallback`, or Intent extraction should re-run the harnesses mapped in the [Context Rot feature-add checklist](../../../docs/evaluation.md#feature-add-checklist-context-rot-lens). `scripts/remeasure/dry_run.py` is an offline fixture consistency check; live repeats are driven by [`scripts/remeasure/run_h1_live_repeats.sh`](../../../scripts/remeasure/README.md). Every Part 3 command is listed under [Reproduce Part 3](../../../docs/evaluation.md#reproduce-part-3).
+
 ## Track A — distractor ontology stress test (Issues #49 / #50)
 
 Reproduces silent wrong-field selection on large schemas **without a live LLM**.
@@ -32,6 +36,13 @@ uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --re
 ```
 
 Baselines: [`baselines/track_a_h1_live.md`](baselines/track_a_h1_live.md) (Part 3). v0.1.6 re-runs: [`track_a_h1_live_v0.1.6.md`](baselines/track_a_h1_live_v0.1.6.md) (Gemini 3.7), [`track_a_h1_live_v0.1.6_gemini-3.8.md`](baselines/track_a_h1_live_v0.1.6_gemini-3.8.md) (Gemini 3.8). Comparison: [`gemini_3.7_vs_3.8_v0.1.6.md`](baselines/gemini_3.7_vs_3.8_v0.1.6.md) ([#106](https://github.com/edgesentry/ontographia/issues/106)).
+
+Part 3 used **repeated** live runs. Reproduce them (LiteLLM health check, `meta.txt`, `logs/`, `aggregate.json`) with [`scripts/remeasure/run_h1_live_repeats.sh`](../../../scripts/remeasure/README.md):
+
+```bash
+scripts/remeasure/run_h1_live_repeats.sh --profiles mid,large --n 3 --out-dir DIR
+scripts/remeasure/run_h1_live_repeats.sh --profiles large --n 2 --out-dir DIR-EXT
+```
 
 ## H2 — execution feedback Intent refine (Issue #55)
 
