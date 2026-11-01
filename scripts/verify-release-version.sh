@@ -24,4 +24,12 @@ if [[ "$TAG" != "$CARGO" ]]; then
   exit 1
 fi
 
-echo "release version ok: ${CARGO}"
+NPM_JSON="bindings/typescript/package.json"
+NPM_VERSION="$(awk -F'"' '/"version":/ { print $4; exit }' "$NPM_JSON")"
+if [[ "$NPM_VERSION" != "$CARGO" ]]; then
+  echo "version mismatch: ${NPM_JSON} ${NPM_VERSION:-<missing>} != Cargo.toml workspace version ${CARGO}" >&2
+  echo "Run scripts/bump-version.sh ${CARGO} so the npm package stays on the workspace version." >&2
+  exit 1
+fi
+
+echo "release version ok: ${CARGO} (npm ${NPM_VERSION})"

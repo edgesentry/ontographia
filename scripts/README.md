@@ -42,7 +42,10 @@ Full setup: [docs/litellm-local.md](../docs/litellm-local.md)
 | [`preflight-release.sh`](preflight-release.sh) | Version + tag checks and full `release-check.sh` (Release check & Release preflight) |
 | [`trigger-release.sh`](trigger-release.sh) | Read `Cargo.toml` version, preflight, then `gh workflow run Release` |
 | [`release-check.sh`](release-check.sh) | Tests, `cargo publish --dry-run` (core only), wheel build (called by preflight) |
-| [`verify-release-version.sh`](verify-release-version.sh) | Ensure `vX.Y.Z` tag matches `Cargo.toml` |
+| [`verify-release-version.sh`](verify-release-version.sh) | Ensure `vX.Y.Z` matches `Cargo.toml` and `bindings/typescript/package.json` |
+| [`package-npm.mjs`](package-npm.mjs) | Pack `@edgesentry/ontographia` plus prebuilt FFI platform tarballs |
+| [`publish-npm.sh`](publish-npm.sh) | Upload those tarballs. **Release workflow only** (`PUBLISH_TO_REGISTRIES`, secret `NPM_TOKEN`). Refuses laptops and agents |
+| [`refuse-npm-publish.mjs`](refuse-npm-publish.mjs) | Block `npm publish` of the unpackaged TypeScript directory |
 | [`verify-tag-not-exists.sh`](verify-tag-not-exists.sh) | Fail if `vX.Y.Z` (or related sentinels) already exists on origin |
 | [`verify-release-not-processed.sh`](verify-release-not-processed.sh) | Fail if a release version was already claimed or has assets |
 | [`claim-release-processed.sh`](claim-release-processed.sh) | Push `release-processed/vX.Y.Z` sentinel at release start |

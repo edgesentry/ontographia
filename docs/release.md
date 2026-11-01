@@ -1,6 +1,6 @@
 # Release workflow
 
-Ontographia ships **Rust crates + CLI**, a **Python wheel** (PyPI), and **Go bindings** (cgo + FFI). Releases are cut from `main` only.
+Ontographia ships **Rust crates + CLI**, a **Python wheel** (PyPI), **Go bindings** (cgo + FFI), and **TypeScript bindings** (npm, with a prebuilt `libontographia_ffi`). Releases are cut from `main` only.
 
 **Changelog:** [GitHub Releases](https://github.com/edgesentry/ontographia/releases) are the source of truth. The Release workflow creates each release with `gh release create … --generate-notes`.
 
@@ -19,6 +19,7 @@ flowchart LR
   F --> G1[Release assets]
   F --> G2[crates.io optional]
   F --> G3[PyPI optional]
+  F --> G4[npm optional]
 ```
 
 1. Merge feature work to `main` and confirm [CI](https://github.com/edgesentry/ontographia/actions/workflows/ci.yml) passes.
@@ -106,6 +107,7 @@ gh workflow run Release --ref main
 | Rust (all crates) | `version.workspace = true` → workspace version |
 | Python wheel | `pyproject.toml` `dynamic = ["version"]` → `bindings/python/Cargo.toml` via maturin |
 | Go | No file; `bindings/go/vX.Y.Z` tag created by the release workflow |
+| TypeScript / npm | `bindings/typescript/package.json` `version`, kept equal to the workspace version by `scripts/bump-version.sh`. Preflight fails if they differ. Platform-package versions are not stored in git; `scripts/package-npm.mjs` stamps the workspace version when it packs them |
 
 ```bash
 scripts/bump-version.sh 0.1.6 --commit
@@ -119,12 +121,17 @@ The release workflow rejects versions that do not match `Cargo.toml` (`scripts/v
 |--------|---------|
 | `CARGO_REGISTRY_TOKEN` | `cargo publish` for `ontographia-core`, `-adapters`, `-schema`, `-cli` |
 | `PYPI_API_TOKEN` | `maturin upload` to PyPI |
+| `NPM_TOKEN` | `npm publish` for `@edgesentry/ontographia` and the four platform packages. The workflow maps this secret to `NODE_AUTH_TOKEN`. Use a granular access token that can publish `@edgesentry/*`, with 2FA bypass for CI, or a classic automation token. A token that still prompts for OTP will fail the job |
 
 | Variable | Purpose |
 |----------|---------|
-| `PUBLISH_TO_REGISTRIES` | Set to `true` to enable crates.io / PyPI publish jobs |
+| `PUBLISH_TO_REGISTRIES` | Set to `true` to enable crates.io / PyPI / npm publish jobs |
 
-Without registry settings, the workflow still uploads **GitHub Release assets**.
+Without registry settings, the workflow still uploads **GitHub Release assets**, including the npm tarballs.
+
+**npm org.** The scope `@edgesentry` is an npm org, not something GitHub creates. It has to exist on [npmjs.com](https://www.npmjs.com/org/create) before the first publish (`edgesentry`). If the org is missing, the Release job's `npm publish` fails with a scope error. Package names are immutable after the first successful publish, so confirm the scope before running Release with the registry flag on.
+
+**Do not publish npm from a laptop or an agent.** `npm publish` is forbidden outside the GitHub Actions workflow named **Release**, job id `publish-npm`. `scripts/publish-npm.sh` exits before it talks to the registry unless `GITHUB_ACTIONS=true`, `GITHUB_WORKFLOW=Release`, and `GITHUB_JOB=publish-npm`. That job still runs only when `PUBLISH_TO_REGISTRIES` is `true`, and it reads secret `NPM_TOKEN`. `bindings/typescript` sets `prepublishOnly` so `npm publish` in that directory fails even if someone points npm at a token. Packing (`scripts/package-npm.mjs` / `npm pack`) does not upload and is the local check.
 
 ### Re-running a failed Release
 
@@ -132,6 +139,7 @@ If a Release run fails partway through (for example after `ontographia-core` was
 
 - **crates.io:** publish jobs skip crates that already exist at the workspace version.
 - **Go:** the workflow fails fast if `bindings/go/vX.Y.Z` already exists — do not delete that tag; bump the version instead.
+- **npm:** platform packages publish first, then `@edgesentry/ontographia`. Versions already on npm are skipped. npm versions are immutable; replace a bad native by bumping `Cargo.toml` (and the TypeScript `package.json` via `scripts/bump-version.sh`). If `PUBLISH_TO_REGISTRIES` is `true` and `NPM_TOKEN` is missing, the npm job fails the same way a missing `PYPI_API_TOKEN` fails PyPI.
 - **GitHub Release assets:** the upload step overwrites release files when re-run succeeds.
 
 ## Install after release
@@ -142,6 +150,7 @@ If a Release run fails partway through (for example after `ontographia-core` was
 | `pip` / `uvx` extras (`ontographia[cli]`, `[llm]`, `[mcp]`) | Python library and the Python `otg` entry point |
 | crates.io | Rust libraries and `cargo install ontographia-cli` |
 | Go module + `libontographia_ffi-*` on the GitHub Release | cgo bindings |
+| npm `@edgesentry/ontographia` | TypeScript / JavaScript. Prebuilt `libontographia_ffi` for Linux x64, Linux arm64, macOS arm64, and Windows x64 |
 | `ontographia[mcp]` via `uvx` or pip | MCP server |
 
 Guide: [otg CLI](otg.md). Decision: [#121](https://github.com/edgesentry/ontographia/issues/121).
@@ -207,13 +216,38 @@ Download the matching `libontographia_ffi-*` archive from GitHub Releases for cg
 
 The release workflow creates `bindings/go/vX.Y.Z` automatically.
 
+### TypeScript / JavaScript
+
+Node.js **22+**.
+
+```bash
+npm install @edgesentry/ontographia
+```
+
+That install also selects one platform package (`os` / `cpu` / `libc`) and downloads a single prebuilt library:
+
+| Package | Host |
+|---------|------|
+| `@edgesentry/ontographia-linux-x64` | Linux x64, glibc |
+| `@edgesentry/ontographia-linux-arm64` | Linux arm64, glibc |
+| `@edgesentry/ontographia-darwin-arm64` | macOS Apple Silicon |
+| `@edgesentry/ontographia-win32-x64` | Windows x64 |
+
+musl/Alpine, macOS x64, and Windows arm64 are not built. Set `ONTOGRAPHIA_FFI_LIB` (or `ONTOGRAPHIA_FFI_DIR`) to load a custom shared library; those variables override the prebuild. A git checkout still uses `target/release` when no prebuild is installed (`cargo build --release -p ontographia-ffi`).
+
+The same tarballs are attached to the GitHub Release (`edgesentry-ontographia-*.tgz`) for a registry-less install. Uploading them to npm happens only in the Release workflow when `PUBLISH_TO_REGISTRIES` is `true`. Local `npm publish` is forbidden; see [GitHub secrets](#github-secrets-optional-registry-publish).
+
+User guide (`docs/typescript.md`) is still deferred. Package notes: [bindings/typescript](https://github.com/edgesentry/ontographia/tree/main/bindings/typescript).
+
 ## Artifacts
 
 | Artifact | Contents |
 |----------|----------|
 | `ontographia-{version}-{target}.tar.gz` | CLI binary `otg`, plus a copy named `ontographia` so the current tap formula keeps installing. `--version` prints `otg`. Drop the copy after the tap installs `otg` |
-| `libontographia_ffi-{version}-{target}.tar.gz` | Shared library for Go/cgo (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`) |
+| `libontographia_ffi-{version}-{target}.tar.gz` | Shared library for Go/cgo (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`). The npm job consumes these same archives |
 | `ontographia-{version}-*.whl` | Python package (Linux x86_64/arm64, macOS arm64, Windows x86_64 × Python 3.11–3.13) |
+| `edgesentry-ontographia-{version}.tgz` | npm package `@edgesentry/ontographia` (loader + `optionalDependencies` on the platform packages) |
+| `edgesentry-ontographia-<platform>-{version}.tgz` | Prebuilt `libontographia_ffi` for `linux-x64`, `linux-arm64`, `darwin-arm64`, `win32-x64` |
 
 ## Related
 

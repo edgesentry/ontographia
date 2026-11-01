@@ -244,3 +244,6 @@ jobs:
         env:
           LD_LIBRARY_PATH: ${{ github.workspace }}/target/release
         run: npm run demo
+      - name: Pack npm tarball for this platform
+        if: matrix.node-version == '22'
+        run: node scripts/package-npm.mjs --local --skip-build --out "${{ runner.temp }}/ontographia-npm"

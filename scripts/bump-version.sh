@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Bump the single source of truth: Cargo.toml [workspace.package].version
 # Python reads the same version via maturin (pyproject.toml dynamic = ["version"]).
+# bindings/typescript/package.json is kept equal so npm packs match the workspace.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -10,7 +11,7 @@ usage() {
   cat <<'EOF'
 Usage: scripts/bump-version.sh <X.Y.Z> [options]
 
-Updates [workspace.package].version in Cargo.toml (the only version file).
+Updates [workspace.package].version in Cargo.toml and bindings/typescript/package.json.
 
 Options:
   --commit    Stage Cargo.toml and create commit "chore: release vX.Y.Z"
@@ -64,6 +65,33 @@ if [[ ! "$NEW" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ 
   exit 1
 fi
 
+sync_npm_package_version() {
+  local file="bindings/typescript/package.json"
+  local tmp
+  tmp="$(mktemp)"
+  if ! awk -v new="$NEW" '
+    !done && /^  "version": "/ {
+      comma = ($0 ~ /,$/) ? "," : ""
+      print "  \"version\": \"" new "\"" comma
+      done = 1
+      next
+    }
+    { print }
+    END { if (!done) exit 2 }
+  ' "$file" > "$tmp"; then
+    echo "failed to update ${file}" >&2
+    rm -f "$tmp"
+    exit 1
+  fi
+  if ! cmp -s "$file" "$tmp"; then
+    mv "$tmp" "$file"
+    echo "bumped ${file} -> ${NEW}"
+  else
+    rm -f "$tmp"
+    echo "${file} already ${NEW}"
+  fi
+}
+
 CURRENT="$(bash scripts/workspace-version.sh)"
 if [[ "$CURRENT" == "$NEW" ]]; then
   echo "workspace version already $NEW"
@@ -85,13 +113,17 @@ else
   echo "bumped workspace version: $CURRENT -> $NEW"
 fi
 
+sync_npm_package_version
+
 if [[ "$DO_TEST" -eq 1 ]]; then
   cargo test --workspace
 fi
 
 if [[ "$DO_COMMIT" -eq 1 ]]; then
-  if ! git diff --quiet Cargo.toml; then
-    git add Cargo.toml
+  git add Cargo.toml bindings/typescript/package.json
+  if git diff --cached --quiet; then
+    echo "nothing to commit"
+  else
     git commit -m "chore: release v${NEW}"
   fi
 fi
