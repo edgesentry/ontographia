@@ -1,6 +1,6 @@
 {
   "name": "@edgesentry/ontographia",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "TypeScript and JavaScript bindings for Ontographia. Loads a prebuilt libontographia_ffi with koffi. Does not reimplement query logic.",
   "license": "Apache-2.0",
   "type": "module",
