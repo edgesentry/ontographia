@@ -1,12 +1,17 @@
 #!/usr/bin/env node
-// Confirm npm Trusted Publishing for the five Release packages.
+// Confirm the five Release packages are on the npm registry.
 // Does not publish. Does not read NPM_TOKEN.
 //
-// Listing publishers is not public. GET /-/package/{package}/trust returns
-// 401 unless you send a bearer token for a user with write access. Accounts
-// with 2FA also need the npm-otp header. See docs/release.md.
+// GitHub Actions (GITHUB_ACTIONS=true) and any run without NPM_TRUST_TOKEN
+// only read the public package document. They do not call
+// GET /-/package/{package}/trust. That GET needs a granular write token and
+// often npm-otp. Do not store that token in Actions.
 //
+// Outside Actions, NPM_TRUST_TOKEN opts into the publisher check:
 //   NPM_TRUST_TOKEN=... node scripts/check-npm-trusted-publishers.mjs
+//
+// Operators confirm Trusted Publishing locally after npm login:
+//   npm trust list @edgesentry/ontographia --json
 
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -28,21 +33,25 @@ export const PACKAGES = [
   "@edgesentry/ontographia-win32-x64",
 ];
 
-export const FIX_STEPS = `npm does not publish Trusted Publisher settings.
-GET /-/package/{package}/trust on registry.npmjs.org returns HTTP 401
-{"message":"Bearer token authorization is required"} with no Authorization header.
-The npm registry API requires a user with write access to the package.
-Accounts with 2FA must also send the npm-otp header. This check does not publish.
-It does not read NPM_TOKEN. scripts/publish-npm.sh exits when NPM_TOKEN or a real
-NODE_AUTH_TOKEN is set, so a granular token cannot be used to publish from Actions.
+export const LOCAL_VERIFY_STEPS = `CI does not call GET /-/package/{package}/trust.
+Release check does not read NPM_TRUST_TOKEN. Do not store a granular token, a
+Bypass-2fa token, or NPM_TOKEN in GitHub Actions. npm publish uses Trusted
+Publishing (OIDC) only in the Release job publish-npm.
 
-Expected GitHub Actions publisher on each package:
-  Organization or user: edgesentry
-  Repository: ontographia
-  Workflow filename: release.yml
-  Environment name: empty
-  Allow npm publish: on (permissions includes createPackage)
+Confirm locally after npm login:
+  npm trust list @edgesentry/ontographia --json
+  npm trust list @edgesentry/ontographia-linux-x64 --json
+  npm trust list @edgesentry/ontographia-linux-arm64 --json
+  npm trust list @edgesentry/ontographia-darwin-arm64 --json
+  npm trust list @edgesentry/ontographia-win32-x64 --json
 
+Expected on each package: type github, repository edgesentry/ontographia,
+workflow filename release.yml, empty environment, and createPackage
+(Allow npm publish on).
+`;
+
+export const FIX_STEPS = `${LOCAL_VERIFY_STEPS}
+Access pages, if a publisher is missing or does not allow npm publish:
   @edgesentry/ontographia
     https://www.npmjs.com/package/@edgesentry/ontographia/access
   @edgesentry/ontographia-linux-x64
@@ -54,24 +63,17 @@ Expected GitHub Actions publisher on each package:
   @edgesentry/ontographia-win32-x64
     https://www.npmjs.com/package/@edgesentry/ontographia-win32-x64/access
 
-Fix:
-  1. On each access page, open Settings → Trusted publishing and save that
-     connection. createStagedPackage alone is not enough: turn Allow npm publish
-     on. A publisher created after 2026-09-03 allows npm stage publish until you
-     also allow direct npm publish. Do not upload a Release tarball and do not
-     run scripts/publish-npm.sh.
-  2. So this check can read the setting, create a granular access token that can
-     call GET /-/package/{package}/trust and store it as the repository secret
-     NPM_TRUST_TOKEN. Do not name that secret NPM_TOKEN. Do not add it to the
-     publish-npm job. Locally:
-       NPM_TRUST_TOKEN=... node scripts/check-npm-trusted-publishers.mjs
-  3. If the response is an npm-otp / 2FA challenge, a stored Actions token cannot
-     finish it. After npm login on your machine, run:
-       npm trust list @edgesentry/ontographia --json
-     and the same command for the other four packages. Confirm type github,
-     repository edgesentry/ontographia, file release.yml, no environment, and
-     createPackage. A one-time code is only for that local run:
-       NPM_TRUST_TOKEN=... NPM_TRUST_OTP=123456 node scripts/check-npm-trusted-publishers.mjs
+On each access page, open Settings → Trusted publishing and save that
+connection. createStagedPackage alone is not enough: turn Allow npm publish
+on. A publisher created after 2026-09-03 allows npm stage publish until you
+also allow direct npm publish. Do not upload a Release tarball and do not
+run scripts/publish-npm.sh.
+
+Optional local read of the trust API, outside GitHub Actions. A stored
+Actions token cannot answer an npm-otp challenge. Do not put this token in
+the Release or Release check workflow.
+  NPM_TRUST_TOKEN=... node scripts/check-npm-trusted-publishers.mjs
+  NPM_TRUST_TOKEN=... NPM_TRUST_OTP=123456 node scripts/check-npm-trusted-publishers.mjs
 `;
 
 function isGithub(config) {
@@ -187,12 +189,19 @@ export function evaluatePublishers(configs) {
   return { ok: true, detail: describeConfig(allowed[0]) };
 }
 
+// Authenticated trust reads are local-only. Actions always skips them, even
+// when NPM_TRUST_TOKEN is present, so a 401/403/OTP cannot fail Release check.
+export function readsTrustedPublishers(env = process.env) {
+  if (String(env.GITHUB_ACTIONS || "") === "true") return false;
+  return Boolean(String(env.NPM_TRUST_TOKEN || "").trim());
+}
+
 export function credentialProblem(env = process.env) {
   if (env.NPM_TOKEN) {
     return (
       "error: NPM_TOKEN is set.\n" +
       "This check does not publish and does not read NPM_TOKEN.\n" +
-      "Unset NPM_TOKEN. Use NPM_TRUST_TOKEN to read GET /-/package/{package}/trust.\n" +
+      "Unset NPM_TOKEN. npm publish uses GitHub Actions OIDC in the Release job.\n" +
       "scripts/publish-npm.sh exits when NPM_TOKEN is set, including on the Release job."
     );
   }
@@ -202,7 +211,7 @@ export function credentialProblem(env = process.env) {
       "error: NODE_AUTH_TOKEN is set.\n" +
       "This check does not publish. Unset NODE_AUTH_TOKEN.\n" +
       "The setup-node placeholder (XXXXX-XXXXX-XXXXX-XXXXX) is ignored. A real token is not.\n" +
-      "Use NPM_TRUST_TOKEN to read trusted publisher settings."
+      "GitHub Actions does not read trusted publisher settings. Locally, use npm trust list."
     );
   }
   return "";
@@ -268,6 +277,15 @@ function isDirectRun() {
   return import.meta.url === pathToFileURL(resolve(entry)).href;
 }
 
+function warnSkippedTrust(env = process.env) {
+  console.error(LOCAL_VERIFY_STEPS.trimEnd());
+  if (String(env.GITHUB_ACTIONS || "") === "true" && String(env.NPM_TRUST_TOKEN || "").trim()) {
+    console.error(
+      "warning: NPM_TRUST_TOKEN is set and ignored in GitHub Actions. Do not store a trust token in Actions.",
+    );
+  }
+}
+
 async function main() {
   const blocked = credentialProblem();
   if (blocked) {
@@ -275,10 +293,10 @@ async function main() {
     process.exit(1);
   }
 
-  const token = (process.env.NPM_TRUST_TOKEN || "").trim();
-  const otp = (process.env.NPM_TRUST_OTP || "").trim();
+  const readTrust = readsTrustedPublishers();
+  const token = readTrust ? (process.env.NPM_TRUST_TOKEN || "").trim() : "";
+  const otp = readTrust ? (process.env.NPM_TRUST_OTP || "").trim() : "";
   const failures = [];
-  let sawAuthRequired = false;
   let sawOtp = false;
 
   for (const name of PACKAGES) {
@@ -308,6 +326,8 @@ async function main() {
     const latest = latestVersion(doc.body);
     console.log(`${name} is on the registry${latest ? ` (latest ${latest})` : ""}`);
 
+    if (!readTrust) continue;
+
     const trustUrl = `${REGISTRY}/-/package/${encoded}/trust`;
     let trust;
     try {
@@ -319,14 +339,6 @@ async function main() {
       continue;
     }
     if (isAuthStatus(trust.status)) {
-      if (isOtpChallenge(trust.status, trust.text)) sawOtp = true;
-      else sawAuthRequired = true;
-      if (!token && !otp) {
-        failures.push(
-          `${name}: GET /-/package/${encoded}/trust returned HTTP ${trust.status} (${bodyMessage(trust.body, trust.text)}). Auth is required; the list is not public.`,
-        );
-        continue;
-      }
       try {
         trust = await getJson(trustUrl, authHeaders(token, otp));
       } catch (err) {
@@ -339,12 +351,11 @@ async function main() {
     if (isOtpChallenge(trust.status, trust.text)) {
       sawOtp = true;
       failures.push(
-        `${name}: npm asked for npm-otp (HTTP ${trust.status}: ${bodyMessage(trust.body, trust.text)}). A stored Actions token cannot complete an interactive 2FA challenge.`,
+        `${name}: npm asked for npm-otp (HTTP ${trust.status}: ${bodyMessage(trust.body, trust.text)}). A stored token cannot complete an interactive 2FA challenge. Run npm trust list locally.`,
       );
       continue;
     }
     if (isAuthStatus(trust.status)) {
-      sawAuthRequired = true;
       failures.push(
         `${name}: GET /-/package/${encoded}/trust returned HTTP ${trust.status} (${bodyMessage(trust.body, trust.text)}).`,
       );
@@ -368,6 +379,17 @@ async function main() {
     console.log(`trusted publisher ok: ${name} ${decision.detail}`);
   }
 
+  if (!readTrust) {
+    if (failures.length > 0) {
+      console.error("error: npm package presence check failed.");
+      for (const failure of failures) console.error(`  - ${failure}`);
+      process.exit(1);
+    }
+    warnSkippedTrust();
+    console.log("npm packages on registry; trusted publisher settings were not read");
+    return;
+  }
+
   if (failures.length > 0) {
     console.error("error: npm Trusted Publisher check failed.");
     for (const failure of failures) console.error(`  - ${failure}`);
@@ -375,11 +397,7 @@ async function main() {
     console.error(FIX_STEPS);
     if (sawOtp) {
       console.error(
-        "This run hit an npm-otp challenge. Release check cannot prompt for a code. Use step 3 locally.",
-      );
-    } else if (sawAuthRequired && !token) {
-      console.error(
-        "NPM_TRUST_TOKEN is unset, so Release check cannot see the publisher. The public package document does not include it.",
+        "This run hit an npm-otp challenge. Release check cannot prompt for a code. Use npm trust list locally.",
       );
     }
     process.exit(1);

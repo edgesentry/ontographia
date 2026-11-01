@@ -42,7 +42,7 @@ Both workflows share the same internal validation (`scripts/preflight-release.sh
    - `release version ok`
    - `release workflow ok: .github/workflows/release.yml name=Release job=publish-npm`
    - `registry reachability ok` (read-only npm, crates.io, and PyPI)
-   - `npm trusted publishers ok` for `@edgesentry/ontographia` and the four platform packages
+   - each of `@edgesentry/ontographia` and the four platform packages `is on the registry`, then `npm packages on registry; trusted publisher settings were not read`
    - `npm pack dry-run ok` (stub FFI archives; four platform `optionalDependencies`; no publish)
    - `tag vX.Y.Z is available`
    - `release check ok` (tests, `cargo publish --dry-run` for `ontographia-core`, wheels)
@@ -50,11 +50,23 @@ Both workflows share the same internal validation (`scripts/preflight-release.sh
 
 No tag or GitHub Release is created. Nothing is published.
 
-The publisher check runs **before** the immutable-tag check. While `Cargo.toml` is still `0.1.7`, a run that gets past the publisher check still packs the npm tarballs, then stops with `tag already exists` and does not build wheels. A green run waits until `Cargo.toml` is a version whose tag is free.
+The npm package check runs **before** the immutable-tag check. A version whose tag already exists still confirms the five packages are on the registry and packs the npm tarballs, then stops with `tag already exists` and does not build wheels. A green run waits until `Cargo.toml` is a version whose tag is free.
 
-Trusted publisher **settings are not on the public package document**. `GET /-/package/{package}/trust` returns HTTP 401 `Bearer token authorization is required` until you send a bearer token for a user with write access. Accounts with 2FA must also send `npm-otp`. The check never reads `NPM_TOKEN`.
+Release check confirms those five packages from the **public** registry document. It does not call `GET /-/package/{package}/trust` and it does not read `NPM_TRUST_TOKEN`. That GET needs a granular token with write access and, when the account has 2FA, an `npm-otp` header. npm warns against Bypass-2fa and publish-and-stage tokens and prefers Trusted Publishing. Do not add `NPM_TRUST_TOKEN`, a Bypass-2fa token, or `NPM_TOKEN` to GitHub Actions. `publish-npm` stays on Trusted Publishing (OIDC) only.
 
-Add a repository secret named **`NPM_TRUST_TOKEN`** (a granular token that can call that GET). Do not name it `NPM_TOKEN`, and do not put it on the `publish-npm` job. If the secret is unset, the run stops after the registry pings and prints the five access-page fields (GitHub Actions, `edgesentry` / `ontographia`, workflow filename `release.yml`, empty environment, **Allow npm publish**). A stored token cannot answer an interactive `npm-otp` challenge; the log says to run `npm trust list <package> --json` locally. That failure is what you want to clear before tagging `0.1.8` if win32 or the main package still has no publisher that allows `npm publish`.
+Confirm the publishers yourself after `npm login`:
+
+```bash
+npm trust list @edgesentry/ontographia --json
+npm trust list @edgesentry/ontographia-linux-x64 --json
+npm trust list @edgesentry/ontographia-linux-arm64 --json
+npm trust list @edgesentry/ontographia-darwin-arm64 --json
+npm trust list @edgesentry/ontographia-win32-x64 --json
+```
+
+Each record should be GitHub Actions on `edgesentry/ontographia`, workflow filename `release.yml`, an empty environment, and `createPackage` (**Allow npm publish** on). Do this before the next Release if win32 or the main package might still be missing that publisher. Release check prints the same commands as a warning. A missing trust token does not fail the job.
+
+An optional local read of the same API, outside Actions, is `NPM_TRUST_TOKEN=... node scripts/check-npm-trusted-publishers.mjs`. If npm asks for a one-time code, use `npm trust list`, or set `NPM_TRUST_OTP` for that local process only. GitHub Actions ignores `NPM_TRUST_TOKEN`.
 
 ### Release (publish)
 
@@ -109,7 +121,7 @@ bash scripts/verify-tag-not-exists.sh "v${VERSION}"
 bash scripts/release-check.sh
 ```
 
-(`preflight-release.sh` runs these using the workspace version. `NPM_TRUST_TOKEN`, when set, is read only by the trusted-publisher check.)
+(`preflight-release.sh` runs these using the workspace version. In GitHub Actions, `check-npm-trusted-publishers.mjs` only checks that the five packages exist. It reads publisher settings only when `NPM_TRUST_TOKEN` is set outside Actions.)
 
 ### Trigger Release only (skip local preflight)
 
@@ -186,7 +198,7 @@ A trusted publisher created after 2026-09-03 allows `npm stage publish` until yo
 
 A new connection must complete its first successful publish within **2 days** or it expires. Save it when you are about to run Release, and run Release inside that window. An expired connection is deleted and created again; it cannot be edited.
 
-**npm publish is allowed only in the Release job `publish-npm`.** `scripts/publish-npm.sh` exits before it talks to the registry unless `GITHUB_ACTIONS=true`, `GITHUB_WORKFLOW=Release`, and `GITHUB_JOB=publish-npm`, and unless the OIDC request variables from `id-token: write` are present. `bindings/typescript` sets `prepublishOnly` so `npm publish` in that directory fails. Packing (`scripts/package-npm.mjs` / `npm pack`, including `scripts/package-npm-dry-run.mjs` in preflight) does not upload. Preflight also refuses a `release.yml` whose name is not **Release**, whose publish job id is not `publish-npm`, or whose `upload-assets` job has no checkout and no `GH_REPO`. Those are the OIDC and `gh release upload` invariants. `scripts/check-npm-trusted-publishers.mjs` reads the five publisher records before any publish job; it does not publish.
+**npm publish is allowed only in the Release job `publish-npm`.** `scripts/publish-npm.sh` exits before it talks to the registry unless `GITHUB_ACTIONS=true`, `GITHUB_WORKFLOW=Release`, and `GITHUB_JOB=publish-npm`, and unless the OIDC request variables from `id-token: write` are present. `bindings/typescript` sets `prepublishOnly` so `npm publish` in that directory fails. Packing (`scripts/package-npm.mjs` / `npm pack`, including `scripts/package-npm-dry-run.mjs` in preflight) does not upload. Preflight also refuses a `release.yml` whose name is not **Release**, whose publish job id is not `publish-npm`, or whose `upload-assets` job has no checkout and no `GH_REPO`. Those are the OIDC and `gh release upload` invariants. `scripts/check-npm-trusted-publishers.mjs` confirms the five packages exist before any publish job. In GitHub Actions it does not call the authenticated trust API and it does not publish. Confirm publishers locally with `npm trust list`.
 
 ### Re-running a failed Release
 

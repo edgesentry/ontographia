@@ -2,12 +2,13 @@
 # Pre-release validation. Version defaults to [workspace.package] in Cargo.toml.
 # Used by Release check, Release preflight, and local CLI. See docs/release.md.
 #
-# Order: version, release.yml invariants, registry reachability, npm Trusted
-# Publisher settings, npm pack dry-run, then tag availability, then
+# Order: version, release.yml invariants, registry reachability, public npm
+# package presence, npm pack dry-run, then tag availability, then
 # scripts/release-check.sh (tests, cargo publish --dry-run, wheels).
-# The publisher check runs before the immutable-tag check so a run on a
-# version that already shipped still reports the five npm publishers.
-# Nothing here publishes. NPM_TRUST_TOKEN is not NPM_TOKEN.
+# The package check runs before the immutable-tag check so a run on a
+# version that already shipped still reports whether the five packages exist.
+# Nothing here publishes. GitHub Actions does not read NPM_TRUST_TOKEN.
+# Outside Actions, a local NPM_TRUST_TOKEN opts into the publisher list.
 set -euo pipefail
 
 VERSION="${1:-}"
