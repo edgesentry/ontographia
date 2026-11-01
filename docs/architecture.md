@@ -220,7 +220,7 @@ The core must stay **LLM-agnostic and driver-agnostic**: same `Engine::build` fo
 |---------|----------------|
 | LLM API calls / Intent extraction | Optional Python extra [`ontographia.llm`](llm.md) (`pip install "ontographia[llm]"`), agent skills |
 | Ontology subset for Intent prompts | `ontographia.llm.subset` ([issue #45](https://github.com/edgesentry/ontographia/issues/45)) |
-| Neo4j driver / execution | `examples/run_neo4j_demo.py`, `run_llm_e2e.py`, user applications (not part of the `llm` extra) |
+| Neo4j driver / execution | Rust `otg execute` (`crates/ontographia-cli`, read-only), `examples/run_neo4j_demo.py`, `run_llm_e2e.py`, user applications (not part of the `llm` extra, and not inside `Engine::build`) |
 | Execution → Intent refinement | `ontographia.llm` + `--refine-on-exec` ([issue #46](https://github.com/edgesentry/ontographia/issues/46)) |
 | Intent-layer evaluation harnesses | [`examples/llm/eval/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/eval/) — [evaluation.md](evaluation.md) |
 | RDF reasoning / OWL entailment | Out of scope — adapters extract asserted schema only |

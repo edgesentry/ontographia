@@ -83,7 +83,7 @@ otg build --help
 otg schema --help
 ```
 
-`otg --version` prints `otg` and the formula version. This binary has `build` and `schema`. Read-only `execute` is still the Python entry point ([#121](https://github.com/edgesentry/ontographia/issues/121)).
+`otg --version` prints `otg` and the formula version. This published binary has `build` and `schema`. It does not compile the unreleased commit. Read-only `execute` is in this tree's Rust `otg` ([#136](https://github.com/edgesentry/ontographia/issues/136)). Homebrew serves that binary after the next release and a tap update. Until then, the published-artifact execute check is the Python entry point below.
 
 **npm, darwin-arm64 optional dependency.** Release check packs stub libraries on Linux. It does not load `libontographia_ffi.dylib`. On the Mac, install the published package in a clean directory. npm selects `@edgesentry/ontographia-darwin-arm64` and the dylib sits at the package root (`main` is `./libontographia_ffi.dylib`).
 
@@ -114,7 +114,7 @@ uvx --from "ontographia[cli]" otg build \
   --intent "$REPO/examples/sample_intent.json"
 ```
 
-**Neo4j execute, when a server is reachable.** Homebrew `otg` has no `execute` subcommand. Use the Python entry point. The movies demo needs no local database (login published by Neo4j; see [otg CLI](otg.md)):
+**Neo4j execute, when a server is reachable.** A missing server is a skip. The published Homebrew `otg` (v0.1.8) has no `execute` subcommand, so the check of the already published wheel is the Python entry point. This tree's Rust `otg` accepts the same flags and runs when Neo4j is available; `brew upgrade` does not install that binary until the next release and tap update. The movies demo needs no local database (login published by Neo4j; see [otg CLI](otg.md)):
 
 ```bash
 REPO="${HOME}/agent-work/ontographia"   # this checkout
@@ -127,7 +127,7 @@ uvx --from "ontographia[cli]" otg execute \
   --neo4j-database movies
 ```
 
-A local Neo4j (`./scripts/start_neo4j.sh --seed`, then the manufacturing intent in [End-to-end Neo4j](end-to-end-neo4j.md)) is the same check. If neither server answers, record "Neo4j execute skipped" and continue.
+To smoke this checkout's binary (not part of the published-artifact check): `cargo build -p ontographia-cli` in `$REPO`, then run `target/debug/otg execute` with the same flags. A local Neo4j (`./scripts/start_neo4j.sh --seed`, then the manufacturing intent in [End-to-end Neo4j](end-to-end-neo4j.md)) is the same check. If neither server answers, record "Neo4j execute skipped" and continue.
 
 **Go, against the Release dylib.** `go get` does not ship `libontographia_ffi`. Download `libontographia_ffi-<version>-macos-arm64.tar.gz` from the latest [GitHub Release](https://github.com/edgesentry/ontographia/releases).
 
@@ -344,7 +344,7 @@ If a Release run fails partway through (for example after `ontographia-core` was
 
 | Channel | Role |
 |---------|------|
-| Homebrew `brew install ontographia` | Primary CLI. Rust binary. The published formula installs the command **`otg`** ([`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb), v0.1.8 archives). `build` and `schema` are in this binary. Read-only `execute` is still the Python entry point ([#121](https://github.com/edgesentry/ontographia/issues/121)) |
+| Homebrew `brew install ontographia` | Primary CLI. Rust binary. The published formula installs the command **`otg`** ([`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb), v0.1.8 archives: `build` and `schema`). This tree's `otg` also runs read-only Neo4j `execute` when Neo4j is available; the tap picks that up after the next release |
 | `pip` / `uvx` extras (`ontographia[cli]`, `[llm]`, `[mcp]`) | Python library and the Python `otg` entry point |
 | crates.io | Rust libraries and `cargo install ontographia-cli` |
 | Go module + `libontographia_ffi-*` on the GitHub Release | cgo bindings |
@@ -380,7 +380,9 @@ cargo install --path crates/ontographia-cli
 otg build --help
 ```
 
-Rust `otg` has `build` and `schema`. Read-only `execute` in that binary is [#121](https://github.com/edgesentry/ontographia/issues/121). Until it ships, shell execute is the Python entry point below.
+A checkout of this tree builds `otg` with `build`, `schema`, and read-only `execute` ([#136](https://github.com/edgesentry/ontographia/issues/136)). `execute` runs when Neo4j is available. crates.io 0.1.8 and the published tap archive are still `build` and `schema`. The Python entry point below is how pip and uvx install `otg`, including `execute`.
+
+The Mac workstation smoke is [above](#mac-workstation). `brew upgrade` and `npm install` exercise the already published artifacts. They do not compile this unreleased commit. After the next release and tap update, that Homebrew `otg` is the binary that includes `execute`.
 
 ### Rust libraries
 

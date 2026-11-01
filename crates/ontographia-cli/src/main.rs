@@ -3,13 +3,17 @@
 //! because the current tap formula looks up that filename. The compiled
 //! command name is `otg`.
 //!
-//! Subcommands today: `build` and `schema`. Read-only Neo4j `execute` is the
-//! follow-up tracked in the packaging decision: Intent-only input, generated
-//! Cypher only, write clauses rejected before a driver runs (same rule as
-//! `python/ontographia/cli.py`). Until that subcommand exists, `execute` is
-//! the Python entry point (`ontographia[cli]`).
+//! Subcommands: `build`, `schema`, and read-only Neo4j `execute`.
+//! `execute` accepts Intent JSON only. Write clauses and variable-length hop
+//! ranges are rejected before a driver runs (same rules as
+//! `python/ontographia/cli.py`). The Python entry point (`ontographia[cli]`)
+//! remains for pip and uvx.
 
 mod commands;
+mod neo4j;
+mod output;
+mod read_only;
+mod safety;
 
 use clap::{Parser, Subcommand};
 use std::process;
@@ -31,16 +35,30 @@ enum Commands {
     Build(commands::build::BuildArgs),
     /// Emit Neo4j schema artifacts (constraints, schema.json) from an ontology
     Schema(commands::schema::SchemaArgs),
+    /// Compile Intent JSON and run it read-only against Neo4j
+    Execute(commands::execute::ExecuteArgs),
 }
 
 fn main() {
     let cli = Cli::parse();
-    let result = match cli.command {
-        Commands::Build(args) => commands::build::run(args),
-        Commands::Schema(args) => commands::schema::run(args),
-    };
-    if let Err(err) = result {
-        eprintln!("error: {err}");
-        process::exit(1);
+    match cli.command {
+        Commands::Execute(args) => {
+            if let Err(err) = commands::execute::run(args) {
+                eprintln!("otg: {err}");
+                process::exit(err.code);
+            }
+        }
+        Commands::Build(args) => {
+            if let Err(err) = commands::build::run(args) {
+                eprintln!("error: {err}");
+                process::exit(1);
+            }
+        }
+        Commands::Schema(args) => {
+            if let Err(err) = commands::schema::run(args) {
+                eprintln!("error: {err}");
+                process::exit(1);
+            }
+        }
     }
 }

@@ -2,7 +2,7 @@
 
 **Status: experimental / 0.x.** `otg` loads an ontology, compiles **Intent JSON** with the Rust `Engine`, and can run the query **read-only** against Neo4j.
 
-The model never writes Cypher. `otg` does not call an LLM. Execution on the Python entry point reuses the MCP read-only path (`python/ontographia/mcp/read_only.py`, `safety.py`, `execute.py`): Intent-only input, `READ_ACCESS` / `execute_read`, and the write-clause deny list.
+The model never writes Cypher. `otg` does not call an LLM. Read-only execution accepts Intent JSON only. The Rust binary and the Python entry point use the same rules: one hop per traverse step, a Bolt read-mode session, and the write-clause deny list. Python implements that in `python/ontographia/mcp/read_only.py`, `safety.py`, and `execute.py` (`READ_ACCESS` / `execute_read`). The Rust binary implements it in `crates/ontographia-cli` and opens the driver only after those checks pass.
 
 Packaging decision: [#121](https://github.com/edgesentry/ontographia/issues/121).
 
@@ -12,7 +12,7 @@ Homebrew is the front door for the CLI. Language package managers are the front 
 
 | Channel | Install | What you get |
 |---------|---------|----------------|
-| Homebrew (primary CLI) | `brew tap edgesentry/tap` then `brew install ontographia` | Rust binary. The command is **`otg`**. Read-only Neo4j execute belongs in this binary. Formula: [`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb) |
+| Homebrew (primary CLI) | `brew tap edgesentry/tap` then `brew install ontographia` | Rust binary. The command is **`otg`**. The published v0.1.8 archive has `build` and `schema`. This tree's `otg` also runs read-only `execute` when Neo4j is available; the tap picks that up after the next release. Formula: [`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb) |
 | Python | `uvx --from "ontographia[cli]" otg` or `pip install "ontographia[cli]"` | Library extra and the same `otg` entry point. This is how you call Ontographia from Python. It is the library install, not the Homebrew install |
 | Rust crates | [crates.io](https://crates.io): `cargo install ontographia-cli`, `cargo add ontographia-core` (and `-adapters`, `-schema`) | Libraries and the CLI crate |
 | Go | `go get` the module; matching `libontographia_ffi-*` archive from [GitHub Releases](https://github.com/edgesentry/ontographia/releases) | cgo bindings. See [Go](go.md) |
@@ -24,7 +24,7 @@ The PyPI wheel is the pip / uvx artifact. Homebrew installs the Rust binary from
 
 [`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb) points at the **v0.1.8** archives (macOS arm64 and Linux x86_64) and installs the binary as `otg` (`build` and `schema`).
 
-Read-only `execute` is the Python console script from `ontographia[cli]`.
+This repository's Rust `otg` also includes read-only `execute`. Homebrew picks that up when the next CLI release is published and the tap formula is updated. Until that tap update, `brew install ontographia` is the v0.1.8 binary (`build` and `schema`). `pip install "ontographia[cli]"` / `uvx` remain the Python `otg`, which also executes.
 
 ```bash
 brew tap edgesentry/tap
@@ -41,15 +41,18 @@ The release tarball `ontographia-{version}-{target}.tar.gz` contains `otg` and a
 
 The release workflow does not edit the tap. After a new GitHub Release, a follow-up pull request to [`edgesentry/homebrew-tap`](https://github.com/edgesentry/homebrew-tap) points `Formula/ontographia.rb` at the new archive. The tap does not gain a second formula named `otg`. Before that Release, run the [pre-release checks](release.md#pre-release-checks) (GitHub Actions Release check, then the Mac smoke).
 
-`build` and `schema` are in the Rust binary. Read-only Neo4j `execute` in that binary is the remaining CLI work in [#121](https://github.com/edgesentry/ontographia/issues/121): Intent-only input, write queries rejected, same behavior as `python/ontographia/cli.py`. Until that subcommand ships, `otg execute` means the Python script below.
+`build`, `schema`, and read-only `execute` are in the Rust binary ([#136](https://github.com/edgesentry/ontographia/issues/136)). `execute` takes Intent JSON only, rejects write queries, and uses the same hop rule as `python/ontographia/cli.py`. It connects when Neo4j is available (`NEO4J_URI`, `NEO4J_USERNAME` or `NEO4J_USER`, and `NEO4J_PASSWORD`, or the matching flags).
 
 ```bash
 cargo install --path crates/ontographia-cli
 otg build --help
 otg schema --help
+otg execute --help
 ```
 
-`uv run otg` in a checkout (after `maturin develop`) is the Python script, which has `execute`. The Cargo install is `build` and `schema`. When both are on `PATH`, the one earlier in `PATH` is the `otg` you run.
+`cargo install ontographia-cli` from crates.io (0.1.8) installs `otg` with `build` and `schema`. A checkout of this tree installs `otg`, including `execute`.
+
+`uv run otg` in a checkout (after `maturin develop`) is the Python script, which also has `execute`. When both are on `PATH`, the one earlier in `PATH` is the `otg` you run.
 
 ## Python entry point
 
@@ -74,7 +77,7 @@ uv run otg --help
 
 ## Movies quickstart
 
-These commands use the **Python** entry point. `execute` is not a Rust subcommand yet.
+These commands work on the Rust binary and on the Python entry point. `execute` talks to Neo4j only when the database is reachable.
 
 Public Neo4j Labs movies demo at `neo4j+s://demo.neo4jlabs.com` (read-only). The login is published by Neo4j (`movies` / `movies` on database `movies`). It is not an Ontographia secret; do not commit other passwords.
 
@@ -120,25 +123,23 @@ Manufacturing walkthrough (local Neo4j, seed data): [End-to-end Neo4j](end-to-en
 
 ## Commands
 
-| Command | Python `ontographia[cli]` | Rust binary (`otg`) |
-|---------|---------------------------|---------------------|
+| Command | Python `ontographia[cli]` | Rust binary (`otg`, Homebrew) |
+|---------|---------------------------|------------------------------|
 | `--help` | Subcommands and flags | Subcommands and flags. `--version` prints `otg` |
 | `build --ontology PATH --intent PATH` | Compile only. `--intent -` or a pipe reads stdin | Compile only |
-| `execute …` | Compile and run read-only | Follow-up in [#121](https://github.com/edgesentry/ontographia/issues/121) |
+| `execute …` | Compile and run read-only when Neo4j is available | Compile and run read-only when Neo4j is available |
 | `schema PATH` | — | Constraints and `schema.json` |
 
-Python `execute` needs `NEO4J_URI`, `NEO4J_USERNAME` or `NEO4J_USER`, and `NEO4J_PASSWORD` (or the matching flags). `--row-limit` (default 100, or `ONTOGRAPHIA_MCP_ROW_LIMIT`) caps both the driver fetch and the Cypher `LIMIT`. Each traverse step must be a single hop: omit `min_hops` and `max_hops`, or set both to `1`. Any wider range is rejected with `hop_range_rejected` and is not sent to Neo4j (same rule as the MCP `execute` tool). Exit `2` means usage or missing Neo4j settings. Exit `1` means the Intent failed validation, the hop range was rejected, the generated Cypher was rejected as a write, or Neo4j returned an error.
+`execute` on either binary needs `NEO4J_URI`, `NEO4J_USERNAME` or `NEO4J_USER`, and `NEO4J_PASSWORD` (or the matching flags). `--row-limit` (default 100, or `ONTOGRAPHIA_MCP_ROW_LIMIT`) caps both the driver fetch and the Cypher `LIMIT`. Each traverse step must be a single hop: omit `min_hops` and `max_hops`, or set both to `1`. Any wider range is rejected with `hop_range_rejected` and is not sent to Neo4j (same rule as the MCP `execute` tool). Exit `2` means usage or missing Neo4j settings. Exit `1` means the Intent failed validation, the hop range was rejected, the generated Cypher was rejected as a write, or Neo4j returned an error. The Rust text table sorts column names. The Python table keeps Cypher return order.
 
 ## Write queries
 
-The Python entry point never accepts raw Cypher. A file shaped like `{"query": "CREATE …"}` is an invalid Intent and is not sent to Neo4j. If compilation ever produced a write clause (`CREATE`, `MERGE`, `DELETE`, `SET`, …), execution stops with a read-only error and the driver is not asked to run it. The same deny list is covered by the MCP tests in CI.
-
-The Rust subcommand will use that same rule when it lands: Intent in, generated Cypher only, writes rejected before any driver call.
+Neither entry point accepts raw Cypher. A file shaped like `{"query": "CREATE …"}` is an invalid Intent and is not sent to Neo4j. If compilation ever produced a write clause (`CREATE`, `MERGE`, `DELETE`, `SET`, …), execution stops with a read-only error and the driver is not asked to run it. The same deny list is covered by the MCP tests and by the Rust CLI tests in CI.
 
 ## Related
 
 - [Python bindings](python.md)
 - [Rust](rust.md)
-- [MCP server](mcp.md) — same execute/safety code on the Python side; install with `uvx` or `pip install "ontographia[mcp]"`
+- [MCP server](mcp.md) — Python execute/safety code; install with `uvx` or `pip install "ontographia[mcp]"`. MCP is not part of the Homebrew binary
 - [Release](release.md#pre-release-checks) — Actions vs Mac checks before Release, archive layout, and the tap bump after a release
-- Issue [#117](https://github.com/edgesentry/ontographia/issues/117) (Python `otg`), [#121](https://github.com/edgesentry/ontographia/issues/121) (this packaging decision)
+- Issue [#117](https://github.com/edgesentry/ontographia/issues/117) (Python `otg`), [#121](https://github.com/edgesentry/ontographia/issues/121) (packaging), [#136](https://github.com/edgesentry/ontographia/issues/136) (Rust `execute`)

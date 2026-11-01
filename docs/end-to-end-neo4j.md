@@ -76,8 +76,8 @@ This walkthrough uses **released packages** — no Rust toolchain required for t
 |------|-----|
 | Neo4j **2025.06+** | [§1 Start Neo4j](#1-start-neo4j) |
 | Example files and helper scripts | `git clone https://github.com/edgesentry/ontographia.git` (build not required) |
-| Ontographia CLI or Python | `brew install ontographia` (Rust binary; the published formula's command is `otg` — [otg](otg.md)) or `pip install ontographia`. Read-only execute from the shell today: `pip install "ontographia[cli]"` |
-| Neo4j driver (Python execute path) | `pip install neo4j` |
+| Ontographia CLI or Python | `brew install ontographia` (Rust binary; the published formula's command is `otg` — [otg](otg.md)). The v0.1.8 archive has `build` and `schema`. This tree's `otg` runs read-only `execute` when Neo4j is available; Homebrew picks that up after the next release and tap update. `pip install "ontographia[cli]"` is the Python `otg`, which also executes |
+| Neo4j driver (Python execute path) | `pip install neo4j` (the Rust `otg` binary links its own Bolt driver) |
 
 Language-specific install details: [Rust](rust.md), [Python](python.md), [Go](go.md).
 
