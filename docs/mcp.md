@@ -14,8 +14,10 @@ uvx --from "ontographia[mcp]" ontographia-mcp --ontology /path/to/ontology.nativ
 Importing `ontographia` without the extra still works. Using the server API
 (`OntographiaMcp`, `create_mcp_server`, or `ontographia.mcp.server`) without
 the extra raises `ImportError` with install guidance. The read-only helpers
-(`safety`, `read_only`, `execute`) are shared with the [`otg`](otg.md) CLI and
-do not import the MCP SDK. Homebrew packages `otg` only — not `ontographia-mcp`.
+(`safety`, `read_only`, `execute`) are shared with the Python [`otg`](otg.md)
+entry point and do not import the MCP SDK. Install this server with `uvx` or
+`pip install "ontographia[mcp]"`. The Homebrew formula `ontographia` is the
+Rust CLI (`otg`); it does not install the MCP server.
 
 The server **does not call an LLM**. The MCP *client* (host app) is responsible
 for producing Intent JSON; Ontographia only validates, emits, and optionally

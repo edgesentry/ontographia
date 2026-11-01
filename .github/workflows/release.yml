@@ -136,10 +136,16 @@ jobs:
           VERSION="${RELEASE_TAG#v}"
           NAME="ontographia-${VERSION}-${{ matrix.artifact }}"
           mkdir -p "dist/${NAME}"
+          # `otg` is the binary Cargo builds and the Homebrew command name.
+          # `ontographia` is a copy of that file so the current tap formula,
+          # which looks up that filename, keeps installing. Drop the copy
+          # after the tap installs `otg` (issue #121). `--version` prints `otg`.
           if [[ "${{ runner.os }}" == "Windows" ]]; then
-            cp "target/${{ matrix.target }}/release/ontographia.exe" "dist/${NAME}/"
+            cp "target/${{ matrix.target }}/release/otg.exe" "dist/${NAME}/otg.exe"
+            cp "target/${{ matrix.target }}/release/otg.exe" "dist/${NAME}/ontographia.exe"
           else
-            cp "target/${{ matrix.target }}/release/ontographia" "dist/${NAME}/"
+            cp "target/${{ matrix.target }}/release/otg" "dist/${NAME}/otg"
+            cp "target/${{ matrix.target }}/release/otg" "dist/${NAME}/ontographia"
           fi
           tar -czf "dist/${NAME}.tar.gz" -C dist "${NAME}"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2

@@ -15,7 +15,7 @@ MANUFACTURING = EXAMPLES / "manufacturing.native.yaml"
 SAMPLE_INTENT = EXAMPLES / "sample_intent.json"
 MOVIES = EXAMPLES / "movies.native.yaml"
 MATRIX = EXAMPLES / "movies_matrix.json"
-FORMULA = ROOT / "packaging" / "homebrew" / "otg.rb"
+HOMEBREW_DIR = ROOT / "packaging" / "homebrew"
 
 
 def test_help_mentions_build_and_read_only_execute(capsys: pytest.CaptureFixture[str]) -> None:
@@ -203,12 +203,14 @@ def test_execute_rejects_raw_cypher_intent(
     assert "secret" not in err
 
 
-def test_homebrew_formula_is_otg_not_mcp() -> None:
-    text = FORMULA.read_text(encoding="utf-8")
-    assert "class Otg < Formula" in text
-    assert 'depends_on "uv"' in text
-    assert 'PYPI_SPEC = "ontographia[cli]"' in text
-    assert "ontographia-mcp" in text
-    assert "Do not bottle" in text
-    assert "not part of this formula" in text
-    assert "bin.install_symlink otg" in text
+def test_repo_does_not_ship_a_pypi_homebrew_formula() -> None:
+    """Homebrew installs the Rust binary from the tap, not a PyPI virtualenv."""
+    assert not (HOMEBREW_DIR / "otg.rb").exists()
+    assert list(HOMEBREW_DIR.glob("*.rb")) == []
+    note = (HOMEBREW_DIR / "README.md").read_text(encoding="utf-8")
+    assert "edgesentry/homebrew-tap" in note
+    assert "Formula/ontographia.rb" in note
+    assert "brew install ontographia" in note
+    assert "virtualenv" in note
+    assert "ontographia[cli]" not in note
+    assert "uv pip" not in note
