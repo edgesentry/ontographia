@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Publish tarballs from scripts/package-npm.mjs.
-# Platform packages first, then @edgesentry/ontographia.
-# Versions already on the registry are skipped so a Release re-run is safe.
+# Platform packages first (lexical tarball order), then @edgesentry/ontographia.
+# Versions already on the registry are skipped so a Release re-run is safe
+# when some packages at this version are already published.
+# One package failure does not stop the rest. The script then exits non-zero
+# and names every package that was neither skipped nor published.
 #
 # Forbidden on laptops, agent sandboxes, and every workflow except Release.
 # The Release job is also gated by PUBLISH_TO_REGISTRIES.
@@ -104,6 +107,9 @@ read_meta() {
   '
 }
 
+# Names that were not already on npm and whose publish command failed.
+failed=()
+
 publish_one() {
   local tgz="$1"
   local name="$2"
@@ -114,7 +120,12 @@ publish_one() {
   fi
   echo "Publishing ${name}@${version}"
   # OIDC auth. Provenance is generated for a public package from a public repo.
-  npm publish "$tgz" --access public
+  # `if` so set -e does not abort the remaining packages.
+  if npm publish "$tgz" --access public; then
+    return 0
+  fi
+  echo "error: failed to publish ${name}@${version}" >&2
+  failed+=("${name}@${version}")
 }
 
 main_name=""
@@ -163,5 +174,18 @@ for i in "${!platform_tgz[@]}"; do
   publish_one "${platform_tgz[$i]}" "${platform_names[$i]}" "${platform_versions[$i]}"
 done
 publish_one "$main_tgz" "$main_name" "$main_version"
+
+if [[ ${#failed[@]} -gt 0 ]]; then
+  echo "error: npm publish incomplete. These packages are not on the registry at this version:" >&2
+  for item in "${failed[@]}"; do
+    echo "  ${item}" >&2
+  done
+  cat >&2 <<'EOF'
+Already-published versions were skipped. The other tarballs were still attempted.
+ENEEDAUTH on one package means that package's Trusted Publisher is missing, expired, or does not allow npm publish. Each package needs its own connection, including @edgesentry/ontographia-win32-x64, with the same fields as the others (GitHub Actions, organization edgesentry, repository ontographia, workflow filename release.yml, empty environment, Allow npm publish on). os and cpu in the platform package.json are install filters; they are not why publish returned ENEEDAUTH.
+Re-run the failed publish-npm job after fixing that publisher. A new Release for the same version is refused once the tag exists. Do not bump the version and do not delete the tag.
+EOF
+  exit 1
+fi
 
 echo "npm publish ok"

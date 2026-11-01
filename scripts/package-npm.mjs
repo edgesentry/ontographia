@@ -196,6 +196,9 @@ function stagePlatform(spec, libPath, version, stageRoot) {
       directory: "bindings/typescript",
     },
     publishConfig: { access: "public" },
+    // Install filters for the optional dependency. They do not gate npm publish:
+    // the Linux Release runner publishes darwin and win32 the same way.
+    // ENEEDAUTH on one name is that package's Trusted Publisher. See docs/release.md.
     os: [spec.os],
     cpu: [spec.cpu],
     main: `./${spec.lib}`,
