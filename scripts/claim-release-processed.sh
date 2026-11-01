@@ -11,7 +11,10 @@ fi
 TAG="${TAG#v}"
 RELEASE_TAG="v${TAG}"
 CLAIM="release-processed/${RELEASE_TAG}"
-SHA="${GITHUB_SHA:-$(git rev-parse HEAD)}"
+# Tag the checked-out commit. The release workflow checks out vX.Y.Z first.
+# On a manual dispatch the commit that started the run can differ from the
+# main commit the release tag points at, so this script uses HEAD only.
+SHA="$(git rev-parse HEAD)"
 
 git config user.name "github-actions[bot]"
 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

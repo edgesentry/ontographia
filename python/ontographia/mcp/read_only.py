@@ -19,6 +19,53 @@ NEO4J_NOT_CONFIGURED = (
     "(optional NEO4J_DATABASE), or pass matching CLI flags."
 )
 
+# Read-only execution submits only a single relationship hop. A variable-length
+# quantifier (``*min..max``) is not capped by the row limit. Omitted bounds and
+# exactly 1..1 both compile to one hop; every other pair is rejected.
+EXECUTE_HOP_MIN = 1
+EXECUTE_HOP_MAX = 1
+
+
+class HopRangeRejected(ValueError):
+    """Raised when execute Intent asks for anything other than a single hop."""
+
+
+def assert_execute_hop_policy(intent: dict[str, Any]) -> None:
+    """Reject hop ranges that read-only execute will not submit to Neo4j.
+
+    Allowed on each traverse step:
+
+    * ``min_hops`` and ``max_hops`` both omitted or null
+    * both exactly the integer ``1``
+
+    Rejected: one side set, ``0``, ``min != max``, ``max > 1``, booleans, and
+    non-integers. ``build_cypher`` may still emit variable-length patterns for
+    offline inspection; this policy applies only when a query would be run.
+    """
+    traverse = intent.get("traverse") or []
+    if not isinstance(traverse, list):
+        return
+    for index, step in enumerate(traverse):
+        if not isinstance(step, dict):
+            continue
+        min_hops = step.get("min_hops")
+        max_hops = step.get("max_hops")
+        if min_hops is None and max_hops is None:
+            continue
+        if (
+            type(min_hops) is int
+            and type(max_hops) is int
+            and min_hops == EXECUTE_HOP_MIN
+            and max_hops == EXECUTE_HOP_MAX
+        ):
+            continue
+        raise HopRangeRejected(
+            f"traverse step {index} hop range {min_hops!r}..{max_hops!r} is not allowed "
+            "on execute. Only a single hop may be submitted to Neo4j: omit min_hops and "
+            "max_hops, or set both to 1. Variable-length patterns are not executed "
+            "(use build_cypher to inspect them offline)."
+        )
+
 
 def parse_intent(intent: dict[str, Any] | str) -> dict[str, Any]:
     """Accept an Intent object or a JSON object string."""
@@ -130,6 +177,12 @@ def execute_read_only(
     limit = clamp_row_limit(row_limit, configured_limit)
     try:
         bounded_intent = intent_with_server_limit(intent, server_limit=limit)
+        assert_execute_hop_policy(bounded_intent)
+    except HopRangeRejected as exc:
+        return {
+            "ok": False,
+            "errors": [{"message": str(exc), "code": "hop_range_rejected"}],
+        }
     except ValueError as exc:
         return {"ok": False, "errors": [{"message": str(exc)}]}
 

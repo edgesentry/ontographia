@@ -150,6 +150,9 @@ class OntographiaMcp:
         3. Generated query is deny-checked for write clauses before run.
         4. ``row_limit`` is clamped to the configured server maximum, and the
            Intent always gets a Cypher ``LIMIT`` of at most that maximum.
+        5. Each traverse step must be a single hop (omit ``min_hops`` and
+           ``max_hops``, or set both to 1). Any wider range is rejected with
+           ``hop_range_rejected`` before Neo4j is called.
         """
         return execute_read_only(
             build_cypher=self.build_cypher,
@@ -222,8 +225,10 @@ def create_mcp_server(
         description=(
             "Build Cypher from Intent JSON via Ontographia and run it read-only "
             "against Neo4j. Never accepts raw Cypher. Returns rows with a row "
-            "limit. Fails clearly if Neo4j is not configured or if the generated "
-            "query looks like a write."
+            "limit. Each traverse step must be a single hop (omit min_hops and "
+            "max_hops, or set both to 1). Fails clearly if Neo4j is not configured, "
+            "if the generated query looks like a write, or if a hop range is wider "
+            "than one hop."
         ),
     )
     def execute(

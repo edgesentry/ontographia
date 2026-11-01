@@ -128,7 +128,7 @@ Manufacturing walkthrough (local Neo4j, seed data): [End-to-end Neo4j](end-to-en
 | `execute …` | Compile and run read-only | Follow-up in [#121](https://github.com/edgesentry/ontographia/issues/121) |
 | `schema PATH` | — | Constraints and `schema.json` |
 
-Python `execute` needs `NEO4J_URI`, `NEO4J_USERNAME` or `NEO4J_USER`, and `NEO4J_PASSWORD` (or the matching flags). `--row-limit` (default 100, or `ONTOGRAPHIA_MCP_ROW_LIMIT`) caps both the driver fetch and the Cypher `LIMIT`. Exit `2` means usage or missing Neo4j settings. Exit `1` means the Intent failed validation, the generated Cypher was rejected as a write, or Neo4j returned an error.
+Python `execute` needs `NEO4J_URI`, `NEO4J_USERNAME` or `NEO4J_USER`, and `NEO4J_PASSWORD` (or the matching flags). `--row-limit` (default 100, or `ONTOGRAPHIA_MCP_ROW_LIMIT`) caps both the driver fetch and the Cypher `LIMIT`. Each traverse step must be a single hop: omit `min_hops` and `max_hops`, or set both to `1`. Any wider range is rejected with `hop_range_rejected` and is not sent to Neo4j (same rule as the MCP `execute` tool). Exit `2` means usage or missing Neo4j settings. Exit `1` means the Intent failed validation, the hop range was rejected, the generated Cypher was rejected as a write, or Neo4j returned an error.
 
 ## Write queries
 

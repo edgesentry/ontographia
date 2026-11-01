@@ -21,15 +21,19 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
+      # uv 0.13.6 checksums are in this action. Install the dev group from
+      # uv.lock (mkdocs-material 9.7.7 and its hashes). Do not pip-install a range.
+      - name: Install uv
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
         with:
-          python-version: "3.12"
+          version: "0.13.6"
+          enable-cache: false
 
-      - name: Install MkDocs
-        run: pip install "mkdocs-material>=9.5,<10"
+      - name: Install MkDocs from uv.lock
+        run: uv sync --frozen --only-group dev --no-install-project
 
       - name: Build MkDocs
-        run: mkdocs build --strict
+        run: uv run --frozen --no-sync --only-group dev mkdocs build --strict
 
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
         with:

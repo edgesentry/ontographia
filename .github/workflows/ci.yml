@@ -82,14 +82,21 @@ jobs:
       - name: otg CLI unit tests
         run: uv run --python "$(command -v python3)" pytest tests/python/cli -q
 
-  # Guard + optional decrypt for scripts/litellm/.env.encrypted (issue #105).
-  # Does not add repository secrets; skips decrypt when DOTENV_PRIVATE_KEY is unset.
+  # Plaintext guard for scripts/litellm/.env.encrypted (issue #105).
+  # No secrets: pull_request, including forks, can run this job.
   litellm-dotenvx:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - name: Reject plaintext in tracked LiteLLM env files
         run: bash scripts/litellm/check_encrypted_env.sh
+
+  litellm-dotenvx-decrypt:
+    # Push to main only. Fork and same-repo pull requests do not run this job.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
       - name: Install dotenvx
         run: |
           curl -sfS https://dotenvx.sh | sh

@@ -246,7 +246,7 @@ go get github.com/edgesentry/ontographia/bindings/go@v0.1.7
 
 Download the matching `libontographia_ffi-*` archive from GitHub Releases for cgo linking (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`).
 
-The release workflow creates `bindings/go/vX.Y.Z` automatically.
+The release workflow creates `bindings/go/vX.Y.Z` on the same commit as `vX.Y.Z` (the `main` checkout that created the GitHub Release). The `release-processed/vX.Y.Z` claim uses that same checkout. Neither tag uses the commit that merely started the manual workflow, which can differ when `main` has moved or the run was dispatched from another ref.
 
 ### TypeScript / JavaScript
 

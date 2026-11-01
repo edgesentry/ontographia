@@ -30,7 +30,7 @@ executes.
 | `list_ontology` | _(none)_ | Summary: `classes`, `relationships`, `properties`, plus name lists |
 | `intent_schema` | _(none)_ | Intent JSON Schema constrained to the loaded ontology (what the LLM must emit) |
 | `build_cypher` | `intent` (object), optional `dialect` | `{ok, query, params, dialect}` or `{ok: false, errors: [{message}]}` |
-| `execute` | `intent` (object), optional `dialect`, `row_limit` | Same as build, plus `rows` / `row_count` / `truncated` — or a clear Neo4j/config error |
+| `execute` | `intent` (object), optional `dialect`, `row_limit` | Same as build, plus `rows` / `row_count` / `truncated` — or a clear Neo4j/config error. Each traverse step must be a single hop |
 
 **Key safety property:** the server never accepts raw Cypher from the client.
 `execute` only runs Cypher that Ontographia generated from validated Intent.
@@ -126,6 +126,12 @@ Defense in depth — all three layers are covered by CI tests:
 3. **Deny list** — generated Cypher is scanned for write clauses / procedures
    (`CREATE`, `MERGE`, `DELETE`, `DETACH`, `SET`, `REMOVE`, `LOAD CSV`,
    `IN TRANSACTIONS`, APOC write procs, …) and rejected with an explicit error.
+4. **Single hop** — `execute` accepts only a single relationship hop per
+   traverse step: omit `min_hops` and `max_hops`, or set both to the integer
+   `1`. Any other range (one side set, `0`, `min != max`, `max > 1`,
+   non-integers) is rejected with `hop_range_rejected` before Neo4j is called.
+   A variable-length quantifier is not bounded by `row_limit`. `build_cypher`
+   can still emit those patterns for offline inspection; it does not run them.
 
 ## Related
 
