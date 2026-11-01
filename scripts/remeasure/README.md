@@ -1,16 +1,98 @@
-# Remeasure harnesses (Part 3 reproduction)
+# Remeasure harnesses
 
-Scripts that reproduce the evaluation numbers published in
-[docs/evaluation.md](../../docs/evaluation.md). Two modes:
+Scripts that re-run the evaluation arms published in
+[docs/evaluation.md](../../docs/evaluation.md). The default path is offline;
+only the explicitly live arms call a model or a database.
 
-| Script | Live LLM? | Purpose |
-|--------|-----------|---------|
+| Script | Live? | Purpose |
+|--------|-------|---------|
+| [`run_all.sh`](run_all.sh) | Opt-in | Top-level runner for every arm: Track A, H1 mechanical, H2, H3, Track B schema convert, `dry_run`, plus H1 live and Track B Exec Match under `--live`. |
 | [`dry_run.py`](dry_run.py) | No | Offline fixture check: a saved Intent still agrees with its expected Cypher. |
 | [`run_h1_live_repeats.sh`](run_h1_live_repeats.sh) | Yes (LiteLLM / OpenAI-compatible) | N repeats of Track A H1 live (`examples/llm/eval/run_track_a_h1_live.py`) with health check, `meta.txt`, `logs/`, aggregate. |
 | [`aggregate_h1_live.py`](aggregate_h1_live.py) | No | Summarize already-written `run*.json` files (Property Hit / tokens / compile across repeats). Stdlib only. |
 
-The full command list for every Part 3 arm (mechanical, live, Track B) is in
-[docs/evaluation.md — Reproduce Part 3](../../docs/evaluation.md#reproduce-part-3).
+The arm-by-arm command list is in
+[docs/evaluation.md — Reproduce or refresh all arms](../../docs/evaluation.md#reproduce-or-refresh-all-arms).
+
+## Run every arm
+
+Default run — no LLM spend, no database:
+
+```bash
+scripts/remeasure/run_all.sh
+```
+
+This runs `track-a`, `h1` (mechanical), `h2`, `h3`, `track-b` (schema
+conversion; downloads the public HF dataset), and `dry-run`. Outputs go under
+`examples/llm/eval/out/run-all-<UTC>/` (gitignored).
+
+Live arms — H1 live repeats and Track B Exec Match:
+
+```bash
+scripts/litellm/start.sh
+source scripts/litellm/use-provider.sh gemini-3.8
+scripts/remeasure/run_all.sh --live --h1-live-n 3
+```
+
+`--live` first probes `GET <base-url>/models` and aborts before spending tokens
+if LiteLLM is unhealthy. Track B Exec Match additionally needs network access to
+`neo4j+s://demo.neo4jlabs.com` and the `datasets` / `neo4j` extras (injected via
+`uv run --with` when uv is available).
+
+Select arms explicitly (useful for a quick check or a single table):
+
+```bash
+scripts/remeasure/run_all.sh --only dry-run
+scripts/remeasure/run_all.sh --only h1,h2 --out-dir examples/llm/eval/out/check
+scripts/remeasure/run_all.sh --only track-b-exec --live
+```
+
+Arm IDs: `track-a`, `h1`, `h1-live`, `h2`, `h3`, `track-b`, `track-b-exec`,
+`dry-run`. Live IDs require `--live`; they are never selected implicitly.
+
+### Options and output
+
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `--only ARMS` | offline set | Comma-separated arm IDs; replaces the default selection. |
+| `--live` | off | Add `h1-live` + `track-b-exec` to the default set (or permit them under `--only`). |
+| `--out-dir DIR` | `examples/llm/eval/out/run-all-<UTC>` | Output root. |
+| `--record` | off | Pass `--record` through so harnesses rewrite checked-in baselines. Never implied. |
+| `--profiles LIST` | harness default | Profiles for `track-a` / `h1` / `h3`. |
+| `--h1-live-n N` | `1` | Repeats for `h1-live` (the published protocol used 3). |
+| `--h1-live-profiles LIST` | `mid,large` | Profiles for `h1-live`. |
+| `--limit N` | `0` (all) | Pass `--limit` to the H1 live harness. |
+| `--model ALIAS` | `ontographia-gemini-3.8` | `OPENAI_MODEL` / LiteLLM alias for live arms. |
+| `--base-url URL` | `http://127.0.0.1:4000/v1` | OpenAI-compatible endpoint. |
+| `--python CMD` | `.venv-remeasure/bin/python`, else `uv run python`, else `python3` | Interpreter command. |
+| `--skip-health-check` | off | Do not require `GET <base-url>/models` → `200`. |
+| `--force` | off | Reuse an `--out-dir` that already has `status.tsv`. |
+| `--fail-fast` | off | Stop after the first failing arm (default: run every selected arm). |
+| `--list-arms` | off | Print the selected arm IDs and exit. |
+
+`OPENAI_API_KEY` is read from the environment (LiteLLM master key). Only the
+local development placeholder is used as a fallback default; never commit real
+keys. `ONTOGRAPHIA_LLM_BACKEND` defaults to `openai`.
+
+The runner writes:
+
+```text
+<out-dir>/
+├── meta.txt            # repo rev, dirty flag, python/pkg, arms, model, timings
+├── status.tsv          # arm, pass/fail, exit code, duration, log path
+├── summary.md          # same status table for humans
+├── logs/<arm>.log      # full harness stdout/stderr
+├── logs/<arm>.exit     # exit code
+├── logs/<arm>.command  # exact command, for reproduction
+├── json/<arm>.json     # harness --json-out payload (arms that support it)
+└── h1-live/            # repeat wrapper layout when h1-live is selected
+```
+
+The runner records process status only. It never parses or invents metrics and
+never edits `docs/evaluation.md` or the checked-in baselines; compare logs or
+`json/` payloads with the published tables by hand. Exit codes: `0` all selected
+arms passed, `1` at least one arm failed, `2` invalid arguments / existing
+output directory / unhealthy LiteLLM.
 
 ## Offline dry run
 
@@ -32,18 +114,18 @@ scripts/litellm/start.sh
 source scripts/litellm/use-provider.sh gemini-3.8          # sets OPENAI_* vars
 ```
 
-Then run the repeats (this reproduces the Part 3 stem: n=3 over `mid,large`):
+Then run the repeats (n=3 over `mid,large`, the published live protocol):
 
 ```bash
 scripts/remeasure/run_h1_live_repeats.sh --profiles mid,large --n 3 \
-  --out-dir examples/llm/eval/out/part3-$(date -u +%Y%m%d-%H%M)
+  --out-dir examples/llm/eval/out/remeasure-h1-live-$(date -u +%Y%m%d-%H%M)
 ```
 
 and the large-only extension toward n=5 (separate stem, same model):
 
 ```bash
 scripts/remeasure/run_h1_live_repeats.sh --profiles large --n 2 \
-  --out-dir examples/llm/eval/out/part3-ext-$(date -u +%Y%m%d-%H%M)
+  --out-dir examples/llm/eval/out/remeasure-h1-live-ext-$(date -u +%Y%m%d-%H%M)
 ```
 
 The wrapper only calls `run_track_a_h1_live.py --json-out ...`; it never passes
@@ -91,7 +173,7 @@ when a repeat fails, and `4` when aggregation fails. Partial stems keep their
 
 ```bash
 python3 scripts/remeasure/aggregate_h1_live.py \
-  --out-dir examples/llm/eval/out/part3-20261101-1200
+  --out-dir examples/llm/eval/out/remeasure-h1-live-20261101-1200
 ```
 
 Reads `<out-dir>/json/run*.json` in natural (`run2` before `run10`) order and

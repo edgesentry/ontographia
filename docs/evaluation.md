@@ -2,7 +2,26 @@
 
 Offline experiments for the **app / agent Intent layer** (not the Rust Cypher emitters). Design context: [Related work](related-work.md). Why this stays outside the core: [Architecture — outside the core](architecture.md#what-is-intentionally-outside-the-core).
 
+## Study map
+
+The evaluation has two tracks. **Track A** is an internal stress test on manufacturing ontologies where the gold answers are known: it asks whether the Intent layer selects the right fields, whether it recovers when execution returns nothing, and whether schema subsetting / retry budget can cut spend. **Track B** is external validity: it converts public Text2Cypher schema text into Ontographia ontologies and, in the live arm, checks whether generated queries return the same rows as the public gold Cypher.
+
+| Track | Arm ID | Purpose | Harness | Needs |
+|-------|--------|---------|---------|-------|
+| A | `track-a` | On a large ontology, can a plausible-but-wrong property Intent still pass `Engine.build`? | [`run_track_a.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a.py) | — |
+| A | `h1` — H1 mechanical | Does exact-match subsetting (+ fallback) improve field selection and cut tokens vs the full schema? | [`run_track_a_h1.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h1.py) | — |
+| A | `h1-live` — H1 live | Do the H1 gains hold with a real OpenAI-compatible LLM? | [`run_track_a_h1_live.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h1_live.py) + [`run_h1_live_repeats.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/run_h1_live_repeats.sh) | LiteLLM |
+| A | `h2` — H2 | When an Intent compiles but returns no rows (Empty@Valid), does execution-feedback Intent refine recover rows? | [`run_track_a_h2.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h2.py) | — |
+| A | `h3` — H3 | Does difficulty-adaptive spend (subset-first, escalate on hard questions) cut tokens without hurting Compile / Property Hit? | [`run_track_a_h3.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h3.py) | — |
+| B | `track-b` | Can public Text2Cypher schema text become a loadable ontology, and does it cover the tokens used in gold Cypher? | [`run_track_b.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_b.py) | HF `datasets` |
+| B | `track-b-exec` | Does Question → Intent → `Engine.build` → Neo4j return the same rows as the gold Cypher? | [`run_track_b_exec.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_b_exec.py) | LiteLLM + Neo4j |
+| — | `dry-run` | Offline consistency check: a saved Intent still agrees with its expected Cypher. | [`scripts/remeasure/dry_run.py`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/dry_run.py) | — |
+
+**How the arms relate.** H1 is one hypothesis with two arms, not two studies: the mechanical arm (`h1`) induces silent-wrong Intents from the prompt vocabulary and establishes the mechanism, while the live arm (`h1-live`) repeats the same full / subset / `subset_fallback` comparison against a real model. Read the mechanical result as the controlled version and the live result as the production-relevant one. H2 and H3 ask different questions (execution-feedback recovery and spend budgeting); they are not variants of H1. Track B does not reuse Track A's manufacturing fixture — it measures external validity on public demo databases and makes no Track A-level field-selection claim. The [Context Rot checklist](#feature-add-checklist-context-rot-lens) is a lens for deciding which of these arms to re-run after a feature change, not a standalone study. [`scripts/remeasure/run_all.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/run_all.sh) runs the whole map (see [Reproduce or refresh all arms](#reproduce-or-refresh-all-arms)).
+
 ## Track A — distractor ontology stress test
+
+Track A asks whether ontology validation can see that a field is the wrong *semantic* choice when it is still a valid property. It contains the `track-a`, `h1` / `h1-live`, `h2`, and `h3` arms above.
 
 **Question:** On a large ontology, can an Intent use a *plausible but wrong* property and still pass `Engine::build`?
 
@@ -28,6 +47,8 @@ Recorded `2026-09-08T09:11:27Z` (git `0563c07`). Machine-readable copy: [`exampl
 
 **Harness:** [`examples/llm/eval/run_track_a_h1.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h1.py) (mechanical; no live LLM).
 
+This is the **mechanical arm** of H1 (`h1`). It establishes the prompt-vocabulary mechanism; the **live arm** (`h1-live`) below asks the same question with a real model and is the production-relevant evidence.
+
 **Method:** Induce a silent-wrong near-duplicate Intent **only when** that distractor property name appears in the prompt’s property vocabulary; otherwise use gold. `subset_fallback` uses the full schema when the subset is empty or gold classes/relationships are missing from subset enums (mirrors [#45](https://github.com/edgesentry/ontographia/issues/45) pipeline policy).
 
 Recorded in [`examples/llm/eval/baselines/track_a_h1.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1.json). Regenerate: `uv run python examples/llm/eval/run_track_a_h1.py --record`.
@@ -50,9 +71,9 @@ Recorded in [`examples/llm/eval/baselines/track_a_h1.json`](https://github.com/e
 
 **Caveat (mechanical):** This arm measures *prompt-induced* distractibility, not model decoding. Live follow-up: [issue #68](https://github.com/edgesentry/ontographia/issues/68) below.
 
-### H1 live LLM arm (issue #68)
+### H1 live arm (issue #68) — H1 with a real model
 
-**Question:** Do the H1 gains hold with a real OpenAI-compatible LLM (not a mechanical inducer)?
+**Question:** Do the H1 gains hold with a real OpenAI-compatible LLM (not a mechanical inducer)? This is the **live arm of H1** (`h1-live`), not a separate hypothesis.
 
 **Harness:** [`examples/llm/eval/run_track_a_h1_live.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/run_track_a_h1_live.py). Recorded `2026-09-08T14:42:52Z` via LiteLLM alias `ontographia-gemini-3.7` (recorded as `ontographia-gemini` before #106) → upstream **Gemini 3.7 Flash** (`gemini-3.7-flash`), `temperature=0`, 40 gold × mid/large × three policies. Machine-readable: [`examples/llm/eval/baselines/track_a_h1_live.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live.json).
 
@@ -74,13 +95,13 @@ uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --re
 
 #### v0.1.6 live re-runs (Gemini 3.7 / 3.8, issue #106)
 
-Published-package re-runs (`ontographia[llm]==0.1.6` from PyPI, LiteLLM `1.98.0`, `temperature=0`). Part 3 baselines above are unchanged (`--json-out`).
+Published-package re-runs (`ontographia[llm]==0.1.6` from PyPI, LiteLLM `1.98.0`, `temperature=0`). The `2026-09-08` baselines above are unchanged (`--json-out`).
 
 | artifact | model | recorded_at | notes |
 |----------|-------|-------------|-------|
 | [`track_a_h1_live_v0.1.6.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live_v0.1.6.md) / [`.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live_v0.1.6.json) | alias recorded as `ontographia-gemini` → `gemini-3.7-flash` | `2026-10-22T03:09:33Z` | harness verdict **support**; see file for per-arm table |
 | [`track_a_h1_live_v0.1.6_gemini-3.8.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live_v0.1.6_gemini-3.8.md) / [`.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_a_h1_live_v0.1.6_gemini-3.8.json) | `ontographia-gemini-3.8` → `gemini-3.8-flash` | `2026-10-22T05:43:55Z` | harness verdict **support** |
-| [`gemini_3.7_vs_3.8_v0.1.6.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/gemini_3.7_vs_3.8_v0.1.6.md) | — | — | Part 3 vs v0.1.6 3.7 vs v0.1.6 3.8 (Track A + Track B) |
+| [`gemini_3.7_vs_3.8_v0.1.6.md`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/gemini_3.7_vs_3.8_v0.1.6.md) | — | — | `2026-09-08` baseline vs v0.1.6 3.7 vs v0.1.6 3.8 (Track A + Track B) |
 
 ### H2 study — execution feedback Intent refine
 
@@ -137,9 +158,11 @@ uv run python examples/llm/eval/run_track_a_h2.py --record
 uv run python examples/llm/eval/run_track_a_h3.py --record
 ```
 
-Updates [`examples/llm/eval/baselines/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/eval/baselines). After regenerating, sync the tables above if numbers change.
+Updates [`examples/llm/eval/baselines/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/eval/baselines). After regenerating, sync the tables above if numbers change. For a scratch run that leaves baselines untouched, use [`scripts/remeasure/run_all.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/run_all.sh) (see [Reproduce or refresh all arms](#reproduce-or-refresh-all-arms)).
 
 ## Track B — public Text2Cypher schemas
+
+Track B contains two arms: schema conversion (`track-b`, offline apart from the public dataset download) and the live Exec Match spot (`track-b-exec`). Neither reuses Track A's manufacturing fixture.
 
 **Question:** Can Neo4j Text2Cypher **schema text** from public demo databases be converted into a loadable Ontographia ontology, and does that ontology cover tokens used in gold Cypher?
 
@@ -185,7 +208,7 @@ uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py
 
 #### v0.1.6 Exec Match re-runs (Gemini 3.7 / 3.8, issue #106)
 
-Same package / LiteLLM / seed / refs as above; Part 3 [`track_b_exec_spot.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_exec_spot.json) unchanged.
+Same package / LiteLLM / seed / refs as above; the `2026-09-08` [`track_b_exec_spot.json`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/baselines/track_b_exec_spot.json) is unchanged.
 
 | artifact | model | recorded_at | compile_ok | exec_match |
 |----------|-------|-------------|------------:|-----------:|
@@ -202,25 +225,44 @@ uv run --with datasets python examples/llm/eval/run_track_b.py --record
 
 Check the Hugging Face dataset card for license before redistributing samples.
 
-## Reproduce Part 3
+## Reproduce or refresh all arms
 
-Every table on this page is produced by a script in this repository. `--record` rewrites the checked-in files under [`examples/llm/eval/baselines/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/eval/baselines); `--json-out` (and the repeat wrapper below) write a scratch copy instead, which is what remeasure runs use so published numbers stay put.
+Every table on this page is produced by a script in this repository. `--record` rewrites the checked-in files under [`examples/llm/eval/baselines/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/eval/baselines); `--json-out` (and the repeat wrapper below) write a scratch copy instead, which is what remeasure runs use so published numbers stay put. The top-level runner defaults to the scratch path and **never** passes `--record` unless you ask for it.
+
+### All arms at once
+
+```bash
+# offline: Track A, H1 mechanical, H2, H3, Track B schema convert, dry-run
+scripts/remeasure/run_all.sh
+
+# also H1 live repeats and Track B Exec Match (health-checked before spend)
+scripts/remeasure/run_all.sh --live --h1-live-n 3
+
+# a subset of arms
+scripts/remeasure/run_all.sh --only h1,h2
+```
+
+The runner writes `meta.txt`, `status.tsv`, `summary.md`, `logs/<arm>.log`, `logs/<arm>.exit`, `logs/<arm>.command`, and `json/<arm>.json` under `--out-dir` (default `examples/llm/eval/out/run-all-<UTC>`, gitignored). It records process status and harness output only — no metrics are parsed or invented, and no baseline is rewritten unless `--record` is passed explicitly. Live arms require `--live`, and the default set excludes them so an accidental run cannot spend tokens. Prerequisites, flags, and exit codes: [`scripts/remeasure/README.md`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/README.md).
+
+### Arm-by-arm commands
 
 | Arm | Command | Needs |
 |-----|---------|-------|
+| All offline arms | `scripts/remeasure/run_all.sh` | — (Track B needs HF `datasets`) |
+| All arms, live included | `scripts/remeasure/run_all.sh --live` | LiteLLM (+ Neo4j for Track B Exec) |
 | Track A full schema | `uv run python examples/llm/eval/run_track_a.py --record` | — |
 | H1 mechanical | `uv run python examples/llm/eval/run_track_a_h1.py --record` | — |
 | H1 live, one run | `uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --record` | LiteLLM |
-| H1 live, Part 3 repeats | `scripts/remeasure/run_h1_live_repeats.sh --profiles mid,large --n 3 --out-dir DIR` | LiteLLM |
+| H1 live, repeats | `scripts/remeasure/run_h1_live_repeats.sh --profiles mid,large --n 3 --out-dir DIR` | LiteLLM |
 | H2 exec feedback | `uv run python examples/llm/eval/run_track_a_h2.py --record` | — |
 | H3 adaptive spend | `uv run python examples/llm/eval/run_track_a_h3.py --record` | — |
 | Track B schema convert | `uv run --with datasets python examples/llm/eval/run_track_b.py --record` | HF `datasets` |
 | Track B Exec Match | `uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py --record` | LiteLLM + `demo.neo4jlabs.com` |
 | Offline fixture check | `python3 scripts/remeasure/dry_run.py` | — |
 
-### Part 3 live repeats
+### Live repeats (variance)
 
-The Part 3 live numbers came from **repeated** H1 live runs, not from a single `--record` invocation. Reproduce the stem with n=3 over `mid,large`, then extend the high-variance `large` arm toward n=5:
+The published live H1 numbers came from **repeated** runs, not from a single `--record` invocation. Reproduce the main stem with n=3 over `mid,large`, then extend the high-variance `large` arm toward n=5:
 
 ```bash
 # once
@@ -230,11 +272,11 @@ source scripts/litellm/use-provider.sh gemini-3.8
 
 # n=3 over mid + large
 scripts/remeasure/run_h1_live_repeats.sh --profiles mid,large --n 3 \
-  --out-dir examples/llm/eval/out/part3-$(date -u +%Y%m%d-%H%M)
+  --out-dir examples/llm/eval/out/remeasure-h1-live-$(date -u +%Y%m%d-%H%M)
 
 # +2 large-only repeats (cumulative n=5 on large)
 scripts/remeasure/run_h1_live_repeats.sh --profiles large --n 2 \
-  --out-dir examples/llm/eval/out/part3-ext-$(date -u +%Y%m%d-%H%M)
+  --out-dir examples/llm/eval/out/remeasure-h1-live-ext-$(date -u +%Y%m%d-%H%M)
 ```
 
 Each stem holds `meta.txt` (git revision, package version, model alias, base URL, timings), `logs/`, the per-repeat `json/run<N>.json` written by the harness, and `aggregate.json` / `aggregate_index.json` / `aggregate.md`. Options, environment variables, and exit codes: [`scripts/remeasure/README.md`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/README.md). The wrapper never passes `--record`, so baselines are untouched — compare the aggregate by hand before editing any table or JSON above.
@@ -254,6 +296,8 @@ Each stem holds `meta.txt` (git revision, package version, model alias, base URL
 | Full schema vs focused subset (and `subset_fallback`) | Property Hit / compile / fallback rate under `full`, `subset`, `subset_fallback`; escalation spend | `run_track_a_h1.py`, `run_track_a_h1_live.py`, `run_track_a_h3.py` |
 | Intent extraction / repair | Empty@Valid recovery after execution feedback (changes the prompt sequence rather than context length) | `run_track_a_h2.py` |
 
+The whole checklist can be run scratch-only with [`scripts/remeasure/run_all.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/run_all.sh) (add `--live` for the live arms); the per-arm commands below use `--record` only because they refresh the published baselines.
+
 ```bash
 # mechanical: prompt length, distractors, full / subset / subset_fallback, refine loop
 uv run python examples/llm/eval/run_track_a.py --record
@@ -265,7 +309,7 @@ uv run python examples/llm/eval/run_track_a_h2.py --record
 source scripts/litellm/use-provider.sh gemini-3.7
 uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --record
 
-# live repeat driver for variance (what Part 3 used)
+# live repeat driver for variance (the published protocol used n=3)
 scripts/remeasure/run_h1_live_repeats.sh --profiles mid,large --n 3 --out-dir DIR
 ```
 
@@ -273,7 +317,7 @@ scripts/remeasure/run_h1_live_repeats.sh --profiles mid,large --n 3 --out-dir DI
 
 - Live evidence is the H1 live arm only: 40 gold × `mid`/`large`, one provider alias per run (Gemini 3.7 / 3.8 in the v0.1.6 re-runs), `temperature=0`. There is no long-input sweep, no many-model replication, and no LongMemEval-style study.
 - Track A mechanical, H2, and H3 measure prompt vocabulary and the spend/refine state machines with mock extractors — they do not measure live model accuracy.
-- [`scripts/remeasure/dry_run.py`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/dry_run.py) loads a saved Intent and checks its expected Cypher offline. It is a fixture consistency check only, **not** a live Context Rot / remeasure harness; use [`scripts/remeasure/run_h1_live_repeats.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/run_h1_live_repeats.sh) for live repeats.
+- [`scripts/remeasure/dry_run.py`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/dry_run.py) loads a saved Intent and checks its expected Cypher offline. It is a fixture consistency check only, **not** a live Context Rot / remeasure harness; use [`scripts/remeasure/run_h1_live_repeats.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/run_h1_live_repeats.sh) for live repeats, or [`scripts/remeasure/run_all.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/run_all.sh) to verify every arm.
 
 ## Related
 

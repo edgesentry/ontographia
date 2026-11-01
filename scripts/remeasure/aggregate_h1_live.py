@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Summarize repeated Track A H1 live runs (Part 3 remeasure, issue #142).
+"""Summarize repeated Track A H1 live runs (issue #142).
 
 Reads the ``json/run*.json`` files written by
 ``examples/llm/eval/run_track_a_h1_live.py --json-out ...`` and writes:

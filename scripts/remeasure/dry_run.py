@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Offline remeasure dry-run: check fixture Intent JSON against expected Cypher.
 
-No engine, LLM, network, or Neo4j. This scaffold for the Part 3 remeasure
-follow-up (#138) verifies that a saved expected Cypher still agrees with its
-Intent fixture. A future full remeasure can replace the consistency checks with
-a real `Engine.build` comparison.
+No engine, LLM, network, or Neo4j. This offline scaffold (#138) verifies that a
+saved expected Cypher still agrees with its Intent fixture. A future full
+remeasure can replace the consistency checks with a real `Engine.build`
+comparison.
 
 Usage:
   python3 scripts/remeasure/dry_run.py

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# N-repeat Track A H1 live remeasure (Part 3 reproduction, issue #142).
+# N-repeat Track A H1 live remeasure (issue #142).
 #
 # Runs examples/llm/eval/run_track_a_h1_live.py N times against a local
 # LiteLLM (or any OpenAI-compatible) endpoint, writing one JSON per repeat plus
@@ -11,7 +11,7 @@
 #     --out-dir examples/llm/eval/out/remeasure-h1-live-ext
 #   scripts/remeasure/run_h1_live_repeats.sh --skip-health-check --limit 4
 #
-# See scripts/remeasure/README.md for the Part 3 recipe and environment vars.
+# See scripts/remeasure/README.md for the live-repeat recipe and environment vars.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

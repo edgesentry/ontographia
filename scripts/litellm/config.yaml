@@ -2,7 +2,7 @@
 #
 # Public model aliases (use as OPENAI_MODEL when calling http://127.0.0.1:4000/v1):
 #   ontographia-openai   → openai/gpt-4o-mini
-#   ontographia-gemini-3.7 → gemini/gemini-3.7-flash (Part 3 / v0.1.6 baselines)
+#   ontographia-gemini-3.7 → gemini/gemini-3.7-flash (published live baselines)
 #   ontographia-gemini-3.8 → gemini/gemini-3.8-flash (issue #106)
 #
 # Gemini aliases are always versioned (no unversioned ontographia-gemini alias since #106),
