@@ -7,7 +7,7 @@ Directory index for the monorepo. Tutorials and usage guides live in this docs s
 | [`crates/`](https://github.com/edgesentry/ontographia/tree/main/crates) | Rust engine: core, adapters, schema, FFI, CLI — see [Rust](rust.md) |
 | [`bindings/`](https://github.com/edgesentry/ontographia/tree/main/bindings) | [Python](python.md) (PyO3) and [Go](go.md) (cgo) bindings |
 | [`python/ontographia/`](https://github.com/edgesentry/ontographia/tree/main/python/ontographia) | Pure-Python package surface (experimental [`llm`](llm.md) / [`mcp`](mcp.md) / [`otg`](otg.md) CLI) |
-| [`packaging/homebrew/`](https://github.com/edgesentry/ontographia/tree/main/packaging/homebrew) | `otg` Homebrew formula (copied into the tap on release; not bottled) |
+| [`packaging/homebrew/`](https://github.com/edgesentry/ontographia/tree/main/packaging/homebrew) | Pointer to the tap formula `Formula/ontographia.rb` (`brew install ontographia` → Rust command `otg`). See [otg](otg.md) |
 | [`tests/python/llm/`](https://github.com/edgesentry/ontographia/tree/main/tests/python/llm) | CI unit tests for `ontographia[llm]` (fake backends) |
 | [`tests/python/mcp/`](https://github.com/edgesentry/ontographia/tree/main/tests/python/mcp) | CI unit tests for `ontographia[mcp]` (in-process tools, mocked Neo4j) |
 | [`tests/python/cli/`](https://github.com/edgesentry/ontographia/tree/main/tests/python/cli) | CI unit tests for the `otg` CLI |
@@ -24,7 +24,7 @@ Directory index for the monorepo. Tutorials and usage guides live in this docs s
 | `ontographia-adapters` | Multi-format ontology parsers → COM |
 | `ontographia-schema` | COM → Neo4j schema DDL + offline catalog diff |
 | `ontographia-ffi` | C ABI for Go and other bindings |
-| `ontographia-cli` | `build` and `schema` subcommands |
+| `ontographia-cli` | `build` and `schema`; binary name `otg` |
 
 ## `examples/` highlights
 

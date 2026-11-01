@@ -23,7 +23,7 @@ Ontology → COM → validate(Intent) → AST → Cypher 25 + $params
 | Need | Doc |
 |------|-----|
 | Install (CLI / Rust / Python / Go) | [docs/index.md](docs/index.md#install-released-versions) · [Rust](docs/rust.md) · [Python](docs/python.md) · [Go](docs/go.md) |
-| Short CLI `otg` (build + read-only Neo4j, Homebrew) | [docs/otg.md](docs/otg.md) |
+| Short CLI `otg` (Homebrew installs the Rust binary; Python entry point for execute today) | [docs/otg.md](docs/otg.md) |
 | End-to-end with Neo4j | [docs/end-to-end-neo4j.md](docs/end-to-end-neo4j.md) |
 | LLM / Intent layer (`ontographia[llm]`, experimental) | [docs/llm.md](docs/llm.md) · [`examples/llm/`](examples/llm/) |
 | MCP server (`ontographia[mcp]`, experimental) | [docs/mcp.md](docs/mcp.md) |

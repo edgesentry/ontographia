@@ -10,7 +10,7 @@ The Rust workspace owns the full pipeline: ontology adapters, COM, Intent valida
 | `ontographia-core` | COM, Intent, validation, AST, emitters, `Engine` |
 | `ontographia-schema` | COM → Neo4j graph schema, constraint DDL, catalog diff |
 | `ontographia-ffi` | Stable C ABI for Go and other FFI callers |
-| `ontographia-cli` | `build` and `schema` subcommands |
+| `ontographia-cli` | `build` and `schema`. Binary name `otg`. Release archives also include a copy named `ontographia` for the current tap formula |
 
 ## Quickstart (released)
 
@@ -24,7 +24,7 @@ cargo add ontographia-schema
 cargo install ontographia-cli
 ```
 
-Or via Homebrew: `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap)). That formula is this Rust binary (`build` and `schema`). Read-only Neo4j execute is the separate [`otg`](otg.md) command.
+Or via Homebrew: `brew tap edgesentry/tap` then `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap) `Formula/ontographia.rb`). That formula installs this Rust binary. The command name is `otg`. The published tap still installs a binary named `ontographia` (`build` and `schema`) until the next release and a tap update. Packaging and where read-only execute lives today: [`otg`](otg.md), [#121](https://github.com/edgesentry/ontographia/issues/121).
 
 ## Library usage
 
@@ -68,6 +68,17 @@ ontographia schema examples/manufacturing.native.yaml --json-out schema.json
 ontographia schema examples/manufacturing.native.yaml \
   --snapshot examples/neo4j/catalog.snapshot.json
 ```
+
+The samples use `ontographia`, the binary name on the published tap and on crates.io today. This crate also builds `otg` (same program; `default-run` is `otg`):
+
+```bash
+cargo run -p ontographia-cli --bin otg -- build \
+  --ontology examples/manufacturing.native.yaml \
+  --intent examples/sample_intent.json \
+  --json
+```
+
+Read-only `execute` is still the Python entry point. The Rust subcommand is the follow-up in [#121](https://github.com/edgesentry/ontographia/issues/121).
 
 ## Next steps
 

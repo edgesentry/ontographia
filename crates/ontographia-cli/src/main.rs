@@ -1,3 +1,14 @@
+//! Homebrew installs this program as `otg` (`brew install ontographia`).
+//! The release archive also ships a copy of the file named `ontographia`,
+//! because the current tap formula looks up that filename. The compiled
+//! command name is `otg`.
+//!
+//! Subcommands today: `build` and `schema`. Read-only Neo4j `execute` is the
+//! follow-up tracked in the packaging decision: Intent-only input, generated
+//! Cypher only, write clauses rejected before a driver runs (same rule as
+//! `python/ontographia/cli.py`). Until that subcommand exists, `execute` is
+//! the Python entry point (`ontographia[cli]`).
+
 mod commands;
 
 use clap::{Parser, Subcommand};
@@ -5,7 +16,7 @@ use std::process;
 
 #[derive(Parser)]
 #[command(
-    name = "ontographia",
+    name = env!("CARGO_BIN_NAME"),
     version,
     about = "Ontology-driven deterministic Cypher 25 query builder"
 )]

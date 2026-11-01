@@ -26,7 +26,7 @@ Ontographia converts **ontology definitions** + **Intent JSON** into **determini
 | Neo4j setup, seed data, execution | [docs/end-to-end-neo4j.md](docs/end-to-end-neo4j.md) |
 | LLM / agent Intent extraction | [docs/llm.md](docs/llm.md) (`ontographia[llm]`), [skills/ontographia-cypher-builder/SKILL.md](skills/ontographia-cypher-builder/SKILL.md) |
 | MCP server for agents | [docs/mcp.md](docs/mcp.md) (`ontographia[mcp]`, `ontographia-mcp`) |
-| Short CLI `otg` (Homebrew, read-only execute) | [docs/otg.md](docs/otg.md) |
+| Short CLI `otg` (Homebrew = Rust binary; Python entry point) | [docs/otg.md](docs/otg.md) |
 | LiteLLM local setup | [docs/litellm-local.md](docs/litellm-local.md) |
 | Release | [docs/release.md](docs/release.md) |
 | CodeQL | [docs/codeql-setup.md](docs/codeql-setup.md) |
@@ -61,7 +61,7 @@ Per-directory READMEs are **indexes only** — route humans and agents to `docs/
 cargo test --workspace
 ./scripts/start_neo4j.sh --seed
 cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufacturing.native.yaml
-cargo run -p ontographia-cli -- schema examples/manufacturing.native.yaml
+cargo run -p ontographia-cli --bin otg -- schema examples/manufacturing.native.yaml
 uv sync --group dev && uv run maturin develop --release
 cargo build --release -p ontographia-ffi && cd bindings/go && go test ./...
 python examples/run_neo4j_demo.py --ontology examples/manufacturing.native.yaml

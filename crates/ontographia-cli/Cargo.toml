@@ -1,17 +1,18 @@
 [package]
 name = "ontographia-cli"
-description = "Command-line interface for Ontographia (Intent → Cypher, schema DDL)"
+description = "Command-line interface for Ontographia (binary name: otg)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
 repository.workspace = true
 readme = "../../README.md"
+default-run = "otg"
 keywords = ["neo4j", "cypher", "ontology", "graph", "cli"]
 categories = ["command-line-utilities", "database"]
 
 [[bin]]
-name = "ontographia"
+name = "otg"
 path = "src/main.rs"
 
 [dependencies]

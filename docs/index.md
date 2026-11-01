@@ -27,16 +27,17 @@ Intent JSON is produced outside the core (LLM or hand-authored), constrained by 
 
 | Target | Install |
 |--------|---------|
-| CLI (`ontographia`, Rust) | `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap)), `cargo install ontographia-cli`, or [GitHub Releases](https://github.com/edgesentry/ontographia/releases). Build and schema only |
-| CLI (`otg`, read-only execute) | `pip install "ontographia[cli]"`; Homebrew `brew install otg` after the tap formula is published ([otg](otg.md)) |
-| Rust libs | `ontographia-core`, `ontographia-adapters`, `ontographia-schema` on [crates.io](https://crates.io) |
+| CLI (Homebrew, primary) | `brew tap edgesentry/tap` then `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap) `Formula/ontographia.rb`). Rust binary; the command is `otg`. The published tap still installs `ontographia` (`build` and `schema`) until the next CLI release and a tap update. Read-only execute joins that binary in the follow-up tracked by [#121](https://github.com/edgesentry/ontographia/issues/121). Guide: [otg](otg.md) |
+| CLI (Python entry point) | `uvx --from "ontographia[cli]" otg` or `pip install "ontographia[cli]"`. Same command name on the library extra, including read-only `execute` today. This is the Python install, not the Homebrew install. [otg](otg.md) |
+| Rust libs | `ontographia-core`, `ontographia-adapters`, `ontographia-schema` on [crates.io](https://crates.io). `cargo install ontographia-cli` installs the CLI crate |
 | Python | `pip install ontographia` (wheels for 3.11–3.13 on Linux, macOS arm64, Windows); optional Intent layer: `pip install "ontographia[llm]"` ([docs](llm.md)); optional MCP server: `pip install "ontographia[mcp]"` ([docs](mcp.md)) |
 | Go | `go get github.com/edgesentry/ontographia/bindings/go@v0.1.6` (+ FFI lib from Releases) |
 
 Release process: [Release](release.md).
 
 ```bash
-# CLI example (after install)
+# Released tap today: the command is still `ontographia`.
+# After the next CLI release and tap update, the same formula's command is `otg`.
 ontographia build --ontology examples/manufacturing.native.yaml \
   --intent examples/sample_intent.json --json
 ontographia schema examples/manufacturing.native.yaml --json-out schema.json
@@ -70,7 +71,7 @@ Detection and routing: `crates/ontographia-adapters/src/registry.rs`.
 |-------|------|
 | Quickstart (install → Neo4j demo) | [Rust](rust.md) / [Python](python.md) / [Go](go.md) → [Neo4j walkthrough](end-to-end-neo4j.md) |
 | Rust library & CLI | [Rust](rust.md) |
-| `otg` (build + read-only Neo4j) | [otg CLI](otg.md) |
+| `otg` CLI and packaging | [otg CLI](otg.md) |
 | Python bindings (PyO3) | [Python](python.md) |
 | Go bindings (cgo / FFI) | [Go](go.md) |
 | Pipeline, COM, validation, emitters | [Architecture](architecture.md) |
