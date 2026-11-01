@@ -13,6 +13,7 @@ import {
   extractPublishers,
   FIX_STEPS,
   PACKAGES,
+  readsTrustedPublishers,
 } from "../../../scripts/check-npm-trusted-publishers.mjs";
 import { workflowProblems } from "../../../scripts/check-release-workflow.mjs";
 
@@ -31,6 +32,7 @@ function childEnv(extra = {}) {
     "ONTOGRAPHIA_NPM_REGISTRY",
     "FAKE_CURL_MODE",
     "CURL_BIN",
+    "GITHUB_ACTIONS",
   ]) {
     delete env[key];
   }
@@ -156,6 +158,22 @@ describe("release workflow self-check", () => {
     assert.match(result.stderr, /GH_REPO/);
     rmSync(work, { recursive: true, force: true });
   });
+
+  it("does not pass NPM_TRUST_TOKEN or NPM_TOKEN into preflight or publish-npm", () => {
+    for (const rel of [
+      ".github/workflows/release-check.yml",
+      ".github/workflows/preflight-release.yml",
+      ".github/workflows/release.yml",
+    ]) {
+      const text = readFileSync(join(repoRoot, rel), "utf8");
+      assert.equal(text.includes("NPM_TRUST_TOKEN"), false, rel);
+      assert.equal(text.includes("secrets.NPM_TOKEN"), false, rel);
+    }
+    const release = readFileSync(releaseYml, "utf8");
+    const publish = release.split("\n  publish-npm:\n")[1] ?? "";
+    assert.match(publish, /id-token:\s*write/);
+    assert.equal(/^\s*NPM_TOKEN\s*:/m.test(publish), false);
+  });
 });
 
 describe("npm trusted publisher records", () => {
@@ -228,8 +246,19 @@ describe("npm trusted publisher records", () => {
       ]).detail,
       /environment/,
     );
-    assert.match(FIX_STEPS, /NPM_TRUST_TOKEN/);
-    assert.match(FIX_STEPS, /Do not name that secret NPM_TOKEN/);
+    assert.match(FIX_STEPS, /npm trust list/);
+    assert.match(FIX_STEPS, /CI does not call/);
+    assert.match(FIX_STEPS, /Do not store a granular token/);
+    assert.match(FIX_STEPS, /NPM_TOKEN in GitHub Actions/);
+    assert.match(FIX_STEPS, /outside GitHub Actions/);
+    assert.equal(FIX_STEPS.includes("repository secret"), false);
+    assert.equal(readsTrustedPublishers({}), false);
+    assert.equal(readsTrustedPublishers({ NPM_TRUST_TOKEN: "  " }), false);
+    assert.equal(readsTrustedPublishers({ NPM_TRUST_TOKEN: "trust-token" }), true);
+    assert.equal(
+      readsTrustedPublishers({ GITHUB_ACTIONS: "true", NPM_TRUST_TOKEN: "trust-token" }),
+      false,
+    );
     assert.equal(PACKAGES.length, 5);
     for (const name of PACKAGES) assert.match(FIX_STEPS, new RegExp(name.replace("/", "\\/")));
   });
@@ -256,12 +285,11 @@ describe("npm trusted publisher records", () => {
     assert.equal(result.stderr.includes("ECONNREFUSED") || result.stderr.includes("127.0.0.1:9"), false);
   });
 
-  it("fails closed when the list API requires auth and no token is set", async () => {
+  it("skips the trust API and warns when no token is set", async () => {
     let trustHits = 0;
-    const registry = await listen(({ pathname, authorization }) => {
+    const registry = await listen(({ pathname }) => {
       if (pathname.includes("/trust")) {
         trustHits += 1;
-        assert.equal(authorization, "");
         return { status: 401, body: { message: "Bearer token authorization is required" } };
       }
       return { status: 200, body: { name: packageName(pathname), "dist-tags": { latest: "0.0.0" } } };
@@ -272,16 +300,129 @@ describe("npm trusted publisher records", () => {
         [],
         childEnv({ ONTOGRAPHIA_NPM_REGISTRY: registry.base }),
       );
-      assert.notEqual(result.status, 0);
+      assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
       assert.match(result.stdout, /@edgesentry\/ontographia is on the registry \(latest 0\.0\.0\)/);
-      assert.match(result.stderr, /Auth is required/);
-      assert.match(result.stderr, /NPM_TRUST_TOKEN is unset/);
+      assert.match(result.stdout, /npm packages on registry; trusted publisher settings were not read/);
+      assert.match(result.stderr, /npm trust list @edgesentry\/ontographia --json/);
+      assert.match(result.stderr, /npm trust list @edgesentry\/ontographia-win32-x64 --json/);
       assert.match(result.stderr, /release\.yml/);
-      assert.match(result.stderr, /@edgesentry\/ontographia-win32-x64/);
+      assert.match(result.stderr, /createPackage/);
+      assert.equal(result.stdout.includes("npm trusted publishers ok"), false);
       assert.equal(result.stderr.includes("npm publish ok"), false);
-      assert.equal(trustHits, PACKAGES.length);
+      assert.equal(trustHits, 0);
     } finally {
       registry.server.close();
+    }
+  });
+
+  it("ignores NPM_TRUST_TOKEN in GitHub Actions", async () => {
+    let trustHits = 0;
+    const registry = await listen(({ pathname, authorization }) => {
+      if (pathname.includes("/trust")) {
+        trustHits += 1;
+        assert.equal(authorization, "");
+        return { status: 401, body: { message: "Bearer token authorization is required" } };
+      }
+      return { status: 200, body: { name: packageName(pathname), "dist-tags": { latest: "0.1.7" } } };
+    });
+    try {
+      const result = await runNodeAsync(
+        join(repoRoot, "scripts", "check-npm-trusted-publishers.mjs"),
+        [],
+        childEnv({
+          ONTOGRAPHIA_NPM_REGISTRY: registry.base,
+          GITHUB_ACTIONS: "true",
+          NPM_TRUST_TOKEN: "trust-token",
+          NPM_TRUST_OTP: "123456",
+        }),
+      );
+      assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+      assert.match(result.stdout, /trusted publisher settings were not read/);
+      assert.match(result.stderr, /NPM_TRUST_TOKEN is set and ignored in GitHub Actions/);
+      assert.equal(result.stdout.includes("trust-token"), false);
+      assert.equal(result.stderr.includes("trust-token"), false);
+      assert.equal(result.stderr.includes("123456"), false);
+      assert.equal(trustHits, 0);
+    } finally {
+      registry.server.close();
+    }
+  });
+
+  it("still fails when a package is missing from the registry", async () => {
+    const registry = await listen(({ pathname }) => {
+      const name = packageName(pathname);
+      if (name === "@edgesentry/ontographia-win32-x64") {
+        return { status: 404, body: { message: "not found" } };
+      }
+      return { status: 200, body: { name, "dist-tags": { latest: "0.0.0" } } };
+    });
+    try {
+      const result = await runNodeAsync(
+        join(repoRoot, "scripts", "check-npm-trusted-publishers.mjs"),
+        [],
+        childEnv({ ONTOGRAPHIA_NPM_REGISTRY: registry.base, GITHUB_ACTIONS: "true" }),
+      );
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /npm package presence check failed/);
+      assert.match(result.stderr, /@edgesentry\/ontographia-win32-x64: package is not on the registry/);
+      assert.equal(result.stdout.includes("trusted publisher settings were not read"), false);
+    } finally {
+      registry.server.close();
+    }
+  });
+
+  it("fails a local token read on 401 and on an npm-otp challenge", async () => {
+    const unauthorized = await listen(({ pathname, authorization }) => {
+      if (pathname.includes("/trust")) {
+        if (authorization && authorization !== "Bearer trust-token") {
+          return { status: 500, body: { message: "unexpected authorization" } };
+        }
+        return { status: 401, body: { message: "Bearer token authorization is required" } };
+      }
+      return { status: 200, body: { name: packageName(pathname), "dist-tags": { latest: "0.0.0" } } };
+    });
+    try {
+      const result = await runNodeAsync(
+        join(repoRoot, "scripts", "check-npm-trusted-publishers.mjs"),
+        [],
+        childEnv({
+          ONTOGRAPHIA_NPM_REGISTRY: unauthorized.base,
+          NPM_TRUST_TOKEN: "trust-token",
+        }),
+      );
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /HTTP 401/);
+      assert.match(result.stderr, /npm trust list/);
+      assert.equal(result.stderr.includes("trust-token"), false);
+    } finally {
+      unauthorized.server.close();
+    }
+
+    const otp = await listen(({ pathname, authorization, otp: code }) => {
+      if (pathname.includes("/trust")) {
+        if (!authorization) {
+          return { status: 401, body: { message: "Bearer token authorization is required" } };
+        }
+        assert.equal(authorization, "Bearer trust-token");
+        assert.equal(code, "");
+        return { status: 401, body: { message: "npm-otp required" } };
+      }
+      return { status: 200, body: { name: packageName(pathname), "dist-tags": { latest: "0.0.0" } } };
+    });
+    try {
+      const result = await runNodeAsync(
+        join(repoRoot, "scripts", "check-npm-trusted-publishers.mjs"),
+        [],
+        childEnv({
+          ONTOGRAPHIA_NPM_REGISTRY: otp.base,
+          NPM_TRUST_TOKEN: "trust-token",
+        }),
+      );
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /npm-otp/);
+      assert.match(result.stderr, /npm trust list locally/);
+    } finally {
+      otp.server.close();
     }
   });
 

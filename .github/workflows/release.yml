@@ -40,8 +40,6 @@ jobs:
     uses: ./.github/workflows/preflight-release.yml
     with:
       version: ${{ needs.resolve-version.outputs.version }}
-    secrets:
-      NPM_TRUST_TOKEN: ${{ secrets.NPM_TRUST_TOKEN }}
 
   create-release:
     name: Create tag and GitHub Release

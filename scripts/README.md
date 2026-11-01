@@ -39,11 +39,11 @@ Full setup: [docs/litellm-local.md](../docs/litellm-local.md)
 |--------|---------|
 | [`workspace-version.sh`](workspace-version.sh) | Print `[workspace.package] version` from `Cargo.toml` |
 | [`bump-version.sh`](bump-version.sh) | Bump workspace version; optional commit (release via Release workflow, not git tag push) |
-| [`preflight-release.sh`](preflight-release.sh) | Version, tag, workflow, registry, trusted publisher, npm pack dry-run, then `release-check.sh` |
+| [`preflight-release.sh`](preflight-release.sh) | Version, tag, workflow, registry, npm package presence, npm pack dry-run, then `release-check.sh` |
 | [`trigger-release.sh`](trigger-release.sh) | Read `Cargo.toml` version, preflight, then `gh workflow run Release` |
 | [`release-check.sh`](release-check.sh) | Tests, `cargo publish --dry-run` (core only), wheel build (called by preflight) |
 | [`check-release-workflow.mjs`](check-release-workflow.mjs) | Assert `release.yml` name Release, job id `publish-npm`, and `upload-assets` checkout + `GH_REPO` |
-| [`check-npm-trusted-publishers.mjs`](check-npm-trusted-publishers.mjs) | Read npm Trusted Publisher settings for the five packages. Does not publish. Needs `NPM_TRUST_TOKEN` when the list API requires auth |
+| [`check-npm-trusted-publishers.mjs`](check-npm-trusted-publishers.mjs) | Confirm the five npm packages exist. Does not publish. Actions skips the trust API. Local `NPM_TRUST_TOKEN` opts into `evaluatePublishers`. Operators use `npm trust list` |
 | [`check-registry-reachability.sh`](check-registry-reachability.sh) | Read-only ping of npm, crates.io, and PyPI |
 | [`package-npm-dry-run.mjs`](package-npm-dry-run.mjs) | `npm pack` metadata check with stub FFI archives. Does not publish |
 | [`verify-release-version.sh`](verify-release-version.sh) | Ensure `vX.Y.Z` matches `Cargo.toml` and `bindings/typescript/package.json` |
