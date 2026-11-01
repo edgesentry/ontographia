@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Pre-release validation: tests, publish dry-runs, and wheel build.
+# Tests, cargo publish --dry-run (core only), and wheel build.
+# Workflow, registry, trusted-publisher, and npm pack checks run first
+# in scripts/preflight-release.sh. This script does not publish.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

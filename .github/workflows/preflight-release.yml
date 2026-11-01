@@ -1,5 +1,7 @@
-# Shared preflight job: version match, tag availability, release-check.sh
+# Shared preflight job: version, tag, release.yml, registries, trusted
+# publishers, npm pack dry-run, then release-check.sh.
 # Called by Release check (dry-run only) and Release (first stage).
+# NPM_TRUST_TOKEN is not a publish token. Do not pass NPM_TOKEN.
 name: Preflight release
 
 on:
@@ -10,6 +12,10 @@ on:
         required: false
         type: string
         default: ""
+    secrets:
+      NPM_TRUST_TOKEN:
+        description: "Bearer token for GET /-/package/{package}/trust. Not used to publish."
+        required: false
 
 permissions:
   contents: read
@@ -53,7 +59,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-uv-preflight-
 
-      - name: Run preflight (version, tag availability, release check)
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238  # v6.2.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: bindings/typescript/package-lock.json
+
+      - name: Run preflight (version, tag, workflow, registries, npm pack)
+        env:
+          # Read-only. publish-npm.sh rejects NPM_TOKEN; this secret is a different name.
+          NPM_TRUST_TOKEN: ${{ secrets.NPM_TRUST_TOKEN }}
         run: |
           if [[ -n "${{ inputs.version }}" ]]; then
             bash scripts/preflight-release.sh "${{ inputs.version }}"
