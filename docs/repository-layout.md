@@ -5,7 +5,7 @@ Directory index for the monorepo. Tutorials and usage guides live in this docs s
 | Path | Contents |
 |------|----------|
 | [`crates/`](https://github.com/edgesentry/ontographia/tree/main/crates) | Rust engine: core, adapters, schema, FFI, CLI — see [Rust](rust.md) |
-| [`bindings/`](https://github.com/edgesentry/ontographia/tree/main/bindings) | [Python](python.md) (PyO3) and [Go](go.md) (cgo) bindings |
+| [`bindings/`](https://github.com/edgesentry/ontographia/tree/main/bindings) | [Python](python.md) (PyO3), [Go](go.md) (cgo), and TypeScript (`bindings/typescript`, koffi over `ontographia-ffi`) |
 | [`python/ontographia/`](https://github.com/edgesentry/ontographia/tree/main/python/ontographia) | Pure-Python package surface (experimental [`llm`](llm.md) / [`mcp`](mcp.md) / [`otg`](otg.md) CLI) |
 | [`packaging/homebrew/`](https://github.com/edgesentry/ontographia/tree/main/packaging/homebrew) | Pointer to the tap formula `Formula/ontographia.rb` (`brew install ontographia` → Rust command `otg`). See [otg](otg.md) |
 | [`tests/python/llm/`](https://github.com/edgesentry/ontographia/tree/main/tests/python/llm) | CI unit tests for `ontographia[llm]` (fake backends) |
@@ -23,7 +23,7 @@ Directory index for the monorepo. Tutorials and usage guides live in this docs s
 | `ontographia-core` | COM, Intent, validation, QueryAst, emitters, `Engine` |
 | `ontographia-adapters` | Multi-format ontology parsers → COM |
 | `ontographia-schema` | COM → Neo4j schema DDL + offline catalog diff |
-| `ontographia-ffi` | C ABI for Go and other bindings |
+| `ontographia-ffi` | C ABI for Go, TypeScript, and other bindings |
 | `ontographia-cli` | `build` and `schema`; binary name `otg` |
 
 ## `examples/` highlights

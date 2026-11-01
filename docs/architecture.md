@@ -62,6 +62,7 @@ Source: [`crates/ontographia-core/src/engine.rs`](https://github.com/edgesentry/
 | [`ontographia-ffi`](https://github.com/edgesentry/ontographia/tree/main/crates/ontographia-ffi/) | Stable C ABI for non-Rust callers |
 | [`bindings/python`](https://github.com/edgesentry/ontographia/tree/main/bindings/python/) | PyO3 wrapper around `Engine` |
 | [`bindings/go`](https://github.com/edgesentry/ontographia/tree/main/bindings/go/) | cgo wrapper over `ontographia-ffi` |
+| [`bindings/typescript`](https://github.com/edgesentry/ontographia/tree/main/bindings/typescript/) | Node wrapper over `ontographia-ffi` (koffi) |
 
 ## Stage 1 — Ontology ingestion
 
@@ -179,6 +180,7 @@ Bindings call the same `Engine` API; they do not fork validation or emission. Us
 - [Rust](rust.md) — direct `Engine` API and CLI
 - [Python](python.md) — PyO3 `Engine.load()` / `build()`
 - [Go](go.md) — C FFI via `ontographia-ffi`
+- TypeScript / JavaScript — `bindings/typescript` (koffi over `ontographia-ffi`; user guide deferred)
 
 ## Graph schema governance (`ontographia-schema`)
 

@@ -9,7 +9,7 @@ The Rust workspace owns the full pipeline: ontology adapters, COM, Intent valida
 | `ontographia-adapters` | Format detection, `OntologyAdapter`, `load_ontology_from_path` |
 | `ontographia-core` | COM, Intent, validation, AST, emitters, `Engine` |
 | `ontographia-schema` | COM → Neo4j graph schema, constraint DDL, catalog diff |
-| `ontographia-ffi` | Stable C ABI for Go and other FFI callers |
+| `ontographia-ffi` | Stable C ABI for Go, TypeScript, and other FFI callers |
 | `ontographia-cli` | `build` and `schema`. Binary name `otg`. Release archives also include a copy named `ontographia` for the current tap formula |
 
 ## Quickstart (released)
