@@ -219,7 +219,7 @@ If a Release run fails partway through (for example after `ontographia-core` was
 
 | Channel | Role |
 |---------|------|
-| Homebrew `brew install ontographia` | Primary CLI. Rust binary. The command is **`otg`** once [`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb) is pointed at that filename. Read-only Neo4j execute belongs in this binary |
+| Homebrew `brew install ontographia` | Primary CLI. Rust binary. The command is **`otg`** once [`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb) is pointed at that filename. That `otg` runs read-only Neo4j `execute` when Neo4j is available |
 | `pip` / `uvx` extras (`ontographia[cli]`, `[llm]`, `[mcp]`) | Python library and the Python `otg` entry point |
 | crates.io | Rust libraries and `cargo install ontographia-cli` |
 | Go module + `libontographia_ffi-*` on the GitHub Release | cgo bindings |
@@ -257,7 +257,19 @@ cargo install --path crates/ontographia-cli
 otg build --help
 ```
 
-Rust `otg` here has `build` and `schema`. Read-only `execute` in that binary is [#121](https://github.com/edgesentry/ontographia/issues/121). Until it ships, shell execute is the Python entry point below.
+Rust `otg` here has `build`, `schema`, and read-only `execute` ([#136](https://github.com/edgesentry/ontographia/issues/136)). `execute` runs when Neo4j is available. The Python entry point below is still how pip and uvx install `otg`.
+
+**macOS smoke** for the `macos-arm64` archive (and for `otg` after the tap installs it). Neo4j has to be reachable; the binary does not start a database:
+
+```bash
+otg --version
+otg execute --help
+# exit 2 when NEO4J_URI / user / password are unset
+otg execute --ontology examples/manufacturing.native.yaml --intent examples/sample_intent.json
+# with Neo4j up (env or --neo4j-uri / --neo4j-user / --neo4j-password): prints Cypher and rows
+```
+
+The same checks apply to the copy of the binary named `ontographia` inside `ontographia-{version}-macos-arm64.tar.gz`. `--version` prints `otg` for both files.
 
 ### Rust libraries
 

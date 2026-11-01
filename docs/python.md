@@ -100,7 +100,7 @@ LiteLLM proxy setup (OpenAI, Gemini, Cursor): [LiteLLM (local)](litellm-local.md
 
 ## `otg` CLI (`ontographia[cli]`)
 
-Python entry point: compile Intent JSON and optionally execute it read-only. Homebrew's CLI is the Rust binary (`brew install ontographia`; command `otg` after the tap update). Full packaging rules and the Movies demo: [otg CLI](otg.md).
+Python entry point: compile Intent JSON and optionally execute it read-only. Homebrew's CLI is the Rust binary (`brew install ontographia`; command `otg` after the tap update), which also executes when Neo4j is available. This extra stays the pip / uvx `otg`. Full packaging rules and the Movies demo: [otg CLI](otg.md).
 
 ```bash
 pip install "ontographia[cli]"

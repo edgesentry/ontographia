@@ -10,7 +10,7 @@ The Rust workspace owns the full pipeline: ontology adapters, COM, Intent valida
 | `ontographia-core` | COM, Intent, validation, AST, emitters, `Engine` |
 | `ontographia-schema` | COM → Neo4j graph schema, constraint DDL, catalog diff |
 | `ontographia-ffi` | Stable C ABI for Go, TypeScript, and other FFI callers |
-| `ontographia-cli` | `build` and `schema`. Binary name `otg`. Release archives also include a copy named `ontographia` for the current tap formula |
+| `ontographia-cli` | `build`, `schema`, and read-only Neo4j `execute`. Binary name `otg`. Release archives also include a copy named `ontographia` for the current tap formula |
 
 ## Quickstart (released)
 
@@ -24,7 +24,7 @@ cargo add ontographia-schema
 cargo install ontographia-cli
 ```
 
-Or via Homebrew: `brew tap edgesentry/tap` then `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap) `Formula/ontographia.rb`). That formula installs this Rust binary. The command name is `otg`. The published tap still installs a binary named `ontographia` (`build` and `schema`) until the next release and a tap update. Packaging and where read-only execute lives today: [`otg`](otg.md), [#121](https://github.com/edgesentry/ontographia/issues/121).
+Or via Homebrew: `brew tap edgesentry/tap` then `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap) `Formula/ontographia.rb`). That formula installs this Rust binary. The command name is `otg`, including read-only `execute` when Neo4j is available. The published tap still installs a binary named `ontographia` (`build` and `schema` only) until the next release and a tap update. Packaging: [`otg`](otg.md).
 
 ## Library usage
 
@@ -78,7 +78,7 @@ cargo run -p ontographia-cli --bin otg -- build \
   --json
 ```
 
-Read-only `execute` is still the Python entry point. The Rust subcommand is the follow-up in [#121](https://github.com/edgesentry/ontographia/issues/121).
+Read-only `execute` is a subcommand of this binary. It compiles Intent JSON and, when Neo4j is reachable, runs that Cypher in Bolt read mode. Connection settings are `NEO4J_URI`, `NEO4J_USERNAME` or `NEO4J_USER`, and `NEO4J_PASSWORD`, or `--neo4j-uri`, `--neo4j-user`, `--neo4j-password`, and optional `--neo4j-database`. The Python `otg` entry point (`ontographia[cli]`) still does the same job for pip and uvx. Flags, hop limits, and the write deny list: [`otg`](otg.md).
 
 ## Next steps
 

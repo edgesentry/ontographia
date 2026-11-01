@@ -27,8 +27,8 @@ Intent JSON is produced outside the core (LLM or hand-authored), constrained by 
 
 | Target | Install |
 |--------|---------|
-| CLI (Homebrew, primary) | `brew tap edgesentry/tap` then `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap) `Formula/ontographia.rb`). Rust binary; the command is `otg`. The published tap still installs `ontographia` (`build` and `schema`) until the next CLI release and a tap update. Read-only execute joins that binary in the follow-up tracked by [#121](https://github.com/edgesentry/ontographia/issues/121). Guide: [otg](otg.md) |
-| CLI (Python entry point) | `uvx --from "ontographia[cli]" otg` or `pip install "ontographia[cli]"`. Same command name on the library extra, including read-only `execute` today. This is the Python install, not the Homebrew install. [otg](otg.md) |
+| CLI (Homebrew, primary) | `brew tap edgesentry/tap` then `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap) `Formula/ontographia.rb`). Rust binary; the command is `otg`. It can `execute` read-only when Neo4j is available. The published tap still installs `ontographia` (`build` and `schema` only) until the next CLI release and a tap update. Guide: [otg](otg.md) |
+| CLI (Python entry point) | `uvx --from "ontographia[cli]" otg` or `pip install "ontographia[cli]"`. Same command name on the library extra, including read-only `execute`. This is the Python install, not the Homebrew install. [otg](otg.md) |
 | Rust libs | `ontographia-core`, `ontographia-adapters`, `ontographia-schema` on [crates.io](https://crates.io). `cargo install ontographia-cli` installs the CLI crate |
 | Python | `pip install ontographia` (wheels for 3.11–3.13 on Linux, macOS arm64, Windows); optional Intent layer: `pip install "ontographia[llm]"` ([docs](llm.md)); optional MCP server: `pip install "ontographia[mcp]"` ([docs](mcp.md)) |
 | Go | `go get github.com/edgesentry/ontographia/bindings/go@v0.1.8` (+ FFI lib from Releases). Link with `LIBRARY_PATH` / `CGO_LDFLAGS`; see [Go](go.md). `v0.1.8` still hardcodes a checkout `target/release` path |

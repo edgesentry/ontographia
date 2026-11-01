@@ -17,7 +17,11 @@ path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
+neo4rs = { version = "=0.9.0-rc.11", features = ["json", "unstable-bolt-protocol-impl-v2"] }
 ontographia-adapters = { workspace = true }
 ontographia-core = { workspace = true }
 ontographia-schema = { workspace = true }
+regex = "1"
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 serde_json = { workspace = true }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "io-util", "sync"] }
