@@ -1,5 +1,7 @@
 # Manual dry-run only (workflow_dispatch). Never runs on push to main.
-# Same validation as Release preflight; no tag or GitHub Release created. See docs/release.md
+# Same validation as Release preflight. No tag, GitHub Release, or registry publish.
+# NPM_TRUST_TOKEN reads trusted publisher settings. It is not a publish token.
+# See docs/release.md
 name: Release check
 
 on:
@@ -11,3 +13,5 @@ permissions:
 jobs:
   preflight:
     uses: ./.github/workflows/preflight-release.yml
+    secrets:
+      NPM_TRUST_TOKEN: ${{ secrets.NPM_TRUST_TOKEN }}

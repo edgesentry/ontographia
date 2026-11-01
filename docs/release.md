@@ -37,9 +37,24 @@ Both workflows share the same internal validation (`scripts/preflight-release.sh
 
 1. Open **Actions → Release check**.
 2. Click **Run workflow** (branch `main`).
-3. Confirm the run passes (version from `Cargo.toml`, tests, `cargo publish --dry-run` for `ontographia-core`, wheel build).
+3. Confirm the run passes. Preflight prints these lines, in order:
 
-No tag or GitHub Release is created.
+   - `release version ok`
+   - `release workflow ok: .github/workflows/release.yml name=Release job=publish-npm`
+   - `registry reachability ok` (read-only npm, crates.io, and PyPI)
+   - `npm trusted publishers ok` for `@edgesentry/ontographia` and the four platform packages
+   - `npm pack dry-run ok` (stub FFI archives; four platform `optionalDependencies`; no publish)
+   - `tag vX.Y.Z is available`
+   - `release check ok` (tests, `cargo publish --dry-run` for `ontographia-core`, wheels)
+   - `preflight ok for vX.Y.Z`
+
+No tag or GitHub Release is created. Nothing is published.
+
+The publisher check runs **before** the immutable-tag check. While `Cargo.toml` is still `0.1.7`, a run that gets past the publisher check still packs the npm tarballs, then stops with `tag already exists` and does not build wheels. A green run waits until `Cargo.toml` is a version whose tag is free.
+
+Trusted publisher **settings are not on the public package document**. `GET /-/package/{package}/trust` returns HTTP 401 `Bearer token authorization is required` until you send a bearer token for a user with write access. Accounts with 2FA must also send `npm-otp`. The check never reads `NPM_TOKEN`.
+
+Add a repository secret named **`NPM_TRUST_TOKEN`** (a granular token that can call that GET). Do not name it `NPM_TOKEN`, and do not put it on the `publish-npm` job. If the secret is unset, the run stops after the registry pings and prints the five access-page fields (GitHub Actions, `edgesentry` / `ontographia`, workflow filename `release.yml`, empty environment, **Allow npm publish**). A stored token cannot answer an interactive `npm-otp` challenge; the log says to run `npm trust list <package> --json` locally. That failure is what you want to clear before tagging `0.1.8` if win32 or the main package still has no publisher that allows `npm publish`.
 
 ### Release (publish)
 
@@ -86,11 +101,15 @@ gh run watch --workflow Release
 ```bash
 VERSION="$(bash scripts/workspace-version.sh)"
 bash scripts/verify-release-version.sh "v${VERSION}"
+node scripts/check-release-workflow.mjs
+bash scripts/check-registry-reachability.sh
+node scripts/check-npm-trusted-publishers.mjs
+node scripts/package-npm-dry-run.mjs
 bash scripts/verify-tag-not-exists.sh "v${VERSION}"
 bash scripts/release-check.sh
 ```
 
-(`preflight-release.sh` runs all three using the workspace version.)
+(`preflight-release.sh` runs these using the workspace version. `NPM_TRUST_TOKEN`, when set, is read only by the trusted-publisher check.)
 
 ### Trigger Release only (skip local preflight)
 
@@ -167,7 +186,7 @@ A trusted publisher created after 2026-09-03 allows `npm stage publish` until yo
 
 A new connection must complete its first successful publish within **2 days** or it expires. Save it when you are about to run Release, and run Release inside that window. An expired connection is deleted and created again; it cannot be edited.
 
-**npm publish is allowed only in the Release job `publish-npm`.** `scripts/publish-npm.sh` exits before it talks to the registry unless `GITHUB_ACTIONS=true`, `GITHUB_WORKFLOW=Release`, and `GITHUB_JOB=publish-npm`, and unless the OIDC request variables from `id-token: write` are present. `bindings/typescript` sets `prepublishOnly` so `npm publish` in that directory fails. Packing (`scripts/package-npm.mjs` / `npm pack`) does not upload and is the local check.
+**npm publish is allowed only in the Release job `publish-npm`.** `scripts/publish-npm.sh` exits before it talks to the registry unless `GITHUB_ACTIONS=true`, `GITHUB_WORKFLOW=Release`, and `GITHUB_JOB=publish-npm`, and unless the OIDC request variables from `id-token: write` are present. `bindings/typescript` sets `prepublishOnly` so `npm publish` in that directory fails. Packing (`scripts/package-npm.mjs` / `npm pack`, including `scripts/package-npm-dry-run.mjs` in preflight) does not upload. Preflight also refuses a `release.yml` whose name is not **Release**, whose publish job id is not `publish-npm`, or whose `upload-assets` job has no checkout and no `GH_REPO`. Those are the OIDC and `gh release upload` invariants. `scripts/check-npm-trusted-publishers.mjs` reads the five publisher records before any publish job; it does not publish.
 
 ### Re-running a failed Release
 
