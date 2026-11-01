@@ -80,7 +80,7 @@ gh workflow run "Release check" --ref main
 
 ```bash
 # 1. Bump version on main (via PR or locally)
-scripts/bump-version.sh 0.1.7 --commit
+scripts/bump-version.sh 0.1.8 --commit
 git push origin main
 
 # 2. (Recommended) dry-run
@@ -129,7 +129,7 @@ gh workflow run Release --ref main
 | TypeScript / npm | `bindings/typescript/package.json` `version`, kept equal to the workspace version by `scripts/bump-version.sh`. Preflight fails if they differ. Platform-package versions are not stored in git; `scripts/package-npm.mjs` stamps the workspace version when it packs them |
 
 ```bash
-scripts/bump-version.sh 0.1.7 --commit
+scripts/bump-version.sh 0.1.8 --commit
 ```
 
 The release workflow rejects versions that do not match `Cargo.toml` (`scripts/verify-release-version.sh`).
@@ -270,7 +270,7 @@ uvx --from "ontographia[cli]" otg --help
 ### Go
 
 ```bash
-go get github.com/edgesentry/ontographia/bindings/go@v0.1.7
+go get github.com/edgesentry/ontographia/bindings/go@v0.1.8
 ```
 
 Download the matching `libontographia_ffi-*` archive from GitHub Releases for cgo linking (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`).
