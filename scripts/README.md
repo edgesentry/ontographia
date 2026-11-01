@@ -44,7 +44,7 @@ Full setup: [docs/litellm-local.md](../docs/litellm-local.md)
 | [`release-check.sh`](release-check.sh) | Tests, `cargo publish --dry-run` (core only), wheel build (called by preflight) |
 | [`verify-release-version.sh`](verify-release-version.sh) | Ensure `vX.Y.Z` matches `Cargo.toml` and `bindings/typescript/package.json` |
 | [`package-npm.mjs`](package-npm.mjs) | Pack `@edgesentry/ontographia` plus prebuilt FFI platform tarballs |
-| [`publish-npm.sh`](publish-npm.sh) | Upload those tarballs. **Release workflow only** (`PUBLISH_TO_REGISTRIES`, npm Trusted Publishing / OIDC). Refuses laptops, agents, and `NPM_TOKEN` |
+| [`publish-npm.sh`](publish-npm.sh) | Upload those tarballs. **Release workflow only** (`PUBLISH_TO_REGISTRIES`, npm Trusted Publishing / OIDC). Skips versions already on npm, keeps going after one package fails, then exits non-zero with the failed names. Refuses laptops, agents, and `NPM_TOKEN` |
 | [`refuse-npm-publish.mjs`](refuse-npm-publish.mjs) | Block `npm publish` of the unpackaged TypeScript directory |
 | [`verify-tag-not-exists.sh`](verify-tag-not-exists.sh) | Fail if `vX.Y.Z` (or related sentinels) already exists on origin |
 | [`verify-release-not-processed.sh`](verify-release-not-processed.sh) | Fail if a release version was already claimed or has assets |
