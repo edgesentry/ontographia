@@ -17,6 +17,9 @@ path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
+# `unstable-bolt-protocol-impl-v2` is neo4rs client-side routing for neo4j:// and
+# neo4j+s://. It pulls nav-types → nalgebra → simba → unmaintained `paste`
+# (RUSTSEC-2024-0436, no fixed release). Ignored in osv-scanner.toml.
 neo4rs = { version = "=0.9.0-rc.11", features = ["json", "unstable-bolt-protocol-impl-v2"] }
 ontographia-adapters = { workspace = true }
 ontographia-core = { workspace = true }

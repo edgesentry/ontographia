@@ -7,9 +7,10 @@ cd "$ROOT"
 TARGET_DIR="${CARGO_TARGET_DIR:-target}"
 OTG="${TARGET_DIR}/release/otg"
 
-if [[ ! -x "$OTG" ]]; then
-  cargo build --release -p ontographia-cli
-fi
+# Always rebuild. CI restores `target/` from a cache that can contain an older
+# `otg` (build/schema only). Skipping cargo when that file is executable runs
+# the stale binary, which rejects `execute`.
+cargo build --release -p ontographia-cli
 
 smoke_build_and_schema() {
   local bin="$1"
