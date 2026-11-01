@@ -28,6 +28,14 @@ assert_mermaid_page() {
     echo "error: site/$rel/index.html does not load javascripts/mermaid.js" >&2
     exit 1
   fi
+  if ! grep -q 'javascripts/mermaid.min.js' "$html"; then
+    echo "error: site/$rel/index.html does not load the vendored mermaid bundle" >&2
+    exit 1
+  fi
+  if grep -q 'unpkg.com/mermaid' "$html"; then
+    echo "error: site/$rel/index.html loads Mermaid from unpkg" >&2
+    exit 1
+  fi
 }
 
 echo "==> assert: built HTML structure"

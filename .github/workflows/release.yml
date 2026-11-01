@@ -288,11 +288,12 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
+      # Pinned action verifies the uv 0.13.6 release checksum before wheels are published.
       - name: Install uv
-        shell: bash
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+        uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2  # v10.3.3
+        with:
+          version: "0.13.6"
+          enable-cache: false
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
         with:
           path: ~/.cache/uv
@@ -381,7 +382,15 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag -a "$GO_TAG" "${GITHUB_SHA}" -m "Release ${RELEASE_TAG} (Go module)"
+          # Same commit as vX.Y.Z. The dispatch ref can differ from the main
+          # checkout that created the release tag, so do not tag that ref.
+          TARGET="$(git rev-parse HEAD)"
+          TAG_COMMIT="$(git rev-parse "${RELEASE_TAG}^{commit}")"
+          if [[ "$TARGET" != "$TAG_COMMIT" ]]; then
+            echo "error: HEAD ${TARGET} is not ${RELEASE_TAG} (${TAG_COMMIT})" >&2
+            exit 1
+          fi
+          git tag -a "$GO_TAG" "$TARGET" -m "Release ${RELEASE_TAG} (Go module)"
           git push origin "$GO_TAG"
 
   publish-crates:

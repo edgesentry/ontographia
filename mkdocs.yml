@@ -35,8 +35,9 @@ validation:
     # Fail `mkdocs build --strict` on broken heading anchors (e.g. em-dash slug mistakes).
     anchors: warn
 
+# Vendored mermaid 10.9.5 (docs/javascripts/mermaid.min.js). Same origin; no CDN tag.
 extra_javascript:
-  - https://unpkg.com/mermaid@10/dist/mermaid.min.js
+  - javascripts/mermaid.min.js
   - javascripts/mermaid.js
 
 markdown_extensions:

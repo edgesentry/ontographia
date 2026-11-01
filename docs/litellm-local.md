@@ -140,7 +140,7 @@ dotenvx encrypt -f scripts/litellm/.env.encrypted \
 ### Guards
 
 - CI job `litellm-dotenvx` runs [`scripts/litellm/check_encrypted_env.sh`](https://github.com/edgesentry/ontographia/blob/main/scripts/litellm/check_encrypted_env.sh): tracked LiteLLM env files must not contain plaintext values (every secret value must start with `encrypted:`).
-- Optional: if repository secret `DOTENV_PRIVATE_KEY` is set, CI decrypts `.env.encrypted` as a smoke test; if unset, that step skips. **Do not** add the secret from automation — maintainers set it manually if desired.
+- Optional: if repository secret `DOTENV_PRIVATE_KEY` is set, the `litellm-dotenvx-decrypt` job on pushes to `main` decrypts `.env.encrypted` as a smoke test; if unset, that step skips. Pull requests do not receive that secret. **Do not** add the secret from automation — maintainers set it manually if desired.
 - Optional local hook: `git config core.hooksPath .githooks` (runs the same check).
 
 ## 1. One-time setup
