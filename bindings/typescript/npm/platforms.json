@@ -1,0 +1,38 @@
+{
+  "platforms": [
+    {
+      "id": "linux-x64",
+      "package": "@edgesentry/ontographia-linux-x64",
+      "os": "linux",
+      "cpu": "x64",
+      "libc": "glibc",
+      "artifact": "linux-x86_64",
+      "lib": "libontographia_ffi.so"
+    },
+    {
+      "id": "linux-arm64",
+      "package": "@edgesentry/ontographia-linux-arm64",
+      "os": "linux",
+      "cpu": "arm64",
+      "libc": "glibc",
+      "artifact": "linux-arm64",
+      "lib": "libontographia_ffi.so"
+    },
+    {
+      "id": "darwin-arm64",
+      "package": "@edgesentry/ontographia-darwin-arm64",
+      "os": "darwin",
+      "cpu": "arm64",
+      "artifact": "macos-arm64",
+      "lib": "libontographia_ffi.dylib"
+    },
+    {
+      "id": "win32-x64",
+      "package": "@edgesentry/ontographia-win32-x64",
+      "os": "win32",
+      "cpu": "x64",
+      "artifact": "windows-x86_64",
+      "lib": "ontographia_ffi.dll"
+    }
+  ]
+}

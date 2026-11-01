@@ -1,7 +1,7 @@
 {
   "name": "@edgesentry/ontographia",
   "version": "0.1.6",
-  "description": "TypeScript and JavaScript bindings for Ontographia. Wraps libontographia_ffi; does not reimplement query logic.",
+  "description": "TypeScript and JavaScript bindings for Ontographia. Loads a prebuilt libontographia_ffi with koffi. Does not reimplement query logic.",
   "license": "Apache-2.0",
   "type": "module",
   "engines": {
@@ -17,13 +17,15 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "npm/platforms.json"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.types.json --noEmit",
     "test": "tsc -p tsconfig.json && tsc -p tsconfig.types.json --noEmit && node --test test/*.test.mjs",
-    "demo": "npm run build && node examples/demo.mjs"
+    "demo": "npm run build && node examples/demo.mjs",
+    "prepublishOnly": "node ../../scripts/refuse-npm-publish.mjs"
   },
   "repository": {
     "type": "git",

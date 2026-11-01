@@ -1,5 +1,7 @@
 # Manual release only (workflow_dispatch). Never runs on push to main or release events.
-# Preflight → tag + GitHub Release → build & upload. Version from Cargo.toml. See docs/release.md
+# Preflight → tag + GitHub Release → build & upload. Version from Cargo.toml.
+# npm tarballs are always attached. npm publish runs only when PUBLISH_TO_REGISTRIES is true.
+# See docs/release.md
 name: Release
 
 on:
@@ -308,9 +310,36 @@ jobs:
           name: python-wheels-${{ matrix.platform }}-${{ matrix.python-version }}
           path: dist/*.whl
 
+  package-npm:
+    name: Package npm
+    needs: [resolve-version, build-ffi]
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238  # v6.2.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: bindings/typescript/package-lock.json
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          pattern: ffi-*
+          path: ffi-artifacts
+          merge-multiple: true
+      - name: Pack npm packages
+        run: node scripts/package-npm.mjs --ffi-archives ffi-artifacts --out dist/npm
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: npm-tarballs
+          path: dist/npm/*.tgz
+
   upload-assets:
     name: Upload GitHub Release assets
-    needs: [resolve-version, build-cli, build-ffi, build-wheels]
+    needs: [resolve-version, build-cli, build-ffi, build-wheels, package-npm]
     runs-on: ubuntu-latest
     env:
       RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
@@ -322,7 +351,7 @@ jobs:
       - name: Collect release files
         run: |
           mkdir -p release-files
-          find dist -type f \( -name '*.tar.gz' -o -name '*.whl' \) -exec cp {} release-files/ \;
+          find dist -type f \( -name '*.tar.gz' -o -name '*.whl' -o -name '*.tgz' \) -exec cp {} release-files/ \;
       - name: Upload to GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -412,3 +441,27 @@ jobs:
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           packages-dir: dist
+
+  publish-npm:
+    name: Publish npm
+    needs: [resolve-version, package-npm]
+    runs-on: ubuntu-latest
+    if: vars.PUBLISH_TO_REGISTRIES == 'true'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ needs.resolve-version.outputs.release_tag }}
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238  # v6.2.0
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: npm-tarballs
+          path: dist/npm
+      - name: Publish to npm
+        # publish-npm.sh refuses to run unless GITHUB_JOB is publish-npm
+        # (this job id). Do not rename the job id without updating that guard.
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: bash scripts/publish-npm.sh dist/npm

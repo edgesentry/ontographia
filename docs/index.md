@@ -32,7 +32,7 @@ Intent JSON is produced outside the core (LLM or hand-authored), constrained by 
 | Rust libs | `ontographia-core`, `ontographia-adapters`, `ontographia-schema` on [crates.io](https://crates.io). `cargo install ontographia-cli` installs the CLI crate |
 | Python | `pip install ontographia` (wheels for 3.11–3.13 on Linux, macOS arm64, Windows); optional Intent layer: `pip install "ontographia[llm]"` ([docs](llm.md)); optional MCP server: `pip install "ontographia[mcp]"` ([docs](mcp.md)) |
 | Go | `go get github.com/edgesentry/ontographia/bindings/go@v0.1.6` (+ FFI lib from Releases) |
-| TypeScript / JavaScript | From a git checkout: `bindings/typescript` (npm name `@edgesentry/ontographia`). User guide deferred. |
+| TypeScript / JavaScript | `npm install @edgesentry/ontographia` (Node.js 22+). Installs a prebuilt `libontographia_ffi` for Linux x64, Linux arm64, macOS arm64, and Windows x64. Not on npm until a Release run publishes it; until then use a checkout (`bindings/typescript`). User guide deferred. |
 
 Release process: [Release](release.md).
 
@@ -75,7 +75,7 @@ Detection and routing: `crates/ontographia-adapters/src/registry.rs`.
 | `otg` CLI and packaging | [otg CLI](otg.md) |
 | Python bindings (PyO3) | [Python](python.md) |
 | Go bindings (cgo / FFI) | [Go](go.md) |
-| TypeScript / JavaScript bindings | `bindings/typescript` (guide deferred) |
+| TypeScript / JavaScript bindings | `bindings/typescript` (registry upload is the Release workflow only; user guide deferred) |
 | Pipeline, COM, validation, emitters | [Architecture](architecture.md) |
 | Related Text2Cypher / adaptive-decoding work | [Related work](related-work.md) |
 | Intent layer (`ontographia[llm]`, experimental) | [Intent layer (LLM)](llm.md) |

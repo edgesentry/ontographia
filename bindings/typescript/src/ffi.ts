@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { arch, platform } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -18,6 +19,18 @@ type BuildFn = (
 ) => string;
 
 let buildFn: BuildFn | undefined;
+
+const nodeRequire = createRequire(import.meta.url);
+
+type PrebuildSpec = {
+  id: string;
+  package: string;
+  os: string;
+  cpu: string;
+  artifact: string;
+  lib: string;
+  libc?: string;
+};
 
 function sharedLibraryFileName(): string {
   switch (platform()) {
@@ -68,6 +81,73 @@ function findRepoRoot(start: string): string | undefined {
   return undefined;
 }
 
+function isPrebuildSpec(value: unknown): value is PrebuildSpec {
+  if (typeof value !== "object" || value === null) return false;
+  const spec = value as Record<string, unknown>;
+  if (
+    typeof spec.id !== "string" ||
+    typeof spec.package !== "string" ||
+    typeof spec.os !== "string" ||
+    typeof spec.cpu !== "string" ||
+    typeof spec.artifact !== "string" ||
+    typeof spec.lib !== "string"
+  ) {
+    return false;
+  }
+  return spec.libc === undefined || typeof spec.libc === "string";
+}
+
+/** Platform packages declared in `npm/platforms.json`. Empty when the file is absent. */
+function readPrebuildCatalog(): PrebuildSpec[] {
+  const manifest = join(packageDirectory(), "npm", "platforms.json");
+  if (!existsSync(manifest)) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(manifest, "utf8")) as unknown;
+  } catch (err) {
+    throw new OntographiaError(
+      `failed to read prebuild catalog ${manifest}: ${errorMessage(err)}`,
+    );
+  }
+  const platforms = (parsed as { platforms?: unknown }).platforms;
+  if (!Array.isArray(platforms)) {
+    throw new OntographiaError(
+      `prebuild catalog ${manifest} is missing a platforms array`,
+    );
+  }
+  return platforms.map((item, index) => {
+    if (!isPrebuildSpec(item)) {
+      throw new OntographiaError(
+        `prebuild catalog ${manifest} platforms[${index}] is invalid`,
+      );
+    }
+    return item;
+  });
+}
+
+function currentPrebuild(): PrebuildSpec | undefined {
+  const id = `${platform()}-${arch()}`;
+  return readPrebuildCatalog().find((item) => item.id === id);
+}
+
+/**
+ * Installed `@edgesentry/ontographia-<platform>` package, when npm selected one.
+ * `require.resolve` covers a hoisted install. The path under this package covers
+ * a nested `node_modules` before the package is linked.
+ */
+function bundledPrebuildCandidates(): string[] {
+  const spec = currentPrebuild();
+  if (!spec) return [];
+  const paths: string[] = [];
+  try {
+    paths.push(nodeRequire.resolve(spec.package));
+  } catch {
+    // Not installed: git checkout, unsupported host, or optional dependency skipped.
+  }
+  paths.push(join(packageDirectory(), "node_modules", spec.package, spec.lib));
+  return paths;
+}
+
 function unique(paths: string[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
@@ -79,12 +159,19 @@ function unique(paths: string[]): string[] {
   return out;
 }
 
-/** Absolute paths checked before the dynamic loader's default search path. */
-function ffiLibraryCandidates(): string[] {
+/**
+ * Absolute paths checked before the dynamic loader's default search path.
+ *
+ * `ONTOGRAPHIA_FFI_LIB` is applied by `loadLibrary` and replaces this list, so a
+ * custom build overrides the npm prebuild. `ONTOGRAPHIA_FFI_DIR` is next, then
+ * the platform package, then a git checkout's `target/release` and `target/debug`.
+ */
+export function ffiLibraryCandidates(): string[] {
   const name = sharedLibraryFileName();
   const paths: string[] = [];
   const dir = process.env.ONTOGRAPHIA_FFI_DIR;
   if (dir) paths.push(join(dir, name));
+  paths.push(...bundledPrebuildCandidates());
 
   const roots = [findRepoRoot(packageDirectory()), findRepoRoot(process.cwd())];
   for (const root of roots) {
@@ -126,8 +213,13 @@ function loadLibrary(): ReturnType<typeof koffi.load> {
     return koffi.load(name);
   } catch (err) {
     const looked = candidates.map((path) => `  ${path}`).join("\n");
+    const supported = readPrebuildCatalog()
+      .map((item) => item.id)
+      .join(", ");
     throw new OntographiaError(
-      `could not load ${name}. Build it with \`cargo build --release -p ontographia-ffi\` or set ONTOGRAPHIA_FFI_LIB.\nLooked in:\n${looked}\nLoader error: ${errorMessage(err)}`,
+      `could not load ${name}. \`npm install @edgesentry/ontographia\` ships a prebuilt for: ${supported || "(catalog missing)"}. ` +
+        `For a custom or dev build set ONTOGRAPHIA_FFI_LIB, or from a git checkout run \`cargo build --release -p ontographia-ffi\`.\n` +
+        `Looked in:\n${looked}\nLoader error: ${errorMessage(err)}`,
     );
   }
 }
