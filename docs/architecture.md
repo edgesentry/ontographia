@@ -202,8 +202,8 @@ COM → GraphSchema::from_com()
 CLI example:
 
 ```bash
-ontographia schema examples/manufacturing.native.yaml
-ontographia schema examples/manufacturing.native.yaml --snapshot examples/neo4j/catalog.snapshot.json
+otg schema examples/manufacturing.native.yaml
+otg schema examples/manufacturing.native.yaml --snapshot examples/neo4j/catalog.snapshot.json
 ```
 
 **Out of scope (v1):** Neo4j live introspection, data seed generation, automatic migration execution. Seed data remains in [`examples/neo4j/seed.cypher`](https://github.com/edgesentry/ontographia/blob/main/examples/neo4j/seed.cypher); generated constraints are tested for semantic equivalence.

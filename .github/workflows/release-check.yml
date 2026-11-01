@@ -1,7 +1,7 @@
 # Manual dry-run only (workflow_dispatch). Never runs on push to main.
 # Same validation as Release preflight. No tag, GitHub Release, or registry publish.
-# Does not read trusted publisher settings. Confirm those locally with npm trust list.
-# See docs/release.md
+# Does not read NPM_TRUST_TOKEN. Confirm publishers locally with npm trust list.
+# Required before Release, then the Mac smoke: docs/release.md#pre-release-checks
 name: Release check
 
 on:

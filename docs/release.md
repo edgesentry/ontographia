@@ -12,9 +12,9 @@ Ontographia ships **Rust crates + CLI**, a **Python wheel** (PyPI), **Go binding
 flowchart LR
   A[PR merge to main] --> B[CI green on main]
   B --> C[Bump version in Cargo.toml]
-  C --> D[Release check]
-  C --> E[Release]
-  D -. optional .-> E
+  C --> D[Release check green]
+  D --> M[Mac smoke]
+  M --> E[Release]
   E --> F[GitHub Release + artifacts]
   F --> G1[Release assets]
   F --> G2[crates.io optional]
@@ -24,12 +24,135 @@ flowchart LR
 
 1. Merge feature work to `main` and confirm [CI](https://github.com/edgesentry/ontographia/actions/workflows/ci.yml) passes.
 2. Bump the workspace version on `main` (see [Version bumps](#version-bumps)) — **no local git tag**.
-3. **(Recommended)** Run **[Release check](https://github.com/edgesentry/ontographia/actions/workflows/release-check.yml)** — dry-run only; no tag or release is created.
-4. Run **[Release](https://github.com/edgesentry/ontographia/actions/workflows/release.yml)** — reads `Cargo.toml`, creates `vX.Y.Z`, uploads artifacts.
+3. Run **[Release check](https://github.com/edgesentry/ontographia/actions/workflows/release-check.yml)** on `main` and wait until it is green. Detail: [GitHub Actions (Release check)](#github-actions-release-check).
+4. Run the [Mac workstation](#mac-workstation) smoke (Cursor Agent CLI, checkout under `~/agent-work`).
+5. Run **[Release](https://github.com/edgesentry/ontographia/actions/workflows/release.yml)** — reads `Cargo.toml`, creates `vX.Y.Z`, uploads artifacts.
+
+Steps 3 and 4 are the [pre-release checks](#pre-release-checks). Release waits until both are done.
 
 Both workflows share the same internal validation (`scripts/preflight-release.sh`). **No version input** — bump `Cargo.toml` on `main` first.
 
 **Immutable tags:** preflight fails if `vX.Y.Z`, `release-processed/vX.Y.Z`, or `bindings/go/vX.Y.Z` already exists on the remote. After a successful Release start, `release-processed/vX.Y.Z` is claimed; the same version cannot be re-released — bump the version in `Cargo.toml`.
+
+## Pre-release checks
+
+Run these before **Run workflow** on Release. Order:
+
+1. [Release check](https://github.com/edgesentry/ontographia/actions/workflows/release-check.yml) green on `main`.
+2. Mac workstation smoke below.
+3. Then Release.
+
+Release check validates the commit on `main` (the version in `Cargo.toml`, free tags, pack metadata, tests, wheels). The Mac smoke installs the channels a person on Apple Silicon uses. `brew upgrade` and `npm install` exercise the **already published** artifacts (v0.1.8 today). They do not compile the unreleased commit. The release workflow does not edit the Homebrew tap. After the GitHub Release exists, a follow-up pull request on [`edgesentry/homebrew-tap`](https://github.com/edgesentry/homebrew-tap) points `Formula/ontographia.rb` at the new archive.
+
+The Mac smoke runs under the **Cursor Agent CLI**, from a checkout under `~/agent-work`. agy stays on docs and decks.
+
+### GitHub Actions (Release check)
+
+```bash
+gh workflow run "Release check" --ref main
+gh run watch --workflow "Release check"
+```
+
+The job is `scripts/preflight-release.sh`. It does not create a tag, a GitHub Release, or a registry publish. A green run prints the lines under [Release check (dry-run)](#release-check-dry-run), in that order, and ends with `preflight ok for vX.Y.Z`.
+
+| Check | Green means |
+|-------|-------------|
+| Version | `Cargo.toml` `[workspace.package] version` and `bindings/typescript/package.json` `version` are the same `X.Y.Z` (`scripts/verify-release-version.sh`) |
+| Workflow file | `.github/workflows/release.yml` is named **Release**, the publish job id is `publish-npm`, and `upload-assets` checks out the repo and sets `GH_REPO` |
+| Registries | Read-only ping of npm, crates.io, and PyPI (`scripts/check-registry-reachability.sh`) |
+| npm packages | `@edgesentry/ontographia` and the four platform packages are on the public registry. The job reads that public document. It does not call `GET /-/package/{package}/trust` |
+| npm pack | `scripts/package-npm-dry-run.mjs` packs stub FFI archives. The main tarball lists four `optionalDependencies`. Nothing is uploaded |
+| Tags | `vX.Y.Z`, `release-processed/vX.Y.Z`, and `bindings/go/vX.Y.Z` are absent on the remote |
+| Build | `scripts/release-check.sh`: `cargo test --workspace`, CLI smoke, `cargo publish --dry-run` for `ontographia-core` only, a release build of the CLI, and maturin wheels for Python 3.11, 3.12, and 3.13 |
+
+Release check does not read `NPM_TRUST_TOKEN`. Do not add `NPM_TRUST_TOKEN`, a Bypass-2fa token, or `NPM_TOKEN` to GitHub Actions. `publish-npm` stays on Trusted Publishing (OIDC). Confirm the five publishers on a maintainer machine with `npm trust list` (commands in [Release check (dry-run)](#release-check-dry-run)). A missing trust token does not fail this job.
+
+A local `bash scripts/preflight-release.sh` runs the same script. The required signal is the Release check workflow on `main`.
+
+### Mac workstation
+
+Apple Silicon. Cursor Agent CLI. Checkout under `~/agent-work`. Record each item. A missing Neo4j server is a skip. The other items are required before Release.
+
+**Homebrew → `otg`.** [`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb) installs the Rust binary from the v0.1.8 archives. The command is `otg`.
+
+```bash
+brew tap edgesentry/tap
+brew upgrade ontographia || brew install ontographia
+otg --version
+otg build --help
+otg schema --help
+```
+
+`otg --version` prints `otg` and the formula version. This binary has `build` and `schema`. Read-only `execute` is still the Python entry point ([#121](https://github.com/edgesentry/ontographia/issues/121)).
+
+**npm, darwin-arm64 optional dependency.** Release check packs stub libraries on Linux. It does not load `libontographia_ffi.dylib`. On the Mac, install the published package in a clean directory. npm selects `@edgesentry/ontographia-darwin-arm64` and the dylib sits at the package root (`main` is `./libontographia_ffi.dylib`).
+
+```bash
+REPO="${HOME}/agent-work/ontographia"   # this checkout
+SMOKE="${HOME}/agent-work/ontographia-npm-smoke"
+rm -rf "$SMOKE" && mkdir -p "$SMOKE" && cd "$SMOKE"
+npm install @edgesentry/ontographia
+test -f node_modules/@edgesentry/ontographia-darwin-arm64/libontographia_ffi.dylib
+node --input-type=module -e '
+import { readFileSync } from "node:fs";
+import { buildCypherFromFiles } from "@edgesentry/ontographia";
+const intent = JSON.parse(readFileSync(process.argv[2], "utf8"));
+const r = buildCypherFromFiles(process.argv[1], intent);
+if (!r.query) process.exit(1);
+console.log(r.query.split("\n")[0]);
+' "$REPO/examples/manufacturing.native.yaml" "$REPO/examples/sample_intent.json"
+```
+
+Node.js 22+. Intel macOS, musl/Alpine, and Windows arm64 have no prebuilt library.
+
+**Python (`uvx` / `pip`).** Library install, separate from Homebrew. On Apple Silicon this wheel is the macOS arm64 build. `build` loads the extension:
+
+```bash
+REPO="${HOME}/agent-work/ontographia"   # this checkout
+uvx --from "ontographia[cli]" otg build \
+  --ontology "$REPO/examples/manufacturing.native.yaml" \
+  --intent "$REPO/examples/sample_intent.json"
+```
+
+**Neo4j execute, when a server is reachable.** Homebrew `otg` has no `execute` subcommand. Use the Python entry point. The movies demo needs no local database (login published by Neo4j; see [otg CLI](otg.md)):
+
+```bash
+REPO="${HOME}/agent-work/ontographia"   # this checkout
+uvx --from "ontographia[cli]" otg execute \
+  --ontology "$REPO/examples/movies.native.yaml" \
+  --intent "$REPO/examples/movies_matrix.json" \
+  --neo4j-uri neo4j+s://demo.neo4jlabs.com \
+  --neo4j-user movies \
+  --neo4j-password movies \
+  --neo4j-database movies
+```
+
+A local Neo4j (`./scripts/start_neo4j.sh --seed`, then the manufacturing intent in [End-to-end Neo4j](end-to-end-neo4j.md)) is the same check. If neither server answers, record "Neo4j execute skipped" and continue.
+
+**Go, against the Release dylib.** `go get` does not ship `libontographia_ffi`. Download `libontographia_ffi-<version>-macos-arm64.tar.gz` from the latest [GitHub Release](https://github.com/edgesentry/ontographia/releases).
+
+On `main`, `#cgo LDFLAGS` in `bindings/go/ontographia/ontographia.go` is still:
+
+```text
+-L${SRCDIR}/../../../target/release -lontographia_ffi -Wl,-rpath,${SRCDIR}/../../../target/release
+```
+
+`${SRCDIR}` is `bindings/go/ontographia`, so the linker looks for `<repo>/target/release/libontographia_ffi.dylib`. `DYLD_LIBRARY_PATH` is the runtime search path ([Go](go.md)). The linker does not read it. That checkout-relative `-L` is the open Go link UX: a Release dylib is not discovered on its own. Place the published library on that path, then test. The file must be the Release archive, not a library you just built with `cargo build`.
+
+```bash
+# from the repository root, under ~/agent-work
+VER=0.1.8   # version already on GitHub Releases
+gh release download "v${VER}" --repo edgesentry/ontographia \
+  --pattern "libontographia_ffi-${VER}-macos-arm64.tar.gz" --dir /tmp/otg-ffi --clobber
+mkdir -p target/release /tmp/otg-ffi
+tar -xzf "/tmp/otg-ffi/libontographia_ffi-${VER}-macos-arm64.tar.gz" -C /tmp/otg-ffi
+cp "/tmp/otg-ffi/libontographia_ffi-${VER}-macos-arm64/libontographia_ffi.dylib" target/release/
+export DYLD_LIBRARY_PATH="$(pwd)/target/release${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+cd bindings/go
+CGO_ENABLED=1 go test ./...
+```
+
+**Apple Silicon.** The Homebrew macOS arm64 archive, `@edgesentry/ontographia-darwin-arm64`, and `libontographia_ffi-*-macos-arm64` are the platform checks Linux Release check cannot run.
 
 ## Option A — GitHub Actions
 
@@ -71,8 +194,9 @@ An optional local read of the same API, outside Actions, is `NPM_TRUST_TOKEN=...
 ### Release (publish)
 
 1. Bump `[workspace.package] version` in `Cargo.toml` on `main` (see [Version bumps](#version-bumps)).
-2. Open **Actions → Release**.
-3. Click **Run workflow** (branch `main`) — no version field; the workflow reads `Cargo.toml`.
+2. Finish [pre-release checks](#pre-release-checks): Release check green on `main`, then the Mac smoke.
+3. Open **Actions → Release**.
+4. Click **Run workflow** (branch `main`) — no version field; the workflow reads `Cargo.toml`.
 
 Preflight runs internally, then the workflow creates `vX.Y.Z`, the GitHub Release, and uploads assets.
 
@@ -82,31 +206,36 @@ Requires [GitHub CLI](https://cli.github.com/) (`gh`) authenticated with `repo` 
 
 ### Release check only
 
+The required run is the workflow on `main`. `scripts/preflight-release.sh` is the same script, for a laptop; it does not replace that run.
+
 ```bash
-bash scripts/preflight-release.sh
-# or trigger the Release check workflow:
 gh workflow run "Release check" --ref main
+# same checks locally:
+bash scripts/preflight-release.sh
 ```
 
 ### Full release
 
 ```bash
 # 1. Bump version on main (via PR or locally)
-scripts/bump-version.sh 0.1.8 --commit
+scripts/bump-version.sh 0.1.9 --commit
 git push origin main
 
-# 2. (Recommended) dry-run
-bash scripts/preflight-release.sh
-# or: gh workflow run "Release check" --ref main
+# 2. Required: Release check workflow on main (see Pre-release checks)
+gh workflow run "Release check" --ref main
+gh run watch --workflow "Release check"
 
-# 3. Preflight locally + trigger Release workflow
-scripts/trigger-release.sh
+# 3. Required: Mac workstation smoke (docs/release.md#mac-workstation)
+#    Cursor Agent CLI, checkout under ~/agent-work
 
-# 4. Watch the run
+# 4. Trigger Release (the workflow runs preflight again on the runner)
+gh workflow run Release --ref main
+
+# 5. Watch the run
 gh run watch --workflow Release
 ```
 
-`trigger-release.sh` reads `Cargo.toml`, runs `preflight-release.sh`, then `gh workflow run Release`. The Release workflow still runs preflight on the runner.
+`scripts/trigger-release.sh` reads `Cargo.toml`, runs `preflight-release.sh` locally, then `gh workflow run Release`. Use it only after Release check is green on `main` and the Mac smoke is done. The Release workflow still runs preflight on the runner. A local preflight does not replace that workflow run.
 
 ### Preflight steps (shared by Release check and Release)
 
@@ -219,7 +348,7 @@ If a Release run fails partway through (for example after `ontographia-core` was
 
 | Channel | Role |
 |---------|------|
-| Homebrew `brew install ontographia` | Primary CLI. Rust binary. The command is **`otg`** once [`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb) is pointed at that filename. Read-only Neo4j execute belongs in this binary |
+| Homebrew `brew install ontographia` | Primary CLI. Rust binary. The published formula installs the command **`otg`** ([`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb), v0.1.8 archives). `build` and `schema` are in this binary. Read-only `execute` is still the Python entry point ([#121](https://github.com/edgesentry/ontographia/issues/121)) |
 | `pip` / `uvx` extras (`ontographia[cli]`, `[llm]`, `[mcp]`) | Python library and the Python `otg` entry point |
 | crates.io | Rust libraries and `cargo install ontographia-cli` |
 | Go module + `libontographia_ffi-*` on the GitHub Release | cgo bindings |
@@ -230,34 +359,32 @@ Guide: [otg CLI](otg.md). Decision: [#121](https://github.com/edgesentry/ontogra
 
 ### CLI (GitHub Release, Homebrew, or crates.io)
 
-The published tap (assets from **v0.1.3**) installs a binary named `ontographia`:
+The published tap installs `otg` from the **v0.1.8** archives (macOS arm64, Linux x86_64):
 
 ```bash
 brew tap edgesentry/tap
 brew install ontographia
+otg build --ontology manufacturing.native.yaml --intent intent.json --json
+otg schema manufacturing.native.yaml --out constraints.cypher --json-out schema.json
 ```
 
-```bash
-ontographia build --ontology manufacturing.native.yaml --intent intent.json --json
-ontographia schema manufacturing.native.yaml --out constraints.cypher --json-out schema.json
-```
-
-crates.io matches the last published crate:
+crates.io `ontographia-cli` 0.1.8 installs the same binary name:
 
 ```bash
 cargo install ontographia-cli
+otg --version
 ```
 
-**Next CLI release.** Cargo builds `otg`. `ontographia-{version}-{target}.tar.gz` contains that binary and a copy named `ontographia`, so the current formula keeps installing. `--version` prints `otg` for both files. After that release is published, a follow-up pull request on `edgesentry/homebrew-tap` changes `Formula/ontographia.rb` to install `otg` and can drop the extra filename from the archive. The release workflow does not edit the tap. Open the tap pull request only after the `otg` binary is in the GitHub Release.
+Cargo builds `otg`. `ontographia-{version}-{target}.tar.gz` also contains a copy of that file named `ontographia`. `--version` prints `otg` for both files. The formula prefers `otg` and, for an older archive that only has `ontographia`, installs that file as `otg`. The release workflow does not edit the tap. After the next GitHub Release, a follow-up pull request on `edgesentry/homebrew-tap` points `Formula/ontographia.rb` at the new archive.
 
-A checkout that already builds both filenames:
+A checkout:
 
 ```bash
 cargo install --path crates/ontographia-cli
 otg build --help
 ```
 
-Rust `otg` here has `build` and `schema`. Read-only `execute` in that binary is [#121](https://github.com/edgesentry/ontographia/issues/121). Until it ships, shell execute is the Python entry point below.
+Rust `otg` has `build` and `schema`. Read-only `execute` in that binary is [#121](https://github.com/edgesentry/ontographia/issues/121). Until it ships, shell execute is the Python entry point below.
 
 ### Rust libraries
 
@@ -285,7 +412,7 @@ uvx --from "ontographia[cli]" otg --help
 go get github.com/edgesentry/ontographia/bindings/go@v0.1.8
 ```
 
-Download the matching `libontographia_ffi-*` archive from GitHub Releases for cgo linking (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`).
+Download the matching `libontographia_ffi-*` archive from GitHub Releases for cgo linking (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`). On `main`, `#cgo LDFLAGS` still passes `-L${SRCDIR}/../../../target/release` (`bindings/go/ontographia/ontographia.go`). `DYLD_LIBRARY_PATH` / `LD_LIBRARY_PATH` cover runtime. The linker looks in that checkout `target/release` directory. Copy the Release library there before `go test`. That path is the open Go link UX. The Mac steps are in [Mac workstation](#mac-workstation).
 
 The release workflow creates `bindings/go/vX.Y.Z` on the same commit as `vX.Y.Z` (the `main` checkout that created the GitHub Release). The `release-processed/vX.Y.Z` claim uses that same checkout. Neither tag uses the commit that merely started the manual workflow, which can differ when `main` has moved or the run was dispatched from another ref.
 
@@ -316,7 +443,7 @@ User guide (`docs/typescript.md`) is still deferred. Package notes: [bindings/ty
 
 | Artifact | Contents |
 |----------|----------|
-| `ontographia-{version}-{target}.tar.gz` | CLI binary `otg`, plus a copy named `ontographia` so the current tap formula keeps installing. `--version` prints `otg`. Drop the copy after the tap installs `otg` |
+| `ontographia-{version}-{target}.tar.gz` | CLI binary `otg`, plus a copy named `ontographia` so an older formula that looks up that filename still installs. The v0.1.8 formula prefers `otg`. `--version` prints `otg` |
 | `libontographia_ffi-{version}-{target}.tar.gz` | Shared library for Go/cgo (`linux-x86_64`, `linux-arm64`, `macos-arm64`, `windows-x86_64`). The npm job consumes these same archives |
 | `ontographia-{version}-*.whl` | Python package (Linux x86_64/arm64, macOS arm64, Windows x86_64 × Python 3.11–3.13) |
 | `edgesentry-ontographia-{version}.tgz` | npm package `@edgesentry/ontographia` (loader + `optionalDependencies` on the platform packages) |

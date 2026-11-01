@@ -27,21 +27,19 @@ Intent JSON is produced outside the core (LLM or hand-authored), constrained by 
 
 | Target | Install |
 |--------|---------|
-| CLI (Homebrew, primary) | `brew tap edgesentry/tap` then `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap) `Formula/ontographia.rb`). Rust binary; the command is `otg`. The published tap still installs `ontographia` (`build` and `schema`) until the next CLI release and a tap update. Read-only execute joins that binary in the follow-up tracked by [#121](https://github.com/edgesentry/ontographia/issues/121). Guide: [otg](otg.md) |
+| CLI (Homebrew, primary) | `brew tap edgesentry/tap` then `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap) `Formula/ontographia.rb`, v0.1.8 archives). Rust binary; the command is `otg` (`build` and `schema`). Read-only `execute` is still the Python entry point ([#121](https://github.com/edgesentry/ontographia/issues/121)). Guide: [otg](otg.md) |
 | CLI (Python entry point) | `uvx --from "ontographia[cli]" otg` or `pip install "ontographia[cli]"`. Same command name on the library extra, including read-only `execute` today. This is the Python install, not the Homebrew install. [otg](otg.md) |
 | Rust libs | `ontographia-core`, `ontographia-adapters`, `ontographia-schema` on [crates.io](https://crates.io). `cargo install ontographia-cli` installs the CLI crate |
 | Python | `pip install ontographia` (wheels for 3.11–3.13 on Linux, macOS arm64, Windows); optional Intent layer: `pip install "ontographia[llm]"` ([docs](llm.md)); optional MCP server: `pip install "ontographia[mcp]"` ([docs](mcp.md)) |
 | Go | `go get github.com/edgesentry/ontographia/bindings/go@v0.1.8` (+ FFI lib from Releases) |
-| TypeScript / JavaScript | `npm install @edgesentry/ontographia` (Node.js 22+). Installs a prebuilt `libontographia_ffi` for Linux x64, Linux arm64, macOS arm64, and Windows x64. Not on npm until a Release run publishes it; until then use a checkout (`bindings/typescript`). User guide deferred. |
+| TypeScript / JavaScript | `npm install @edgesentry/ontographia` (Node.js 22+). Installs one prebuilt `libontographia_ffi` (Linux x64, Linux arm64, macOS arm64, Windows x64). Published at 0.1.8, including `@edgesentry/ontographia-darwin-arm64`. User guide deferred. |
 
-Release process: [Release](release.md).
+Release process, including what to run on GitHub Actions and on a Mac before the next Release: [Pre-release checks](release.md#pre-release-checks).
 
 ```bash
-# Released tap today: the command is still `ontographia`.
-# After the next CLI release and tap update, the same formula's command is `otg`.
-ontographia build --ontology examples/manufacturing.native.yaml \
+otg build --ontology examples/manufacturing.native.yaml \
   --intent examples/sample_intent.json --json
-ontographia schema examples/manufacturing.native.yaml --json-out schema.json
+otg schema examples/manufacturing.native.yaml --json-out schema.json
 ```
 
 **Quickstart:** language guides ([Rust](rust.md) / [Python](python.md) / [Go](go.md)) → [Neo4j walkthrough](end-to-end-neo4j.md).
@@ -84,7 +82,7 @@ Detection and routing: `crates/ontographia-adapters/src/registry.rs`.
 | Neo4j seed data + execute queries | [Neo4j walkthrough](end-to-end-neo4j.md) |
 | Ontology ↔ Neo4j schema alignment | [Ontology & graph alignment](ontology-graph-alignment.md) |
 | Local LLM via LiteLLM proxy | [LiteLLM (local)](litellm-local.md) |
-| Release tagging & CI artifacts | [Release](release.md) |
+| Release tagging, pre-release checks, CI artifacts | [Release](release.md#pre-release-checks) |
 | Repository directories | [Repository layout](repository-layout.md) |
 
 ## License

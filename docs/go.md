@@ -35,6 +35,8 @@ export LD_LIBRARY_PATH=/path/to/extracted/libontographia_ffi-0.1.8-*/
 export DYLD_LIBRARY_PATH=/path/to/extracted/libontographia_ffi-0.1.8-macos-arm64/
 ```
 
+Those variables are the runtime search path. On `main`, `#cgo LDFLAGS` in `bindings/go/ontographia/ontographia.go` still links `-L${SRCDIR}/../../../target/release`. From a checkout of this repo that directory is `target/release` at the repository root. Copy `libontographia_ffi.dylib` (or `.so`) there before `go test`, in addition to the runtime variable. A `go get` of the module does not point that `-L` at a downloaded Release archive. That checkout-relative link line is the open Go link UX. The Mac pre-release smoke uses the Release dylib this way: [Pre-release checks](release.md#mac-workstation).
+
 ## Basic usage
 
 Examples below use paths under `examples/` from a [git clone](https://github.com/edgesentry/ontographia) (no Rust build required when using the Release FFI library).
