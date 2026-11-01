@@ -24,7 +24,7 @@ cargo add ontographia-schema
 cargo install ontographia-cli
 ```
 
-Or via Homebrew: `brew tap edgesentry/tap` then `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap) `Formula/ontographia.rb`). That formula installs this Rust binary. The command name is `otg`. The published tap still installs a binary named `ontographia` (`build` and `schema`) until the next release and a tap update. Packaging and where read-only execute lives today: [`otg`](otg.md), [#121](https://github.com/edgesentry/ontographia/issues/121).
+Or via Homebrew: `brew tap edgesentry/tap` then `brew install ontographia` ([tap](https://github.com/edgesentry/homebrew-tap) `Formula/ontographia.rb`). That formula installs this Rust binary. The command name is `otg` (published formula: v0.1.8 archives, `build` and `schema`). Packaging and where read-only execute lives today: [`otg`](otg.md), [#121](https://github.com/edgesentry/ontographia/issues/121).
 
 ## Library usage
 
@@ -58,18 +58,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ```bash
 # Build Cypher from ontology + Intent JSON file
-ontographia build \
+otg build \
   --ontology examples/manufacturing.native.yaml \
   --intent examples/sample_intent.json \
   --json
 
 # Emit Neo4j schema artifacts (constraints, schema.json)
-ontographia schema examples/manufacturing.native.yaml --json-out schema.json
-ontographia schema examples/manufacturing.native.yaml \
+otg schema examples/manufacturing.native.yaml --json-out schema.json
+otg schema examples/manufacturing.native.yaml \
   --snapshot examples/neo4j/catalog.snapshot.json
 ```
 
-The samples use `ontographia`, the binary name on the published tap and on crates.io today. This crate also builds `otg` (same program; `default-run` is `otg`):
+The samples use `otg`, the binary name on the published tap and on crates.io (`ontographia-cli` 0.1.8). `default-run` is `otg`:
 
 ```bash
 cargo run -p ontographia-cli --bin otg -- build \

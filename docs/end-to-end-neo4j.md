@@ -76,7 +76,7 @@ This walkthrough uses **released packages** — no Rust toolchain required for t
 |------|-----|
 | Neo4j **2025.06+** | [§1 Start Neo4j](#1-start-neo4j) |
 | Example files and helper scripts | `git clone https://github.com/edgesentry/ontographia.git` (build not required) |
-| Ontographia CLI or Python | `brew install ontographia` (Rust binary; published tap command is `ontographia`, and that formula's command becomes `otg` after the next release and tap update — [otg](otg.md)) or `pip install ontographia`. Read-only execute from the shell today: `pip install "ontographia[cli]"` |
+| Ontographia CLI or Python | `brew install ontographia` (Rust binary; the published formula's command is `otg` — [otg](otg.md)) or `pip install ontographia`. Read-only execute from the shell today: `pip install "ontographia[cli]"` |
 | Neo4j driver (Python execute path) | `pip install neo4j` |
 
 Language-specific install details: [Rust](rust.md), [Python](python.md), [Go](go.md).
@@ -164,10 +164,10 @@ Or with the dev container running:
 
 ### Generate Cypher (CLI)
 
-Install the CLI if needed: `brew install ontographia` or `cargo install ontographia-cli`. The samples below use `ontographia`, the command the published tap installs. Packaging: [otg](otg.md).
+Install the CLI if needed: `brew install ontographia` or `cargo install ontographia-cli`. The samples below use `otg`, the command the published tap installs. Packaging: [otg](otg.md).
 
 ```bash
-ontographia build \
+otg build \
   --ontology examples/manufacturing.native.yaml \
   --intent examples/sample_intent.json \
   --json
@@ -311,7 +311,7 @@ for f in examples/manufacturing.native.yaml \
          examples/manufacturing.owl.ttl \
          examples/manufacturing.jsonld \
          examples/manufacturing.linkml.yaml; do
-  ontographia build --ontology "$f" --intent examples/sample_intent.json --json
+  otg build --ontology "$f" --intent examples/sample_intent.json --json
 done
 ```
 
