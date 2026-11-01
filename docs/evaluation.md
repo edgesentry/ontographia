@@ -202,6 +202,37 @@ uv run --with datasets python examples/llm/eval/run_track_b.py --record
 
 Check the Hugging Face dataset card for license before redistributing samples.
 
+## Feature-add checklist: Context Rot lens
+
+[Context Rot (Chroma, July 2025)](https://www.trychroma.com/research/context-rot) reports that model accuracy degrades as input grows, as distractors accumulate, and when the full context is supplied instead of a focused subset. Ontographia has **not** replicated that study (18 models, LongMemEval-style long inputs) and makes no comparable claim. The Track A results above are fixture measurements on Ontographia's own prompts and tasks; this checklist only records which of them to re-run when a feature changes the context the LLM sees.
+
+**When to use:** any roadmap feature that changes prompts (`build_initial_user_message`), schema exposure, subsetting / `subset_fallback` (`schema_policy`), or Intent extraction / repair. Re-run the mapped harnesses below, then refresh the tables and baselines above if numbers move.
+
+| Context Rot dimension | What to re-check | Existing harness (scripted today) |
+|-----------------------|------------------|-----------------------------------|
+| Input length / prompt tokens | full vs subset ≈tokens per profile; p50 / p95 | `run_track_a.py`, `run_track_a_h1.py` (mechanical), `run_track_a_h1_live.py` (live, p95), `run_track_a_h3.py` (total p95) |
+| Distractors / near-duplicates | whether a near-duplicate property is visible in the prompt and gets selected | `run_track_a.py` (silent-wrong), `run_track_a_h1.py` (mechanical induce), `run_track_a_h1_live.py` (near-dup picks, invent-without-seeing) |
+| Full schema vs focused subset (and `subset_fallback`) | Property Hit / compile / fallback rate under `full`, `subset`, `subset_fallback`; escalation spend | `run_track_a_h1.py`, `run_track_a_h1_live.py`, `run_track_a_h3.py` |
+| Intent extraction / repair | Empty@Valid recovery after execution feedback (changes the prompt sequence rather than context length) | `run_track_a_h2.py` |
+
+```bash
+# mechanical: prompt length, distractors, full / subset / subset_fallback, refine loop
+uv run python examples/llm/eval/run_track_a.py --record
+uv run python examples/llm/eval/run_track_a_h1.py --record
+uv run python examples/llm/eval/run_track_a_h3.py --record
+uv run python examples/llm/eval/run_track_a_h2.py --record
+
+# live Intent extraction (needs an OpenAI-compatible backend via LiteLLM)
+source scripts/litellm/use-provider.sh gemini-3.7
+uv run python examples/llm/eval/run_track_a_h1_live.py --profiles mid,large --record
+```
+
+**Coverage and limits today:**
+
+- Live evidence is the H1 live arm only: 40 gold × `mid`/`large`, one provider alias per run (Gemini 3.7 / 3.8 in the v0.1.6 re-runs), `temperature=0`. There is no long-input sweep, no many-model replication, and no LongMemEval-style study.
+- Track A mechanical, H2, and H3 measure prompt vocabulary and the spend/refine state machines with mock extractors — they do not measure live model accuracy.
+- [`scripts/remeasure/dry_run.py`](https://github.com/edgesentry/ontographia/blob/main/scripts/remeasure/dry_run.py) loads a saved Intent and checks its expected Cypher offline. It is a fixture consistency check only, **not** a live Context Rot / remeasure harness.
+
 ## Related
 
 - [Related work](related-work.md)

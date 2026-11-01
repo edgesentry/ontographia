@@ -2,6 +2,10 @@
 
 Offline experiments under `examples/llm/eval/`. Harnesses import the packaged module `ontographia.llm` (`pip install "ontographia[llm]"`). Published summaries: [docs/evaluation.md](../../../docs/evaluation.md). Unit tests for the Intent layer live in `tests/python/llm/` (CI).
 
+## Context Rot lens for feature adds
+
+Changes to prompts, schema exposure, subsetting / `subset_fallback`, or Intent extraction should re-run the harnesses mapped in the [Context Rot feature-add checklist](../../../docs/evaluation.md#feature-add-checklist-context-rot-lens). `scripts/remeasure/dry_run.py` is an offline fixture consistency check, not a live remeasure harness.
+
 ## Track A — distractor ontology stress test (Issues #49 / #50)
 
 Reproduces silent wrong-field selection on large schemas **without a live LLM**.

@@ -4,7 +4,7 @@ This roadmap describes where Ontographia is heading. It is organized into phases
 
 Ontographia's core principle stays fixed throughout: the LLM produces only **Intent JSON**; a deterministic, ontology-constrained pipeline in the Rust core validates it and emits **parameter-bound Cypher**. The LLM never writes Cypher.
 
-> Evaluation results referenced by this roadmap are published in [evaluation.md](evaluation.md). The roadmap itself makes no performance claims.
+> Evaluation results referenced by this roadmap are published in [evaluation.md](evaluation.md). The roadmap itself makes no performance claims. Feature changes to prompts, schema exposure, subsetting, or Intent extraction should follow the [Context Rot feature-add checklist](evaluation.md#feature-add-checklist-context-rot-lens).
 
 ## Overview
 
