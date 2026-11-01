@@ -40,6 +40,8 @@ jobs:
     uses: ./.github/workflows/preflight-release.yml
     with:
       version: ${{ needs.resolve-version.outputs.version }}
+    secrets:
+      NPM_TRUST_TOKEN: ${{ secrets.NPM_TRUST_TOKEN }}
 
   create-release:
     name: Create tag and GitHub Release
@@ -345,6 +347,12 @@ jobs:
     env:
       RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
     steps:
+      # gh release upload resolves the repository with git. This job only
+      # downloads artifacts, so without a checkout it exits
+      # "fatal: not a git repository".
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
         with:
           path: dist
@@ -356,8 +364,10 @@ jobs:
       - name: Upload to GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          # Equivalent to softprops/action-gh-release overwrite_files=true
+          # Equivalent to softprops/action-gh-release overwrite_files=true.
+          # GH_REPO names the repo even if git remote detection fails.
           gh release upload "${{ env.RELEASE_TAG }}" release-files/* --clobber
 
   tag-go-module:

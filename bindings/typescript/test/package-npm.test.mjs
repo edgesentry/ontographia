@@ -180,6 +180,144 @@ exit 99
     }
   });
 
+  it("skips versions already on npm, continues after one failure, and names it", () => {
+    const work = mkdtempSync(join(tmpdir(), "ontographia-partial-"));
+    try {
+      const bin = join(work, "bin");
+      const log = join(work, "npm.log");
+      const tarballs = join(work, "tarballs");
+      mkdirSync(bin);
+      mkdirSync(tarballs);
+      writeFileSync(
+        join(bin, "npm"),
+        `#!/bin/sh
+echo "$@" >> ${JSON.stringify(log)}
+if [ "$1" = "--version" ]; then
+  echo "11.5.1"
+  exit 0
+fi
+if [ "$1" = "view" ]; then
+  case "$2" in
+    @edgesentry/ontographia-darwin-arm64@9.9.9|@edgesentry/ontographia-linux-arm64@9.9.9|@edgesentry/ontographia-linux-x64@9.9.9)
+      exit 0
+      ;;
+  esac
+  exit 1
+fi
+if [ "$1" = "publish" ]; then
+  case "$2" in
+    *win32*)
+      echo "npm error code ENEEDAUTH" >&2
+      exit 1
+      ;;
+  esac
+  exit 0
+fi
+exit 99
+`,
+      );
+      chmodSync(join(bin, "npm"), 0o755);
+      writeFileSync(log, "");
+      const version = "9.9.9";
+      const platforms = [
+        "@edgesentry/ontographia-linux-x64",
+        "@edgesentry/ontographia-linux-arm64",
+        "@edgesentry/ontographia-darwin-arm64",
+        "@edgesentry/ontographia-win32-x64",
+      ];
+      for (const name of platforms) {
+        writePackageTarball(tarballs, { name, version });
+      }
+      writePackageTarball(tarballs, {
+        name: "@edgesentry/ontographia",
+        version,
+        optionalDependencies: Object.fromEntries(platforms.map((name) => [name, version])),
+      });
+      const result = spawnSync(
+        "bash",
+        [join(repoRoot, "scripts", "publish-npm.sh"), tarballs],
+        { encoding: "utf8", env: releasePublishEnv(bin) },
+      );
+      assert.equal(result.status, 1, `${result.stdout}\n${result.stderr}`);
+      assert.match(result.stdout, /@edgesentry\/ontographia-darwin-arm64@9\.9\.9 already on npm/);
+      assert.match(result.stdout, /@edgesentry\/ontographia-linux-arm64@9\.9\.9 already on npm/);
+      assert.match(result.stdout, /@edgesentry\/ontographia-linux-x64@9\.9\.9 already on npm/);
+      assert.match(result.stdout, /Publishing @edgesentry\/ontographia-win32-x64@9\.9\.9/);
+      assert.match(result.stdout, /Publishing @edgesentry\/ontographia@9\.9\.9/);
+      assert.equal(result.stdout.includes("npm publish ok"), false);
+      assert.match(result.stderr, /npm publish incomplete/);
+      assert.match(result.stderr, /@edgesentry\/ontographia-win32-x64@9\.9\.9/);
+      assert.match(result.stderr, /ENEEDAUTH/);
+      const publishes = readFileSync(log, "utf8")
+        .split("\n")
+        .filter((line) => line.startsWith("publish "));
+      assert.deepEqual(
+        publishes.map((line) => line.includes("win32")),
+        [true, false],
+      );
+    } finally {
+      rmSync(work, { recursive: true, force: true });
+    }
+  });
+
+  it("exits 0 when every package version is already on npm", () => {
+    const work = mkdtempSync(join(tmpdir(), "ontographia-skip-all-"));
+    try {
+      const bin = join(work, "bin");
+      const log = join(work, "npm.log");
+      const tarballs = join(work, "tarballs");
+      mkdirSync(bin);
+      mkdirSync(tarballs);
+      writeFileSync(
+        join(bin, "npm"),
+        `#!/bin/sh
+echo "$@" >> ${JSON.stringify(log)}
+if [ "$1" = "--version" ]; then
+  echo "11.5.1"
+  exit 0
+fi
+if [ "$1" = "view" ]; then
+  exit 0
+fi
+exit 99
+`,
+      );
+      chmodSync(join(bin, "npm"), 0o755);
+      writeFileSync(log, "");
+      const version = "9.9.9";
+      const platforms = [
+        "@edgesentry/ontographia-linux-x64",
+        "@edgesentry/ontographia-linux-arm64",
+        "@edgesentry/ontographia-darwin-arm64",
+        "@edgesentry/ontographia-win32-x64",
+      ];
+      for (const name of platforms) {
+        writePackageTarball(tarballs, { name, version });
+      }
+      writePackageTarball(tarballs, {
+        name: "@edgesentry/ontographia",
+        version,
+        optionalDependencies: Object.fromEntries(platforms.map((name) => [name, version])),
+      });
+      const result = spawnSync(
+        "bash",
+        [join(repoRoot, "scripts", "publish-npm.sh"), tarballs],
+        { encoding: "utf8", env: releasePublishEnv(bin) },
+      );
+      assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+      assert.match(result.stdout, /npm publish ok/);
+      for (const name of [...platforms, "@edgesentry/ontographia"]) {
+        assert.match(result.stdout, new RegExp(`${name.replace("/", "\\/")}@9\\.9\\.9 already on npm`));
+      }
+      const publishes = readFileSync(log, "utf8")
+        .split("\n")
+        .filter((line) => line.startsWith("publish "));
+      assert.equal(publishes.length, 0);
+    } finally {
+      rmSync(work, { recursive: true, force: true });
+    }
+  });
+
   it("refuses npm older than Trusted Publishing support", () => {
     const work = mkdtempSync(join(tmpdir(), "ontographia-old-npm-"));
     const bin = join(work, "bin");

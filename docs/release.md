@@ -37,9 +37,24 @@ Both workflows share the same internal validation (`scripts/preflight-release.sh
 
 1. Open **Actions → Release check**.
 2. Click **Run workflow** (branch `main`).
-3. Confirm the run passes (version from `Cargo.toml`, tests, `cargo publish --dry-run` for `ontographia-core`, wheel build).
+3. Confirm the run passes. Preflight prints these lines, in order:
 
-No tag or GitHub Release is created.
+   - `release version ok`
+   - `release workflow ok: .github/workflows/release.yml name=Release job=publish-npm`
+   - `registry reachability ok` (read-only npm, crates.io, and PyPI)
+   - `npm trusted publishers ok` for `@edgesentry/ontographia` and the four platform packages
+   - `npm pack dry-run ok` (stub FFI archives; four platform `optionalDependencies`; no publish)
+   - `tag vX.Y.Z is available`
+   - `release check ok` (tests, `cargo publish --dry-run` for `ontographia-core`, wheels)
+   - `preflight ok for vX.Y.Z`
+
+No tag or GitHub Release is created. Nothing is published.
+
+The publisher check runs **before** the immutable-tag check. While `Cargo.toml` is still `0.1.7`, a run that gets past the publisher check still packs the npm tarballs, then stops with `tag already exists` and does not build wheels. A green run waits until `Cargo.toml` is a version whose tag is free.
+
+Trusted publisher **settings are not on the public package document**. `GET /-/package/{package}/trust` returns HTTP 401 `Bearer token authorization is required` until you send a bearer token for a user with write access. Accounts with 2FA must also send `npm-otp`. The check never reads `NPM_TOKEN`.
+
+Add a repository secret named **`NPM_TRUST_TOKEN`** (a granular token that can call that GET). Do not name it `NPM_TOKEN`, and do not put it on the `publish-npm` job. If the secret is unset, the run stops after the registry pings and prints the five access-page fields (GitHub Actions, `edgesentry` / `ontographia`, workflow filename `release.yml`, empty environment, **Allow npm publish**). A stored token cannot answer an interactive `npm-otp` challenge; the log says to run `npm trust list <package> --json` locally. That failure is what you want to clear before tagging `0.1.8` if win32 or the main package still has no publisher that allows `npm publish`.
 
 ### Release (publish)
 
@@ -86,11 +101,15 @@ gh run watch --workflow Release
 ```bash
 VERSION="$(bash scripts/workspace-version.sh)"
 bash scripts/verify-release-version.sh "v${VERSION}"
+node scripts/check-release-workflow.mjs
+bash scripts/check-registry-reachability.sh
+node scripts/check-npm-trusted-publishers.mjs
+node scripts/package-npm-dry-run.mjs
 bash scripts/verify-tag-not-exists.sh "v${VERSION}"
 bash scripts/release-check.sh
 ```
 
-(`preflight-release.sh` runs all three using the workspace version.)
+(`preflight-release.sh` runs these using the workspace version. `NPM_TRUST_TOKEN`, when set, is read only by the trusted-publisher check.)
 
 ### Trigger Release only (skip local preflight)
 
@@ -161,9 +180,13 @@ The file is `.github/workflows/release.yml`. Its workflow `name:` is **Release**
 
 A trusted publisher created after 2026-09-03 allows `npm stage publish` until you also allow direct `npm publish`. The Release job runs `npm publish`. Turn **Allow npm publish** on.
 
+`os` and `cpu` on a platform `package.json` (`scripts/package-npm.mjs`) choose which optional dependency npm installs. They do not decide whether `npm publish` is allowed. The v0.1.7 Release runner was Linux and still published `@edgesentry/ontographia-darwin-arm64@0.1.7` (`"os": ["darwin"]`) with provenance. Leave those fields in place, including on `@edgesentry/ontographia-win32-x64` (`"os": ["win32"]`, `"cpu": ["x64"]`, no `libc`).
+
+**Win32 uses the same Trusted Publisher as the other four packages.** Release run [41265294898](https://github.com/edgesentry/ontographia/actions/runs/41265294898) published `@edgesentry/ontographia-darwin-arm64`, `@edgesentry/ontographia-linux-arm64`, and `@edgesentry/ontographia-linux-x64` at `0.1.7` via OIDC. `@edgesentry/ontographia-win32-x64@0.1.7` then returned `ENEEDAUTH` (`need auth`). The package already exists (`0.0.0` and `0.0.0-stage`); `0.1.7` was not published, and neither was `@edgesentry/ontographia@0.1.7`, because the script stopped at the first failure. That is a missing, expired, or publish-disallowed Trusted Publisher on the win32 package alone. Re-check [its access page](https://www.npmjs.com/package/@edgesentry/ontographia-win32-x64/access) against the table above before re-running Release. Do the same for [`@edgesentry/ontographia`](https://www.npmjs.com/package/@edgesentry/ontographia/access) if the main package has not been published at this version yet.
+
 A new connection must complete its first successful publish within **2 days** or it expires. Save it when you are about to run Release, and run Release inside that window. An expired connection is deleted and created again; it cannot be edited.
 
-**npm publish is allowed only in the Release job `publish-npm`.** `scripts/publish-npm.sh` exits before it talks to the registry unless `GITHUB_ACTIONS=true`, `GITHUB_WORKFLOW=Release`, and `GITHUB_JOB=publish-npm`, and unless the OIDC request variables from `id-token: write` are present. `bindings/typescript` sets `prepublishOnly` so `npm publish` in that directory fails. Packing (`scripts/package-npm.mjs` / `npm pack`) does not upload and is the local check.
+**npm publish is allowed only in the Release job `publish-npm`.** `scripts/publish-npm.sh` exits before it talks to the registry unless `GITHUB_ACTIONS=true`, `GITHUB_WORKFLOW=Release`, and `GITHUB_JOB=publish-npm`, and unless the OIDC request variables from `id-token: write` are present. `bindings/typescript` sets `prepublishOnly` so `npm publish` in that directory fails. Packing (`scripts/package-npm.mjs` / `npm pack`, including `scripts/package-npm-dry-run.mjs` in preflight) does not upload. Preflight also refuses a `release.yml` whose name is not **Release**, whose publish job id is not `publish-npm`, or whose `upload-assets` job has no checkout and no `GH_REPO`. Those are the OIDC and `gh release upload` invariants. `scripts/check-npm-trusted-publishers.mjs` reads the five publisher records before any publish job; it does not publish.
 
 ### Re-running a failed Release
 
@@ -171,8 +194,14 @@ If a Release run fails partway through (for example after `ontographia-core` was
 
 - **crates.io:** publish jobs skip crates that already exist at the workspace version.
 - **Go:** the workflow fails fast if `bindings/go/vX.Y.Z` already exists — do not delete that tag; bump the version instead.
-- **npm:** platform packages publish first, then `@edgesentry/ontographia`. Versions already on npm are skipped. npm versions are immutable; replace a bad native by bumping `Cargo.toml` (and the TypeScript `package.json` via `scripts/bump-version.sh`). A missing trusted publisher, a workflow filename other than `release.yml`, or a publisher that does not allow `npm publish` fails the job (`ENEEDAUTH`).
-- **GitHub Release assets:** the upload step overwrites release files when re-run succeeds.
+- **npm:** platform tarballs publish first (lexical filename order: `darwin-arm64`, `linux-arm64`, `linux-x64`, `win32-x64`), then `@edgesentry/ontographia`. Versions already on npm are skipped, so a re-run is safe when some packages are already at this version (for `0.1.7`, the three platform packages above). A missing trusted publisher, a workflow filename other than `release.yml`, or a publisher that does not allow `npm publish` makes that one package return `ENEEDAUTH`. The script still attempts the remaining tarballs, then exits non-zero and lists the names that are not on the registry. npm versions are immutable; replace a bad native by bumping `Cargo.toml` (and the TypeScript `package.json` via `scripts/bump-version.sh`). Do not delete tag `v0.1.7` to retry this publish.
+- **GitHub Release assets:** `upload-assets` checks out the release tag and sets `GH_REPO`. `gh release upload` needs a git checkout or `GH_REPO`; without either it exits `fatal: not a git repository`. The upload overwrites files of the same name (`--clobber`).
+
+**Re-run uses the workflow file from that run's commit**, not a later commit on `main`. For [run 41265294898](https://github.com/edgesentry/ontographia/actions/runs/41265294898) (`c6ca92a`, tag `v0.1.7`):
+
+1. On npm, open [@edgesentry/ontographia-win32-x64 access](https://www.npmjs.com/package/@edgesentry/ontographia-win32-x64/access) and save the same Trusted Publisher as the other four packages (table above, **Allow npm publish** on). Also confirm [@edgesentry/ontographia access](https://www.npmjs.com/package/@edgesentry/ontographia/access) before the main package is published.
+2. **Re-run failed jobs** on that run. `publish-npm` checks out tag `v0.1.7`. The script on that tag already skips `@edgesentry/ontographia-darwin-arm64@0.1.7`, `@edgesentry/ontographia-linux-arm64@0.1.7`, and `@edgesentry/ontographia-linux-x64@0.1.7`, then publishes win32 and `@edgesentry/ontographia`. Do this only after step 1. The continue-on-failure behavior in this document is on `main` after the fix is merged; the tag does not move.
+3. Do not expect that same re-run to fix `upload-assets`. It still executes the workflow from `c6ca92a`, which does not check out the repo. Do not start a new Release for `0.1.7`: preflight refuses because `v0.1.7` and `release-processed/v0.1.7` already exist. Do not delete those tags. Attach the assets from the run with `gh release upload v0.1.7 <files> --clobber` (the run's artifacts are the CLI, FFI, wheel, and npm tarballs). The checkout fix applies to the next Release, which is a new `Cargo.toml` version.
 
 ## Install after release
 
