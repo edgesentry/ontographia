@@ -199,3 +199,48 @@ jobs:
           CGO_ENABLED: "1"
           LD_LIBRARY_PATH: ${{ github.workspace }}/target/release
         run: go test -v ./...
+
+  # TypeScript binding smoke. 26 is the current LTS; 22 stays supported through 2027-04.
+  node:
+    name: node (${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ["22", "26"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Install Rust stable
+        run: |
+          rustup toolchain install stable --profile minimal --no-self-update
+          rustup default stable
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-node-
+            ${{ runner.os }}-cargo-
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238  # v6.2.0
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: bindings/typescript/package-lock.json
+      - name: build FFI library
+        run: cargo build --release -p ontographia-ffi
+      - name: npm test
+        working-directory: bindings/typescript
+        env:
+          LD_LIBRARY_PATH: ${{ github.workspace }}/target/release
+        run: |
+          npm ci
+          npm test
+      - name: demo
+        working-directory: bindings/typescript
+        env:
+          LD_LIBRARY_PATH: ${{ github.workspace }}/target/release
+        run: npm run demo

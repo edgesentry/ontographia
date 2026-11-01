@@ -64,6 +64,7 @@ cargo run -p ontographia-adapters --example intent_to_cypher -- examples/manufac
 cargo run -p ontographia-cli --bin otg -- schema examples/manufacturing.native.yaml
 uv sync --group dev && uv run maturin develop --release
 cargo build --release -p ontographia-ffi && cd bindings/go && go test ./...
+cargo build --release -p ontographia-ffi && cd bindings/typescript && npm ci && npm test
 python examples/run_neo4j_demo.py --ontology examples/manufacturing.native.yaml
 python scripts/neo4j_integration_test.py
 ```
