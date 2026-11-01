@@ -30,7 +30,7 @@ Ontology → COM → validate(Intent) → AST → Cypher 25 + $params
 | Evaluation baselines | [docs/evaluation.md](docs/evaluation.md) |
 | Related Text2Cypher work | [docs/related-work.md](docs/related-work.md) |
 | Repo layout | [docs/repository-layout.md](docs/repository-layout.md) |
-| Release | [docs/release.md](docs/release.md) |
+| Release (Actions vs Mac before the next cut) | [docs/release.md](docs/release.md#pre-release-checks) |
 
 Tutorials and tables live under [`docs/`](docs/) — this file is an index only.
 
@@ -43,7 +43,7 @@ pip install "ontographia[llm]"   # optional Intent layer — docs/llm.md
 pip install "ontographia[mcp]"   # optional MCP server — docs/mcp.md
 pip install "ontographia[cli]"   # optional `otg` command — docs/otg.md
 
-ontographia build --ontology examples/manufacturing.native.yaml \
+otg build --ontology examples/manufacturing.native.yaml \
   --intent examples/sample_intent.json --json
 ```
 

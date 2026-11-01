@@ -28,7 +28,7 @@ Ontographia converts **ontology definitions** + **Intent JSON** into **determini
 | MCP server for agents | [docs/mcp.md](docs/mcp.md) (`ontographia[mcp]`, `ontographia-mcp`) |
 | Short CLI `otg` (Homebrew = Rust binary; Python entry point) | [docs/otg.md](docs/otg.md) |
 | LiteLLM local setup | [docs/litellm-local.md](docs/litellm-local.md) |
-| Release | [docs/release.md](docs/release.md) |
+| Release (Actions vs Mac before the next cut) | [docs/release.md](docs/release.md#pre-release-checks) |
 | CodeQL | [docs/codeql-setup.md](docs/codeql-setup.md) |
 | COM / native ontology JSON Schema | [schemas/com.schema.json](schemas/com.schema.json), [schemas/native_ontology.schema.json](schemas/native_ontology.schema.json) |
 

@@ -76,7 +76,7 @@ This walkthrough uses **released packages** — no Rust toolchain required for t
 |------|-----|
 | Neo4j **2025.06+** | [§1 Start Neo4j](#1-start-neo4j) |
 | Example files and helper scripts | `git clone https://github.com/edgesentry/ontographia.git` (build not required) |
-| Ontographia CLI or Python | `brew install ontographia` (Rust binary; the command is `otg` after the next release and tap update — [otg](otg.md)). Homebrew `otg` runs read-only `execute` when Neo4j is available. The published tap still installs `ontographia` with `build` and `schema` only until that update. `pip install "ontographia[cli]"` is the Python `otg`, which also executes |
+| Ontographia CLI or Python | `brew install ontographia` (Rust binary; the published formula's command is `otg` — [otg](otg.md)). The v0.1.8 archive has `build` and `schema`. This tree's `otg` runs read-only `execute` when Neo4j is available; Homebrew picks that up after the next release and tap update. `pip install "ontographia[cli]"` is the Python `otg`, which also executes |
 | Neo4j driver (Python execute path) | `pip install neo4j` (the Rust `otg` binary links its own Bolt driver) |
 
 Language-specific install details: [Rust](rust.md), [Python](python.md), [Go](go.md).
@@ -164,10 +164,10 @@ Or with the dev container running:
 
 ### Generate Cypher (CLI)
 
-Install the CLI if needed: `brew install ontographia` or `cargo install ontographia-cli`. The samples below use `ontographia`, the command the published tap installs. Packaging: [otg](otg.md).
+Install the CLI if needed: `brew install ontographia` or `cargo install ontographia-cli`. The samples below use `otg`, the command the published tap installs. Packaging: [otg](otg.md).
 
 ```bash
-ontographia build \
+otg build \
   --ontology examples/manufacturing.native.yaml \
   --intent examples/sample_intent.json \
   --json
@@ -311,7 +311,7 @@ for f in examples/manufacturing.native.yaml \
          examples/manufacturing.owl.ttl \
          examples/manufacturing.jsonld \
          examples/manufacturing.linkml.yaml; do
-  ontographia build --ontology "$f" --intent examples/sample_intent.json --json
+  otg build --ontology "$f" --intent examples/sample_intent.json --json
 done
 ```
 

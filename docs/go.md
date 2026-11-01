@@ -116,6 +116,8 @@ go build
 
 `eval "$(bindings/go/scripts/ffi-env.sh)"` prints the same exports when you cannot source the file.
 
+The Mac pre-release smoke links this tree the same way, against the published macOS archive, and does not pass `-tags ontographia_checkout`: [Pre-release checks](release.md#mac-workstation).
+
 ## Basic usage
 
 Examples below use paths under `examples/` from a [git clone](https://github.com/edgesentry/ontographia). The Release FFI library is enough; a Rust toolchain is not, once the variables above are set.

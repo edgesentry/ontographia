@@ -12,33 +12,34 @@ Homebrew is the front door for the CLI. Language package managers are the front 
 
 | Channel | Install | What you get |
 |---------|---------|----------------|
-| Homebrew (primary CLI) | `brew tap edgesentry/tap` then `brew install ontographia` | Rust binary. The command is **`otg`**. It includes read-only Neo4j `execute`, which runs when Neo4j is available. Formula: [`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb) |
+| Homebrew (primary CLI) | `brew tap edgesentry/tap` then `brew install ontographia` | Rust binary. The command is **`otg`**. The published v0.1.8 archive has `build` and `schema`. This tree's `otg` also runs read-only `execute` when Neo4j is available; the tap picks that up after the next release. Formula: [`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb) |
 | Python | `uvx --from "ontographia[cli]" otg` or `pip install "ontographia[cli]"` | Library extra and the same `otg` entry point. This is how you call Ontographia from Python. It is the library install, not the Homebrew install |
 | Rust crates | [crates.io](https://crates.io): `cargo install ontographia-cli`, `cargo add ontographia-core` (and `-adapters`, `-schema`) | Libraries and the CLI crate |
 | Go | `go get` the module; matching `libontographia_ffi-*` archive from [GitHub Releases](https://github.com/edgesentry/ontographia/releases) | cgo bindings. See [Go](go.md) |
 | MCP | `uvx --from "ontographia[mcp]" ontographia-mcp` or `pip install "ontographia[mcp]"` | MCP server. See [MCP server](mcp.md) |
 
-The PyPI wheel is the pip / uvx artifact. Homebrew installs the Rust binary from the GitHub Release archive. This repository does not ship a Homebrew formula for that wheel. The formula lives in the tap under the name `ontographia`. The command it installs is `otg` after the tap update below. The formula published today still installs a binary named `ontographia`.
+The PyPI wheel is the pip / uvx artifact. Homebrew installs the Rust binary from the GitHub Release archive. This repository does not ship a Homebrew formula for that wheel. The formula lives in the tap under the name `ontographia`. The command it installs is `otg`.
 
-### Published tap today
+### Published tap (v0.1.8)
 
-[`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb) on the tap points at the **v0.1.3** release archive and installs a binary named `ontographia` (`build` and `schema`). That archive has no Neo4j driver.
+[`Formula/ontographia.rb`](https://github.com/edgesentry/homebrew-tap/blob/main/Formula/ontographia.rb) points at the **v0.1.8** archives (macOS arm64 and Linux x86_64) and installs the binary as `otg` (`build` and `schema`).
 
-This repository's Rust `otg` includes read-only `execute`. Homebrew picks that up when the next CLI release is published and the tap formula is updated. Until that tap update, `brew install ontographia` is still the older binary. `pip install "ontographia[cli]"` / `uvx` remain the Python `otg`, which also executes.
+This repository's Rust `otg` also includes read-only `execute`. Homebrew picks that up when the next CLI release is published and the tap formula is updated. Until that tap update, `brew install ontographia` is the v0.1.8 binary (`build` and `schema`). `pip install "ontographia[cli]"` / `uvx` remain the Python `otg`, which also executes.
 
 ```bash
 brew tap edgesentry/tap
 brew install ontographia
-ontographia build --help
+otg build --help
+otg schema --help
 ```
 
-### Next CLI release, then the tap
+### Release archive and the next tap bump
 
-`ontographia-cli` builds one binary, named `otg`. `cargo install ontographia-cli` installs that command.
+`ontographia-cli` builds one binary, named `otg`. `cargo install ontographia-cli` (crates.io 0.1.8) installs that command.
 
-The release tarball `ontographia-{version}-{target}.tar.gz` contains `otg` and a copy of the same file named `ontographia`. The copy is there so the current tap formula, which looks up the filename `ontographia`, keeps installing. `--version` prints `otg` for both files. The published formula keeps working because that filename is still in the archive.
+The release tarball `ontographia-{version}-{target}.tar.gz` contains `otg` and a copy of the same file named `ontographia`. `--version` prints `otg` for both files. The formula prefers `otg`. An older archive that only contains `ontographia` is installed as `otg`.
 
-After that release is on GitHub Releases, a follow-up pull request to [`edgesentry/homebrew-tap`](https://github.com/edgesentry/homebrew-tap) updates `Formula/ontographia.rb` so `brew install ontographia` installs `otg`. That pull request waits until the binary is in the release. The release workflow does not edit the tap. The tap does not gain a second formula named `otg`.
+The release workflow does not edit the tap. After a new GitHub Release, a follow-up pull request to [`edgesentry/homebrew-tap`](https://github.com/edgesentry/homebrew-tap) points `Formula/ontographia.rb` at the new archive. The tap does not gain a second formula named `otg`. Before that Release, run the [pre-release checks](release.md#pre-release-checks) (GitHub Actions Release check, then the Mac smoke).
 
 `build`, `schema`, and read-only `execute` are in the Rust binary ([#136](https://github.com/edgesentry/ontographia/issues/136)). `execute` takes Intent JSON only, rejects write queries, and uses the same hop rule as `python/ontographia/cli.py`. It connects when Neo4j is available (`NEO4J_URI`, `NEO4J_USERNAME` or `NEO4J_USER`, and `NEO4J_PASSWORD`, or the matching flags).
 
@@ -49,7 +50,7 @@ otg schema --help
 otg execute --help
 ```
 
-`cargo install ontographia-cli` from crates.io matches the last published crate (binary name `ontographia` until this crate is published again). A checkout of this tree installs `otg`, including `execute`.
+`cargo install ontographia-cli` from crates.io (0.1.8) installs `otg` with `build` and `schema`. A checkout of this tree installs `otg`, including `execute`.
 
 `uv run otg` in a checkout (after `maturin develop`) is the Python script, which also has `execute`. When both are on `PATH`, the one earlier in `PATH` is the `otg` you run.
 
@@ -118,7 +119,7 @@ otg execute --ontology examples/movies.native.yaml --intent examples/movies_matr
 
 `--json` prints one object (`query`, `params`, `rows`, …) instead of the table. `--dialect cypher5` emits `WHERE` instead of Cypher 25 `FILTER` if you need it. The movies demo accepts the default `cypher25` dialect.
 
-Manufacturing walkthrough (local Neo4j, seed data): [End-to-end Neo4j](end-to-end-neo4j.md). Same flags: `--ontology` and `--intent`. The walkthrough's released-CLI samples use `ontographia`, the command the published tap installs.
+Manufacturing walkthrough (local Neo4j, seed data): [End-to-end Neo4j](end-to-end-neo4j.md). Same flags: `--ontology` and `--intent`. The walkthrough's released-CLI samples use `otg`, the command the published tap installs.
 
 ## Commands
 
@@ -140,5 +141,5 @@ Neither entry point accepts raw Cypher. A file shaped like `{"query": "CREATE �
 - [Python bindings](python.md)
 - [Rust](rust.md)
 - [MCP server](mcp.md) — Python execute/safety code; install with `uvx` or `pip install "ontographia[mcp]"`. MCP is not part of the Homebrew binary
-- [Release](release.md) — archive layout, and the tap update after the binary ships
+- [Release](release.md#pre-release-checks) — Actions vs Mac checks before Release, archive layout, and the tap bump after a release
 - Issue [#117](https://github.com/edgesentry/ontographia/issues/117) (Python `otg`), [#121](https://github.com/edgesentry/ontographia/issues/121) (packaging), [#136](https://github.com/edgesentry/ontographia/issues/136) (Rust `execute`)
