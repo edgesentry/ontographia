@@ -79,6 +79,18 @@ uv run --with datasets python examples/llm/eval/run_track_b.py --record
 uv run --with datasets python examples/llm/eval/run_track_b.py --record --write-ontologies
 ```
 
+These project-mode commands require a working local Maturin build. If a stale
+in-tree `python/ontographia/*.so` breaks `import ontographia` (LINKEDIT
+ImportError, issue [#144](https://github.com/edgesentry/ontographia/issues/144)),
+run against the published wheel instead — this is what
+`scripts/remeasure/run_all.sh` does for the `track-b` / `track-b-exec` arms
+(see [scripts/remeasure/README.md](../../../scripts/remeasure/README.md#interpreter-modes-and-stale-native-builds)):
+
+```bash
+uv run --no-project --with 'ontographia[llm]==0.1.8' --with datasets \
+  python examples/llm/eval/run_track_b.py --record
+```
+
 Requires ephemeral `datasets` (not a core package dependency). Check the HF dataset card for license before redistributing rows.
 
 Baselines: [`baselines/track_b_schema_convert.md`](baselines/track_b_schema_convert.md).
