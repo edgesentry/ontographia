@@ -1,0 +1,126 @@
+{
+  "schema_version": "1.0",
+  "split_id": "track_a_v1",
+  "version": "1.0.0",
+  "seed": 9602,
+  "gold_hash": "sha256:cafdcd2243055a4c3982fbb7cc6a1000f04c1c43c0926748675111c79538d05d",
+  "n_gold": 40,
+  "held_out_per_stratum": 2,
+  "n_folds": 4,
+  "strata": {
+    "bom_suppliers": [
+      "bom_suppliers_00",
+      "bom_suppliers_01",
+      "bom_suppliers_02",
+      "bom_suppliers_03",
+      "bom_suppliers_04",
+      "bom_suppliers_05",
+      "bom_suppliers_06",
+      "bom_suppliers_07",
+      "bom_suppliers_08",
+      "bom_suppliers_09"
+    ],
+    "line_plant": [
+      "line_plant_00",
+      "line_plant_01",
+      "line_plant_02",
+      "line_plant_03",
+      "line_plant_04",
+      "line_plant_05",
+      "line_plant_06",
+      "line_plant_07",
+      "line_plant_08",
+      "line_plant_09"
+    ],
+    "lot_defect": [
+      "lot_defect_00",
+      "lot_defect_01",
+      "lot_defect_02",
+      "lot_defect_03",
+      "lot_defect_04",
+      "lot_defect_05",
+      "lot_defect_06",
+      "lot_defect_07",
+      "lot_defect_08",
+      "lot_defect_09"
+    ],
+    "lot_line": [
+      "lot_line_00",
+      "lot_line_01",
+      "lot_line_02",
+      "lot_line_03",
+      "lot_line_04",
+      "lot_line_05",
+      "lot_line_06",
+      "lot_line_07",
+      "lot_line_08",
+      "lot_line_09"
+    ]
+  },
+  "partitions": {
+    "test": [
+      "bom_suppliers_02",
+      "bom_suppliers_05",
+      "line_plant_00",
+      "line_plant_02",
+      "lot_defect_01",
+      "lot_defect_07",
+      "lot_line_00",
+      "lot_line_01"
+    ],
+    "folds": [
+      {
+        "fold": 0,
+        "ids": [
+          "bom_suppliers_00",
+          "bom_suppliers_06",
+          "line_plant_01",
+          "line_plant_09",
+          "lot_defect_03",
+          "lot_defect_05",
+          "lot_line_03",
+          "lot_line_06"
+        ]
+      },
+      {
+        "fold": 1,
+        "ids": [
+          "bom_suppliers_08",
+          "bom_suppliers_09",
+          "line_plant_03",
+          "line_plant_07",
+          "lot_defect_04",
+          "lot_defect_09",
+          "lot_line_02",
+          "lot_line_08"
+        ]
+      },
+      {
+        "fold": 2,
+        "ids": [
+          "bom_suppliers_01",
+          "bom_suppliers_03",
+          "line_plant_04",
+          "line_plant_05",
+          "lot_defect_00",
+          "lot_defect_02",
+          "lot_line_04",
+          "lot_line_05"
+        ]
+      },
+      {
+        "fold": 3,
+        "ids": [
+          "bom_suppliers_04",
+          "bom_suppliers_07",
+          "line_plant_06",
+          "line_plant_08",
+          "lot_defect_06",
+          "lot_defect_08",
+          "lot_line_07",
+          "lot_line_09"
+        ]
+      }
+    ]
+  }
+}
