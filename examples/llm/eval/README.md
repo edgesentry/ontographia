@@ -106,6 +106,17 @@ uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py
 
 Runs Intent → emit → `demo.neo4jlabs.com` vs gold Cypher row Jaccard on movies (+ recommendations). Baseline: [`baselines/track_b_exec_spot.md`](baselines/track_b_exec_spot.md). v0.1.6 re-runs: [`track_b_exec_spot_v0.1.6.md`](baselines/track_b_exec_spot_v0.1.6.md) (Gemini 3.7), [`track_b_exec_spot_v0.1.6_gemini-3.8.md`](baselines/track_b_exec_spot_v0.1.6_gemini-3.8.md) (Gemini 3.8). Comparison: [`gemini_3.7_vs_3.8_v0.1.6.md`](baselines/gemini_3.7_vs_3.8_v0.1.6.md).
 
+## Gold Intent field match (Issue #96 step 1)
+
+Deterministic field-by-field scorer (entities / relations / filters / projections / limit) comparing a predicted Intent dict against a gold Intent dict; aliases are resolved to classes before comparison. No LLM, no Neo4j. Scorer: [`field_match.py`](field_match.py).
+
+```bash
+uv run python examples/llm/eval/run_gold_field_match.py            # aggregate JSON
+uv run python examples/llm/eval/run_gold_field_match.py --per-item # + per-item scores
+```
+
+Arms over the 40 Track A golds: `gold_self` (gold vs gold self-check, expect 1.0 everywhere) and `silent_wrong` (near-duplicate distractor variant vs gold, expect the corrupted field to drop while entities/relations stay 1.0). Unit tests: `tests/python/llm/test_field_match.py` (CI). Frozen splits / JSON publishing (step 2) and failure-mode judges + gate (step 3) are not in scope here.
+
 ## Repair mapping (Issue #48)
 
 ```bash
@@ -128,5 +139,6 @@ Manufacturing heuristics live in [`../mappings/manufacturing.repair.yaml`](../ma
 - H2 exec feedback: [#46](https://github.com/edgesentry/ontographia/issues/46), [#55](https://github.com/edgesentry/ontographia/issues/55)
 - H3 adaptive spend: [#47](https://github.com/edgesentry/ontographia/issues/47), [#54](https://github.com/edgesentry/ontographia/issues/54)
 - Track B: [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53)
+- Gold Intent field match: [#96](https://github.com/edgesentry/ontographia/issues/96) (step 1 only)
 - Repair mapping: [#48](https://github.com/edgesentry/ontographia/issues/48)
 - Gemini 3.7 vs 3.8 v0.1.6 live: [#106](https://github.com/edgesentry/ontographia/issues/106)

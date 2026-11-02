@@ -256,6 +256,7 @@ The runner writes `meta.txt`, `status.tsv`, `summary.md`, `logs/<arm>.log`, `log
 | H1 live, repeats | `scripts/remeasure/run_h1_live_repeats.sh --profiles mid,large --n 3 --out-dir DIR` | LiteLLM |
 | H2 exec feedback | `uv run python examples/llm/eval/run_track_a_h2.py --record` | — |
 | H3 adaptive spend | `uv run python examples/llm/eval/run_track_a_h3.py --record` | — |
+| Gold Intent field match (#96 step 1) | `uv run python examples/llm/eval/run_gold_field_match.py --per-item` | — |
 | Track B schema convert | `uv run --with datasets python examples/llm/eval/run_track_b.py --record` | HF `datasets` |
 | Track B Exec Match | `uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py --record` | LiteLLM + `demo.neo4jlabs.com` |
 | Offline fixture check | `python3 scripts/remeasure/dry_run.py` | — |
