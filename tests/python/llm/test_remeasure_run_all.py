@@ -22,7 +22,7 @@ def test_default_arms_are_offline_only():
     result = _run("--list-arms")
     assert result.returncode == 0, result.stderr
     arms = result.stdout.split()
-    assert arms == ["track-a", "h1", "h2", "h3", "track-b", "dry-run"]
+    assert arms == ["track-a", "h1", "h2", "h3", "track-b", "dry-run", "field-match"]
     assert "h1-live" not in arms
     assert "track-b-exec" not in arms
 

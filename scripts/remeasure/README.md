@@ -23,7 +23,8 @@ scripts/remeasure/run_all.sh
 ```
 
 This runs `track-a`, `h1` (mechanical), `h2`, `h3`, `track-b` (schema
-conversion; downloads the public HF dataset), and `dry-run`. Outputs go under
+conversion; downloads the public HF dataset), `dry-run`, and `field-match`
+(gold Intent field-match on the frozen `track_a_v1` split). Outputs go under
 `examples/llm/eval/out/run-all-<UTC>/` (gitignored).
 
 Live arms — H1 live repeats and Track B Exec Match:
@@ -48,7 +49,7 @@ scripts/remeasure/run_all.sh --only track-b-exec --live
 ```
 
 Arm IDs: `track-a`, `h1`, `h1-live`, `h2`, `h3`, `track-b`, `track-b-exec`,
-`dry-run`. Live IDs require `--live`; they are never selected implicitly.
+`dry-run`, `field-match`. Live IDs require `--live`; they are never selected implicitly.
 
 ### Interpreter modes and stale native builds
 

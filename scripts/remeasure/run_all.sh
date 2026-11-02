@@ -8,6 +8,7 @@
 #   h3        H3 difficulty-adaptive spend
 #   track-b   Track B public-schema conversion
 #   dry-run   offline Intent fixture -> expected Cypher check
+#   field-match  gold Intent field-match scorer on the frozen track_a_v1 split
 #
 # --live adds the two arms that spend tokens or hit a database:
 #   h1-live       repeated Track A H1 live runs (repeat wrapper)
@@ -27,7 +28,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$REPO_ROOT"
 
-OFFLINE_ARMS=(track-a h1 h2 h3 track-b dry-run)
+OFFLINE_ARMS=(track-a h1 h2 h3 track-b dry-run field-match)
 LIVE_ARMS=(h1-live track-b-exec)
 
 OUT_DIR=""
@@ -60,7 +61,7 @@ Usage: scripts/remeasure/run_all.sh [options]
 Selection:
   --only ARMS           comma-separated arm IDs; overrides the default set
                         IDs: track-a, h1, h1-live, h2, h3, track-b,
-                             track-b-exec, dry-run
+                             track-b-exec, dry-run, field-match
   --live                also run live arms (h1-live, track-b-exec) by default
   --list-arms           print the selected arm IDs and exit
   --skip-health-check   do not require GET <base-url>/models to return 200
@@ -156,6 +157,7 @@ normalize_arm() {
     track-b | track_b) echo "track-b" ;;
     track-b-exec | track_b_exec | track-b-exec-match) echo "track-b-exec" ;;
     dry-run | dry_run | dryrun) echo "dry-run" ;;
+    field-match | field_match | gold-field-match | gold_field_match) echo "field-match" ;;
     *) echo "" ;;
   esac
 }
@@ -449,6 +451,12 @@ for arm in "${SELECTED[@]}"; do
     dry-run)
       set_arm_py
       cmd=("${ARM_PY[@]}" scripts/remeasure/dry_run.py)
+      ;;
+    field-match)
+      set_arm_py
+      cmd=("${ARM_PY[@]}" examples/llm/eval/run_gold_field_match.py \
+        --split track_a_v1 \
+        --json-out "$OUT_DIR/json/field-match.json")
       ;;
     h1-live)
       cmd=(bash scripts/remeasure/run_h1_live_repeats.sh \
