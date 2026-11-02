@@ -18,6 +18,7 @@ Walkthrough: [docs/end-to-end-neo4j.md](../docs/end-to-end-neo4j.md)
 | [`python_smoke_test.py`](python_smoke_test.py) | Python binding smoke test |
 | [`docs_check.sh`](docs_check.sh) | MkDocs lint, strict build, and HTML assertions (CI) |
 | [`neo4j_integration_test.py`](neo4j_integration_test.py) | Mock LLM Intent → Cypher → Neo4j (CI) |
+| [`remeasure/run_all.sh`](remeasure/run_all.sh) | Verify every evaluation arm (offline by default; `--live` adds H1 live + Track B Exec Match); see [`remeasure/README.md`](remeasure/README.md) |
 | [`remeasure/dry_run.py`](remeasure/dry_run.py) | Offline Intent fixture → expected Cypher dry-run (no LLM / Neo4j); see [`remeasure/README.md`](remeasure/README.md) |
 
 ## LiteLLM (`scripts/litellm/`)

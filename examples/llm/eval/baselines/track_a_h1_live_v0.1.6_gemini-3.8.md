@@ -5,9 +5,9 @@
 - Repo tree (harness + gold set): `6bebd01` (origin/main at run time)
 - Model: LiteLLM alias `ontographia-gemini-3.8` → upstream **Gemini 3.8 Flash** (`gemini-3.8-flash`), LiteLLM `1.98.0`, `temperature=0`, `max_retries=1`
 - Cases: 40 gold × profiles mid, large × conditions full, subset, subset_fallback
-- Machine-readable: [`track_a_h1_live_v0.1.6_gemini-3.8.json`](track_a_h1_live_v0.1.6_gemini-3.8.json) (metrics unmodified; meta annotated with package / upstream model after the run). Comparison across Part 3 / v0.1.6 Gemini 3.7 / v0.1.6 Gemini 3.8: [`gemini_3.7_vs_3.8_v0.1.6.md`](gemini_3.7_vs_3.8_v0.1.6.md). Baseline [`track_a_h1_live.json`](track_a_h1_live.json) (`2026-09-08T14:42:52Z`) is unchanged.
+- Machine-readable: [`track_a_h1_live_v0.1.6_gemini-3.8.json`](track_a_h1_live_v0.1.6_gemini-3.8.json) (metrics unmodified; meta annotated with package / upstream model after the run). Comparison across the 2026-09-08 baseline / v0.1.6 Gemini 3.7 / v0.1.6 Gemini 3.8: [`gemini_3.7_vs_3.8_v0.1.6.md`](gemini_3.7_vs_3.8_v0.1.6.md). Baseline [`track_a_h1_live.json`](track_a_h1_live.json) (`2026-09-08T14:42:52Z`) is unchanged.
 
-## Results (v0.1.6 Gemini 3.8 run, Part 3 baseline 2026-09-08 in parentheses)
+## Results (v0.1.6 Gemini 3.8 run, 2026-09-08 baseline in parentheses)
 
 | profile | condition | Property Hit | compile OK | near-dup picks | invent-without-seeing | fallback | mean LLM calls | ≈tok p95 |
 |---------|-----------|-------------:|-----------:|---------------:|----------------------:|---------:|---------------:|---------:|
@@ -54,10 +54,10 @@
 
 ## Reading
 
-- The recommended policy (`subset_fallback` / `schema_policy=auto`) still meets the harness support criteria on `large`: Property Hit 0.89 vs full 0.72 (+16.25pt), ≈tok p95 1,301 vs 13,765, compile 37/40 (not worse than full 30/40). Absolute `subset_fallback` hit/compile are below the Part 3 and v0.1.6 Gemini 3.7 runs (both 0.95 / 40/40); see the comparison doc.
-- Single-mode arms (`full`, `subset`) on this run sit between the weaker v0.1.6 Gemini 3.7 day and the Part 3 baseline on several cells (for example `large` / `full` Property Hit 0.725 vs 0.65 on 3.7 vs 0.825 on Part 3).
+- The recommended policy (`subset_fallback` / `schema_policy=auto`) still meets the harness support criteria on `large`: Property Hit 0.89 vs full 0.72 (+16.25pt), ≈tok p95 1,301 vs 13,765, compile 37/40 (not worse than full 30/40). Absolute `subset_fallback` hit/compile are below the 2026-09-08 baseline and v0.1.6 Gemini 3.7 runs (both 0.95 / 40/40); see the comparison doc.
+- Single-mode arms (`full`, `subset`) on this run sit between the weaker v0.1.6 Gemini 3.7 day and the 2026-09-08 baseline on several cells (for example `large` / `full` Property Hit 0.725 vs 0.65 on 3.7 vs 0.825 on the 2026-09-08 run).
 - Near-duplicate picks and invent-without-seeing stayed at 0 in every arm.
-- Prompt token estimates match the v0.1.6 Gemini 3.7 re-run (~+55 vs Part 3), as expected from the same installed 0.1.6 `build_initial_user_message`.
+- Prompt token estimates match the v0.1.6 Gemini 3.7 re-run (~+55 vs the 2026-09-08 baseline), as expected from the same installed 0.1.6 `build_initial_user_message`.
 - `mean_llm_calls` only counts calls for cases that compiled (the harness records 0 on exceptions), so it is below 1.0 for arms with compile failures.
 - No re-runs or cherry-picking; this is the single recorded Gemini 3.8 run for issue #106.
 
