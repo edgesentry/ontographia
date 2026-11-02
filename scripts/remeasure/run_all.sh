@@ -46,6 +46,10 @@ MODEL_ALIAS="${MODEL_ALIAS:-ontographia-gemini-3.8}"
 OPENAI_BASE_URL="${OPENAI_BASE_URL:-http://127.0.0.1:4000/v1}"
 OPENAI_API_KEY="${OPENAI_API_KEY:-sk-litellm-local-dev}"
 PYTHON="${PYTHON:-}"
+# Arms that need ephemeral extras (track-b, track-b-exec) run against the
+# PUBLISHED wheel via `uv run --no-project`, never the project tree, so a stale
+# or corrupt in-tree Maturin .so cannot break them (issue #144).
+ONTOGRAPHIA_WHEEL_SPEC="${ONTOGRAPHIA_WHEEL_SPEC:-ontographia[llm]==0.1.8}"
 
 usage() {
   cat <<EOF
@@ -81,8 +85,16 @@ Parameters:
   -h, --help            show this help
 
 Environment (flag wins): PROFILES, H1_LIVE_N, H1_LIVE_PROFILES, LIMIT,
-MODEL_ALIAS, OPENAI_BASE_URL, OPENAI_API_KEY, PYTHON. Secrets are exported to
-child harnesses only; they are never written to the output directory.
+MODEL_ALIAS, OPENAI_BASE_URL, OPENAI_API_KEY, PYTHON, ONTOGRAPHIA_WHEEL_SPEC
+(published-package spec for the track-b arms; default: $ONTOGRAPHIA_WHEEL_SPEC).
+Secrets are exported to child harnesses only; they are never written to the
+output directory.
+
+Interpreter note: track-b and track-b-exec run against the published
+ontographia wheel via \`uv run --no-project\` so a stale or corrupt in-tree
+Maturin .so (python/ontographia/*.so) cannot break them. The other arms use
+the local interpreter chain above; if it cannot import ontographia the runner
+fails fast with cleanup/rebuild guidance (issue #144).
 
 Exit codes: 0 all selected arms passed; 1 one or more arms failed;
 2 invalid arguments, an existing OUT_DIR without --force, or an unhealthy
@@ -237,14 +249,19 @@ else
   PY_MODE="system"
 fi
 
-# Set ARM_PY to the interpreter for the current arm. Extras such as `datasets`
-# are injected through `uv run --with` when uv is available; an explicit
-# --python is assumed to provide its own dependencies.
+# Set ARM_PY to the interpreter for the current arm. Arms that need ephemeral
+# extras (track-b: datasets; track-b-exec: datasets + neo4j) run against the
+# PUBLISHED ontographia wheel via `uv run --no-project`, never the project
+# tree: project mode would import the in-tree python/ontographia/ and can pick
+# up a stale or corrupt Maturin .so (issue #144). The harness scripts still
+# come from this checkout; only the `ontographia` package resolves to the
+# wheel. Override the wheel with ONTOGRAPHIA_WHEEL_SPEC. An explicit --python
+# is assumed to provide its own dependencies and is used as-is.
 ARM_PY=()
 set_arm_py() {
   ARM_PY=()
   if [[ "$PY_MODE" != "explicit" && "$#" -gt 0 ]] && command -v uv >/dev/null 2>&1; then
-    ARM_PY=(uv run)
+    ARM_PY=(uv run --no-project --with "$ONTOGRAPHIA_WHEEL_SPEC")
     local extra
     for extra in "$@"; do
       ARM_PY+=(--with "$extra")
@@ -297,7 +314,38 @@ meta "arms=${SELECTED[*]}"
 meta "live=$LIVE record=$RECORD"
 meta "profiles=${PROFILES:-<harness defaults>}"
 meta "h1_live_n=$H1_LIVE_N h1_live_profiles=$H1_LIVE_PROFILES limit=$LIMIT"
+meta "wheel_spec=$ONTOGRAPHIA_WHEEL_SPEC"
 meta "started=$(date -Iseconds)"
+
+# Fail fast (issue #144): arms other than track-b/track-b-exec/dry-run import
+# ontographia through the local interpreter. If that import is broken -- the
+# classic cause is a stale or corrupt in-tree Maturin extension at
+# python/ontographia/*.so -- stop here with the fix instead of dying per-arm
+# with a LINKEDIT ImportError.
+if [[ "$pkg_info" == "ontographia not importable" ]]; then
+  NEEDS_LOCAL_IMPORT=0
+  for arm in "${SELECTED[@]}"; do
+    case "$arm" in
+      track-a | h1 | h2 | h3 | h1-live) NEEDS_LOCAL_IMPORT=1 ;;
+    esac
+  done
+  if [[ "$NEEDS_LOCAL_IMPORT" -eq 1 ]]; then
+    cat >&2 <<EOF
+error: ${PY_CMD[*]} (mode=$PY_MODE) cannot import ontographia.
+A stale or corrupt in-tree Maturin extension (python/ontographia/*.so) is the
+usual cause (issue #144). Pick one fix:
+  1. Delete stale extensions (gitignored, safe to remove):
+       rm -f python/ontographia/*.so
+  2. Rebuild the native module:
+       uv sync --group dev && uv run maturin develop --release
+  3. Point the runner at a clean interpreter:
+       scripts/remeasure/run_all.sh --python .venv-remeasure/bin/python ...
+The track-b / track-b-exec arms are unaffected: they run against the published
+wheel via 'uv run --no-project' (ONTOGRAPHIA_WHEEL_SPEC=$ONTOGRAPHIA_WHEEL_SPEC).
+EOF
+    exit 2
+  fi
+fi
 
 if [[ "$NEEDS_LIVE" -eq 1 ]]; then
   if [[ "$HEALTH_CHECK" -eq 1 ]]; then

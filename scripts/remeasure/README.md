@@ -50,6 +50,33 @@ scripts/remeasure/run_all.sh --only track-b-exec --live
 Arm IDs: `track-a`, `h1`, `h1-live`, `h2`, `h3`, `track-b`, `track-b-exec`,
 `dry-run`. Live IDs require `--live`; they are never selected implicitly.
 
+### Interpreter modes and stale native builds
+
+`run_all.sh` picks the local interpreter in this order (override with
+`--python`): `.venv-remeasure/bin/python`, else `uv run python` (project mode),
+else `python3`. That interpreter must be able to `import ontographia` for the
+`track-a` / `h1` / `h2` / `h3` / `h1-live` arms; the runner probes the import
+up front and exits `2` with guidance instead of dying per-arm when it fails.
+
+The `track-b` and `track-b-exec` arms are different: they run against the
+**published wheel** via `uv run --no-project --with "$ONTOGRAPHIA_WHEEL_SPEC"`
+(default `ontographia[llm]==0.1.8`, overridable via the environment). The
+harness scripts still come from this checkout; only the `ontographia` package
+resolves to PyPI. This is the recommended mode for Track B remeasurement —
+it cannot be broken by the state of your local Rust build (issue
+[#144](https://github.com/edgesentry/ontographia/issues/144)).
+
+The classic local-build failure is a stale or half-built Maturin extension
+left in the source tree (`python/ontographia/*.so`, gitignored via `*.so`),
+which makes project-mode imports die with
+`ImportError: ... mis-aligned LINKEDIT ...`. Any one of these fixes it:
+
+```bash
+rm -f python/ontographia/*.so                                  # drop stale extensions
+uv sync --group dev && uv run maturin develop --release        # or rebuild in place
+scripts/remeasure/run_all.sh --python .venv-remeasure/bin/python  # or use a clean venv
+```
+
 ### Options and output
 
 | Flag | Default | Meaning |
