@@ -225,6 +225,28 @@ uv run --with datasets python examples/llm/eval/run_track_b.py --record
 
 Check the Hugging Face dataset card for license before redistributing samples.
 
+## Failure-mode judges (Issue #96 step 3a)
+
+Semantic scoring for structurally valid Intents without a gold Cypher answer: three independent yes/no judges (`wrong_relation`, `missing_filter`, `over_broad_scope`) see only the question, the Intent, and an exact-match ontology subset ([`judges.py`](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/judges.py)). Prompt build and parse are offline; a model is called only with an explicit `--live`, reusing the LiteLLM / OpenAI-compatible wiring.
+
+Labels are deterministic, derived from the gold Intent via the [field-match scorer](https://github.com/edgesentry/ontographia/blob/main/examples/llm/eval/field_match.py): `gold` and `silent_wrong` (near-duplicate property swap) are negatives for all three modes; relation swap, filter drop, and traverse drop are one positive each. Unparseable or out-of-vocabulary judge output becomes `unknown` and abstains from precision/recall. JSON carries `schema_version`, `git_rev`, split id/version/gold hash, per-mode precision/recall/F1 with counts, and a per-variant breakdown.
+
+```bash
+# offline plumbing check (fixture replay; not a reliability claim)
+uv run python examples/llm/eval/run_failure_mode_judges.py --dry-run \
+    --split track_a_v1 --partition test
+
+# live judges (LiteLLM or any OpenAI-compatible endpoint)
+uv run python examples/llm/eval/run_failure_mode_judges.py --live \
+    --split track_a_v1 --partition test
+
+# externally produced Intents: JSONL of {"id", "intent"}
+uv run python examples/llm/eval/run_failure_mode_judges.py --live \
+    --predictions preds.jsonl --split track_a_v1 --partition fold:0
+```
+
+This is measurement only. The execute-or-clarify gate, precision-weighted threshold selection (F-beta), calibration (Brier / reliability), confidence surfaces, and any `ontographia.mcp` / `ontographia.llm` hook (steps 3b / 3c) are **not** implemented here. The arm is not part of `scripts/remeasure/run_all.sh` defaults. Tests: `tests/python/llm/test_failure_mode_judges.py`.
+
 ## Reproduce or refresh all arms
 
 Every table on this page is produced by a script in this repository. `--record` rewrites the checked-in files under [`examples/llm/eval/baselines/`](https://github.com/edgesentry/ontographia/tree/main/examples/llm/eval/baselines); `--json-out` (and the repeat wrapper below) write a scratch copy instead, which is what remeasure runs use so published numbers stay put. The top-level runner defaults to the scratch path and **never** passes `--record` unless you ask for it.
@@ -257,6 +279,7 @@ The runner writes `meta.txt`, `status.tsv`, `summary.md`, `logs/<arm>.log`, `log
 | H2 exec feedback | `uv run python examples/llm/eval/run_track_a_h2.py --record` | — |
 | H3 adaptive spend | `uv run python examples/llm/eval/run_track_a_h3.py --record` | — |
 | Gold Intent field match (#96 steps 1–2) | `uv run python examples/llm/eval/run_gold_field_match.py --split track_a_v1 --per-item` | — |
+| Failure-mode judges (#96 step 3a) | `uv run python examples/llm/eval/run_failure_mode_judges.py --dry-run --split track_a_v1 --partition test` | — dry run / LiteLLM live |
 | Track B schema convert | `uv run --with datasets python examples/llm/eval/run_track_b.py --record` | HF `datasets` |
 | Track B Exec Match | `uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py --record` | LiteLLM + `demo.neo4jlabs.com` |
 | Offline fixture check | `python3 scripts/remeasure/dry_run.py` | — |
@@ -324,4 +347,4 @@ scripts/remeasure/run_h1_live_repeats.sh --profiles mid,large --n 3 --out-dir DI
 
 - [Related work](related-work.md)
 - [Architecture](architecture.md)
-- Issues [#45](https://github.com/edgesentry/ontographia/issues/45), [#46](https://github.com/edgesentry/ontographia/issues/46), [#47](https://github.com/edgesentry/ontographia/issues/47), [#48](https://github.com/edgesentry/ontographia/issues/48), [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53), [#54](https://github.com/edgesentry/ontographia/issues/54), [#55](https://github.com/edgesentry/ontographia/issues/55), [#68](https://github.com/edgesentry/ontographia/issues/68), [#73](https://github.com/edgesentry/ontographia/issues/73), [#106](https://github.com/edgesentry/ontographia/issues/106)
+- Issues [#45](https://github.com/edgesentry/ontographia/issues/45), [#46](https://github.com/edgesentry/ontographia/issues/46), [#47](https://github.com/edgesentry/ontographia/issues/47), [#48](https://github.com/edgesentry/ontographia/issues/48), [#49](https://github.com/edgesentry/ontographia/issues/49), [#50](https://github.com/edgesentry/ontographia/issues/50), [#51](https://github.com/edgesentry/ontographia/issues/51), [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53), [#54](https://github.com/edgesentry/ontographia/issues/54), [#55](https://github.com/edgesentry/ontographia/issues/55), [#68](https://github.com/edgesentry/ontographia/issues/68), [#73](https://github.com/edgesentry/ontographia/issues/73), [#96](https://github.com/edgesentry/ontographia/issues/96), [#106](https://github.com/edgesentry/ontographia/issues/106)

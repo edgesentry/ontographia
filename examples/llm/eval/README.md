@@ -127,7 +127,28 @@ uv run python examples/llm/eval/run_gold_field_match.py --arms predictions \
     --predictions preds.jsonl --split track_a_v1 --partition fold:0 --model X --provider Y
 ```
 
-The JSON payload carries `schema_version`, `git_rev`, the split id/version/gold hash, per-arm `partition` + `aggregate` (plus per-fold aggregates for `--partition cv`, plus per-item scores with `--per-item`), and optional `model`/`provider` labels. Default output is stdout / scratch (`--json-out`); `--record` is the only path that writes under `baselines/`. Unit tests: `tests/python/llm/test_field_match.py`, `tests/python/llm/test_splits.py` (CI). Failure-mode judges + the execute-or-clarify gate (step 3) are not in scope here.
+The JSON payload carries `schema_version`, `git_rev`, the split id/version/gold hash, per-arm `partition` + `aggregate` (plus per-fold aggregates for `--partition cv`, plus per-item scores with `--per-item`), and optional `model`/`provider` labels. Default output is stdout / scratch (`--json-out`); `--record` is the only path that writes under `baselines/`. Unit tests: `tests/python/llm/test_field_match.py`, `tests/python/llm/test_splits.py` (CI). The execute-or-clarify gate and product hooks (steps 3b / 3c) are not in scope here.
+
+## Failure-mode judges (Issue #96 step 3a)
+
+Three independent yes/no judges — `wrong_relation`, `missing_filter`, `over_broad_scope` — over question + Intent + ontology subset ([`judges.py`](judges.py)). Evaluation only: no gate, threshold, F-beta, Brier score, or product wiring. Prompt build and parse are offline; live model calls require an explicit `--live` and reuse the LiteLLM / OpenAI-compatible backend.
+
+```bash
+# no network: replay committed fixture answers through prompt build + parse
+uv run python examples/llm/eval/run_failure_mode_judges.py --dry-run \
+    --split track_a_v1 --partition test
+
+# live judges (LiteLLM or any OpenAI-compatible endpoint; same env as H1 live)
+source scripts/litellm/use-provider.sh gemini-3.8
+uv run python examples/llm/eval/run_failure_mode_judges.py --live \
+    --split track_a_v1 --partition test
+
+# reliability on externally produced Intents (JSONL: {"id", "intent"})
+uv run python examples/llm/eval/run_failure_mode_judges.py --live \
+    --predictions preds.jsonl --split track_a_v1 --partition fold:0
+```
+
+Labels are derived from [`field_match.py`](field_match.py), not from a model: `gold` and `silent_wrong` (near-duplicate property swap) are negatives for all three modes; `swap_relation`, `drop_filter`, and `drop_traverse` are positives for one mode each. `unknown` answers abstain and are excluded from precision/recall. JSON carries `schema_version`, `git_rev`, split meta, per-mode precision/recall/F1 with counts, and a per-variant breakdown. Dry-run aggregates are a plumbing check, not a reliability claim. This arm is intentionally **not** in `scripts/remeasure/run_all.sh` defaults. Tests: `tests/python/llm/test_failure_mode_judges.py`. Fixtures: [`fixtures/failure_mode_judges.json`](fixtures/failure_mode_judges.json).
 
 ## Repair mapping (Issue #48)
 
@@ -151,6 +172,6 @@ Manufacturing heuristics live in [`../mappings/manufacturing.repair.yaml`](../ma
 - H2 exec feedback: [#46](https://github.com/edgesentry/ontographia/issues/46), [#55](https://github.com/edgesentry/ontographia/issues/55)
 - H3 adaptive spend: [#47](https://github.com/edgesentry/ontographia/issues/47), [#54](https://github.com/edgesentry/ontographia/issues/54)
 - Track B: [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53), [#73](https://github.com/edgesentry/ontographia/issues/73)
-- Gold Intent field match: [#96](https://github.com/edgesentry/ontographia/issues/96) (steps 1–2; step 3 judges/gate out of scope)
+- Gold Intent field match + failure-mode judges: [#96](https://github.com/edgesentry/ontographia/issues/96) (steps 1–2, 3a; gate / product hooks 3b–3c out of scope)
 - Repair mapping: [#48](https://github.com/edgesentry/ontographia/issues/48)
 - Gemini 3.7 vs 3.8 v0.1.6 live: [#106](https://github.com/edgesentry/ontographia/issues/106)
