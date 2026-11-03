@@ -99,6 +99,16 @@ def _projection_set(intent: dict[str, Any]) -> set[tuple[str, str, str]]:
     return out
 
 
+def entity_set(intent: dict[str, Any]) -> set[str]:
+    """Public view of the class set used by the ``entities`` field."""
+    return _entity_set(intent)
+
+
+def filter_set(intent: dict[str, Any]) -> set[tuple[str, str, str, str]]:
+    """Public view of the resolved filter tuples used by the ``filters`` field."""
+    return _filter_set(intent)
+
+
 def _prf(pred: set[Any], gold: set[Any]) -> dict[str, float]:
     """Precision/recall/F1; both-empty scores 1.0 (vacuous match)."""
     if not pred and not gold:

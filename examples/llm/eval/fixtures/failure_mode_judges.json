@@ -1,0 +1,76 @@
+{
+  "schema_version": "1.0",
+  "description": "Offline judge responses for issue #96 step 3a. Keyed by variant, then failure mode. The dry-run CLI replays these through prompt build + parse; no model is called. Expected labels are derived from field_match.py (see tests/python/llm/test_failure_mode_judges.py).",
+  "answers": {
+    "gold": {
+      "wrong_relation": {
+        "answer": "no",
+        "rationale": "Every traverse step matches an ontology relationship for the asked classes."
+      },
+      "missing_filter": {
+        "answer": "no",
+        "rationale": "The specific value named in the question is pinned by a filter entry."
+      },
+      "over_broad_scope": {
+        "answer": "no",
+        "rationale": "The Intent reaches the class the question asks for."
+      }
+    },
+    "silent_wrong": {
+      "wrong_relation": {
+        "answer": "no",
+        "rationale": "The relationship is correct; only the projected property is a near-duplicate."
+      },
+      "missing_filter": {
+        "answer": "no",
+        "rationale": "The specific value named in the question is pinned by a filter entry."
+      },
+      "over_broad_scope": {
+        "answer": "no",
+        "rationale": "The Intent reaches the asked entity; the defect is property selection, not scope."
+      }
+    },
+    "swap_relation": {
+      "wrong_relation": {
+        "answer": "yes",
+        "rationale": "The traverse relationship does not connect the asked classes in the ontology subset."
+      },
+      "missing_filter": {
+        "answer": "no",
+        "rationale": "The named value is still pinned by a filter entry."
+      },
+      "over_broad_scope": {
+        "answer": "no",
+        "rationale": "The Intent still traverses to the asked class."
+      }
+    },
+    "drop_filter": {
+      "wrong_relation": {
+        "answer": "no",
+        "rationale": "The traverse relationship is consistent with the question and ontology."
+      },
+      "missing_filter": {
+        "answer": "yes",
+        "rationale": "The question names a specific value but filter[] is empty."
+      },
+      "over_broad_scope": {
+        "answer": "no",
+        "rationale": "The Intent still reaches the asked class."
+      }
+    },
+    "drop_traverse": {
+      "wrong_relation": {
+        "answer": "no",
+        "rationale": "No wrong relationship is used; the required traverse step is missing instead."
+      },
+      "missing_filter": {
+        "answer": "no",
+        "rationale": "The named value is still pinned by a filter entry."
+      },
+      "over_broad_scope": {
+        "answer": "yes",
+        "rationale": "The Intent stops at the start class instead of traversing to the asked entity."
+      }
+    }
+  }
+}
