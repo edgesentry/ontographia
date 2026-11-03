@@ -1,7 +1,7 @@
-"""Track B Exec Match spot eval (issue #53).
+"""Track B Exec Match spot eval (issue #53 / soft exec match #73).
 
 Question → LLM Intent → Engine.build → exec on demo.neo4jlabs.com
-compared to gold Cypher execution (row-set Jaccard).
+compared to gold Cypher execution (exact row-set Jaccard + Soft Exec Match).
 
 Default scope: neo4jlabs movies (+ optional recommendations), 50–100 questions.
 
@@ -38,6 +38,7 @@ from llm.eval.schema_convert import (  # noqa: E402
     extract_cypher_vocab,
     vocab_coverage,
 )
+from llm.eval.soft_exec_match import score_soft_exec  # noqa: E402
 from ontographia.llm.extractors import create_extractor  # noqa: E402
 from ontographia.llm.pipeline import extract_validated_intent  # noqa: E402
 
@@ -115,6 +116,106 @@ def jaccard_rows(a: list[dict[str, Any]], b: list[dict[str, Any]]) -> float:
     if not sa or not sb:
         return 0.0
     return len(sa & sb) / len(sa | sb)
+
+
+def summarize_cases(case_rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """Compute aggregate summary metrics across case rows (exact + soft)."""
+    compiled = [r for r in case_rows if r.get("compile_ok")]
+    execed = [r for r in case_rows if r.get("jaccard") is not None]
+    soft_execed = [r for r in execed if r.get("soft_jaccard") is not None]
+    entity_execed = [r for r in execed if r.get("entity_jaccard") is not None]
+
+    summary: dict[str, Any] = {
+        "n": len(case_rows),
+        "compile_ok": len(compiled),
+        "compile_rate": round(len(compiled) / len(case_rows), 4) if case_rows else 0.0,
+        "exec_scored": len(execed),
+        "exec_match": sum(1 for r in execed if r.get("exec_match")),
+        "exec_match_rate": round(
+            sum(1 for r in execed if r.get("exec_match")) / len(execed), 4
+        )
+        if execed
+        else None,
+        "jaccard_mean": round(_mean([float(r["jaccard"]) for r in execed]), 4)
+        if execed
+        else None,
+        "soft_exec_match": sum(1 for r in soft_execed if r.get("soft_exec_match")),
+        "soft_exec_match_rate": round(
+            sum(1 for r in soft_execed if r.get("soft_exec_match")) / len(soft_execed),
+            4,
+        )
+        if soft_execed
+        else None,
+        "soft_jaccard_mean": round(
+            _mean([float(r["soft_jaccard"]) for r in soft_execed]), 4
+        )
+        if soft_execed
+        else None,
+        "soft_f1_mean": round(_mean([float(r["soft_f1"]) for r in soft_execed]), 4)
+        if soft_execed
+        else None,
+        "structure_label_f1_mean": round(
+            _mean([float(r["structure"]["label_f1"]) for r in compiled]), 4
+        )
+        if compiled
+        else 0.0,
+        "structure_rel_f1_mean": round(
+            _mean([float(r["structure"]["rel_f1"]) for r in compiled]), 4
+        )
+        if compiled
+        else 0.0,
+        "structure_prop_f1_mean": round(
+            _mean([float(r["structure"]["prop_f1"]) for r in compiled]), 4
+        )
+        if compiled
+        else 0.0,
+        "by_ref": {},
+    }
+    if entity_execed:
+        summary["entity_jaccard_scored"] = len(entity_execed)
+        summary["entity_jaccard_mean"] = round(
+            _mean([float(r["entity_jaccard"]) for r in entity_execed]), 4
+        )
+
+    for ref in sorted({r["ref"] for r in case_rows}):
+        subset = [r for r in case_rows if r["ref"] == ref]
+        sub_exec = [r for r in subset if r.get("jaccard") is not None]
+        sub_soft = [r for r in sub_exec if r.get("soft_jaccard") is not None]
+        sub_ent = [r for r in sub_exec if r.get("entity_jaccard") is not None]
+        ref_entry: dict[str, Any] = {
+            "n": len(subset),
+            "compile_ok": sum(1 for r in subset if r.get("compile_ok")),
+            "exec_match_rate": round(
+                sum(1 for r in sub_exec if r.get("exec_match")) / len(sub_exec), 4
+            )
+            if sub_exec
+            else None,
+            "jaccard_mean": round(_mean([float(r["jaccard"]) for r in sub_exec]), 4)
+            if sub_exec
+            else None,
+            "soft_exec_match": sum(1 for r in sub_soft if r.get("soft_exec_match")),
+            "soft_exec_match_rate": round(
+                sum(1 for r in sub_soft if r.get("soft_exec_match")) / len(sub_soft), 4
+            )
+            if sub_soft
+            else None,
+            "soft_jaccard_mean": round(
+                _mean([float(r["soft_jaccard"]) for r in sub_soft]), 4
+            )
+            if sub_soft
+            else None,
+            "soft_f1_mean": round(_mean([float(r["soft_f1"]) for r in sub_soft]), 4)
+            if sub_soft
+            else None,
+        }
+        if sub_ent:
+            ref_entry["entity_jaccard_scored"] = len(sub_ent)
+            ref_entry["entity_jaccard_mean"] = round(
+                _mean([float(r["entity_jaccard"]) for r in sub_ent]), 4
+            )
+        summary["by_ref"][ref] = ref_entry
+
+    return summary
 
 
 def load_spot_rows(
@@ -209,6 +310,27 @@ def _structure_overlap(pred_cypher: str, gold_cypher: str) -> dict[str, float]:
     }
 
 
+def score_exec_pair(
+    entry: dict[str, Any],
+    pred_rows: list[dict[str, Any]],
+    gold_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Populate exact and soft execution metrics on a scored case row."""
+    jac = jaccard_rows(pred_rows, gold_rows)
+    entry["jaccard"] = round(jac, 4)
+    entry["exec_match"] = jac >= 1.0 - 1e-9
+    soft = score_soft_exec(pred_rows, gold_rows)
+    entry["soft_exec_match"] = soft["soft_exec_match"]
+    entry["soft_jaccard"] = soft["soft_jaccard"]
+    entry["soft_f1"] = soft["soft_f1"]
+    if "entity_jaccard" in soft:
+        entry["entity_jaccard"] = soft["entity_jaccard"]
+    entry["gold_row_count"] = len(gold_rows)
+    entry["pred_row_count"] = len(pred_rows)
+    entry["note"] = "ok" if entry["exec_match"] else "exec_mismatch"
+    return entry
+
+
 def evaluate(
     rows: list[dict[str, Any]],
     *,
@@ -266,6 +388,9 @@ def evaluate(
                 entry["compile_ok"] = None
                 entry["exec_match"] = None
                 entry["jaccard"] = None
+                entry["soft_exec_match"] = None
+                entry["soft_jaccard"] = None
+                entry["soft_f1"] = None
                 entry["note"] = "skipped_write_gold"
                 entry["structure"] = {"label_f1": 0.0, "rel_f1": 0.0, "prop_f1": 0.0}
                 case_rows.append(entry)
@@ -295,6 +420,9 @@ def evaluate(
                 entry["structure"] = {"label_f1": 0.0, "rel_f1": 0.0, "prop_f1": 0.0}
                 entry["exec_match"] = None
                 entry["jaccard"] = None
+                entry["soft_exec_match"] = None
+                entry["soft_jaccard"] = None
+                entry["soft_f1"] = None
                 entry["note"] = "compile_failed"
                 case_rows.append(entry)
                 continue
@@ -302,6 +430,9 @@ def evaluate(
             if skip_exec:
                 entry["exec_match"] = None
                 entry["jaccard"] = None
+                entry["soft_exec_match"] = None
+                entry["soft_jaccard"] = None
+                entry["soft_f1"] = None
                 entry["note"] = "skip_exec"
                 case_rows.append(entry)
                 continue
@@ -311,15 +442,13 @@ def evaluate(
             try:
                 gold_rows = _exec_cypher(driver, gold_cypher, database=db)
                 pred_rows = _exec_cypher(driver, pred_cypher, pred_params, database=db)
-                jac = jaccard_rows(pred_rows, gold_rows)
-                entry["jaccard"] = round(jac, 4)
-                entry["exec_match"] = jac >= 1.0 - 1e-9
-                entry["gold_row_count"] = len(gold_rows)
-                entry["pred_row_count"] = len(pred_rows)
-                entry["note"] = "ok" if entry["exec_match"] else "exec_mismatch"
+                score_exec_pair(entry, pred_rows, gold_rows)
             except Exception as exc:  # noqa: BLE001
                 entry["jaccard"] = None
                 entry["exec_match"] = False
+                entry["soft_exec_match"] = None
+                entry["soft_jaccard"] = None
+                entry["soft_f1"] = None
                 entry["exec_error"] = str(exc)
                 entry["note"] = "exec_error"
 
@@ -330,54 +459,7 @@ def evaluate(
         for d in drivers.values():
             d.close()
 
-    compiled = [r for r in case_rows if r.get("compile_ok")]
-    execed = [r for r in case_rows if r.get("jaccard") is not None]
-    summary = {
-        "n": len(case_rows),
-        "compile_ok": len(compiled),
-        "compile_rate": round(len(compiled) / len(case_rows), 4) if case_rows else 0.0,
-        "exec_scored": len(execed),
-        "exec_match": sum(1 for r in execed if r.get("exec_match")),
-        "exec_match_rate": round(
-            sum(1 for r in execed if r.get("exec_match")) / len(execed), 4
-        )
-        if execed
-        else None,
-        "jaccard_mean": round(_mean([float(r["jaccard"]) for r in execed]), 4)
-        if execed
-        else None,
-        "structure_label_f1_mean": round(
-            _mean([float(r["structure"]["label_f1"]) for r in compiled]), 4
-        )
-        if compiled
-        else 0.0,
-        "structure_rel_f1_mean": round(
-            _mean([float(r["structure"]["rel_f1"]) for r in compiled]), 4
-        )
-        if compiled
-        else 0.0,
-        "structure_prop_f1_mean": round(
-            _mean([float(r["structure"]["prop_f1"]) for r in compiled]), 4
-        )
-        if compiled
-        else 0.0,
-        "by_ref": {},
-    }
-    for ref in sorted({r["ref"] for r in case_rows}):
-        subset = [r for r in case_rows if r["ref"] == ref]
-        sub_exec = [r for r in subset if r.get("jaccard") is not None]
-        summary["by_ref"][ref] = {
-            "n": len(subset),
-            "compile_ok": sum(1 for r in subset if r.get("compile_ok")),
-            "exec_match_rate": round(
-                sum(1 for r in sub_exec if r.get("exec_match")) / len(sub_exec), 4
-            )
-            if sub_exec
-            else None,
-            "jaccard_mean": round(_mean([float(r["jaccard"]) for r in sub_exec]), 4)
-            if sub_exec
-            else None,
-        }
+    summary = summarize_cases(case_rows)
 
     qualitative = [
         {
@@ -385,6 +467,8 @@ def evaluate(
             "ref": r["ref"],
             "note": r.get("note"),
             "jaccard": r.get("jaccard"),
+            "soft_jaccard": r.get("soft_jaccard"),
+            "soft_f1": r.get("soft_f1"),
             "question": (r.get("question") or "")[:120],
         }
         for r in case_rows
@@ -394,35 +478,38 @@ def evaluate(
     return {"summary": summary, "cases": case_rows, "qualitative": qualitative}
 
 
-def write_baseline(payload: dict[str, Any]) -> tuple[Path, Path]:
-    BASELINES_DIR.mkdir(parents=True, exist_ok=True)
-    json_path = BASELINES_DIR / "track_b_exec_spot.json"
-    md_path = BASELINES_DIR / "track_b_exec_spot.md"
-    stamp = payload["meta"]["recorded_at"].replace(":", "").replace("-", "")[:15]
-    dated = BASELINES_DIR / f"track_b_exec_spot_{stamp}.json"
-    text = json.dumps(payload, indent=2) + "\n"
-    json_path.write_text(text, encoding="utf-8")
-    dated.write_text(text, encoding="utf-8")
-
+def format_summary_markdown(payload: dict[str, Any]) -> str:
+    """Render Track B Exec Match summary markdown (exact + soft rollups)."""
     meta = payload["meta"]
     s = payload["results"]["summary"]
-    md = "\n".join(
+    lines = [
+        "# Track B Exec Match — spot evaluation",
+        "",
+        f"- Recorded: `{meta['recorded_at']}`",
+        f"- Git: `{meta.get('git_rev') or 'unknown'}`",
+        f"- Model: `{meta.get('model')}`",
+        f"- Refs: {', '.join(meta['refs'])}",
+        f"- N: {meta['n']} (seed={meta['seed']})",
+        f"- URI: `{meta['neo4j_uri']}`",
+        "",
+        "## Summary",
+        "",
+        f"- Compile OK: {s['compile_ok']}/{s['n']} ({s['compile_rate']})",
+        f"- Exec Match: {s.get('exec_match')} / {s.get('exec_scored')} "
+        f"(rate={s.get('exec_match_rate')})",
+        f"- Jaccard mean: {s.get('jaccard_mean')}",
+        f"- Soft Exec Match: {s.get('soft_exec_match')} / {s.get('exec_scored')} "
+        f"(rate={s.get('soft_exec_match_rate')})",
+        f"- Soft Jaccard mean: {s.get('soft_jaccard_mean')}",
+        f"- Soft F1 mean: {s.get('soft_f1_mean')}",
+    ]
+    if s.get("entity_jaccard_mean") is not None:
+        lines.append(
+            f"- Entity Jaccard mean: {s.get('entity_jaccard_mean')} "
+            f"(n={s.get('entity_jaccard_scored')})"
+        )
+    lines.extend(
         [
-            "# Track B Exec Match — spot evaluation",
-            "",
-            f"- Recorded: `{meta['recorded_at']}`",
-            f"- Git: `{meta.get('git_rev') or 'unknown'}`",
-            f"- Model: `{meta.get('model')}`",
-            f"- Refs: {', '.join(meta['refs'])}",
-            f"- N: {meta['n']} (seed={meta['seed']})",
-            f"- URI: `{meta['neo4j_uri']}`",
-            "",
-            "## Summary",
-            "",
-            f"- Compile OK: {s['compile_ok']}/{s['n']} ({s['compile_rate']})",
-            f"- Exec Match: {s.get('exec_match')} / {s.get('exec_scored')} "
-            f"(rate={s.get('exec_match_rate')})",
-            f"- Jaccard mean: {s.get('jaccard_mean')}",
             f"- Structure F1 (label/rel/prop): "
             f"{s['structure_label_f1_mean']} / {s['structure_rel_f1_mean']} / "
             f"{s['structure_prop_f1_mean']}",
@@ -440,6 +527,20 @@ def write_baseline(payload: dict[str, Any]) -> tuple[Path, Path]:
             "",
         ]
     )
+    return "\n".join(lines)
+
+
+def write_baseline(payload: dict[str, Any]) -> tuple[Path, Path]:
+    BASELINES_DIR.mkdir(parents=True, exist_ok=True)
+    json_path = BASELINES_DIR / "track_b_exec_spot.json"
+    md_path = BASELINES_DIR / "track_b_exec_spot.md"
+    stamp = payload["meta"]["recorded_at"].replace(":", "").replace("-", "")[:15]
+    dated = BASELINES_DIR / f"track_b_exec_spot_{stamp}.json"
+    text = json.dumps(payload, indent=2) + "\n"
+    json_path.write_text(text, encoding="utf-8")
+    dated.write_text(text, encoding="utf-8")
+
+    md = format_summary_markdown(payload)
     md_path.write_text(md, encoding="utf-8")
     return json_path, md_path
 
@@ -539,7 +640,10 @@ def main() -> int:
     print(
         f"compile {s['compile_ok']}/{s['n']} exec_match "
         f"{s.get('exec_match')}/{s.get('exec_scored')} "
-        f"jaccard_mean={s.get('jaccard_mean')}"
+        f"jaccard_mean={s.get('jaccard_mean')} "
+        f"soft_exec_match={s.get('soft_exec_match')}/{s.get('exec_scored')} "
+        f"soft_jaccard_mean={s.get('soft_jaccard_mean')} "
+        f"soft_f1_mean={s.get('soft_f1_mean')}"
     )
 
     if args.record:

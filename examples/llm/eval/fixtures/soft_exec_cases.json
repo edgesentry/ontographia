@@ -1,0 +1,117 @@
+{
+  "cases": [
+    {
+      "id": "alias_mismatch_match",
+      "description": "Same scalar values returned under different column aliases (m.title vs movie_title) and column order.",
+      "pred_rows": [
+        {"movie_title": "The Matrix", "release_year": 1999},
+        {"movie_title": "The Matrix Reloaded", "release_year": 2003}
+      ],
+      "gold_rows": [
+        {"m.released": 1999, "m.title": "The Matrix"},
+        {"m.released": 2003, "m.title": "The Matrix Reloaded"}
+      ],
+      "expected": {
+        "exact_exec_match": false,
+        "exact_jaccard": 0.0,
+        "soft_exec_match": true,
+        "soft_jaccard": 1.0,
+        "soft_f1": 1.0,
+        "has_entity_jaccard": false
+      }
+    },
+    {
+      "id": "order_independence_and_multiset",
+      "description": "Permuted row ordering with duplicate rows preserved as a multiset.",
+      "pred_rows": [
+        {"actor": "Keanu Reeves", "born": 1964},
+        {"actor": "Carrie-Anne Moss", "born": 1967},
+        {"actor": "Keanu Reeves", "born": 1964}
+      ],
+      "gold_rows": [
+        {"p.name": "Carrie-Anne Moss", "p.born": 1967.0},
+        {"p.name": "Keanu Reeves", "p.born": 1964},
+        {"p.name": "Keanu Reeves", "p.born": 1964}
+      ],
+      "expected": {
+        "exact_exec_match": false,
+        "exact_jaccard": 0.0,
+        "soft_exec_match": true,
+        "soft_jaccard": 1.0,
+        "soft_f1": 1.0,
+        "has_entity_jaccard": false
+      }
+    },
+    {
+      "id": "empty_vs_empty",
+      "description": "Both pred and gold return zero rows -> vacuous match.",
+      "pred_rows": [],
+      "gold_rows": [],
+      "expected": {
+        "exact_exec_match": true,
+        "exact_jaccard": 1.0,
+        "soft_exec_match": true,
+        "soft_jaccard": 1.0,
+        "soft_f1": 1.0,
+        "has_entity_jaccard": false
+      }
+    },
+    {
+      "id": "null_handling",
+      "description": "Null values stay null and remain distinct from empty string, 0, and false.",
+      "pred_rows": [
+        {"title": "Unknown Film", "tagline": null}
+      ],
+      "gold_rows": [
+        {"m.title": "Unknown Film", "m.tagline": null}
+      ],
+      "expected": {
+        "exact_exec_match": false,
+        "exact_jaccard": 0.0,
+        "soft_exec_match": true,
+        "soft_jaccard": 1.0,
+        "soft_f1": 1.0,
+        "has_entity_jaccard": false
+      }
+    },
+    {
+      "id": "non_overlap",
+      "description": "Disjoint value tuples score 0.0 across exact and soft metrics.",
+      "pred_rows": [
+        {"movie_title": "Inception", "year": 2010}
+      ],
+      "gold_rows": [
+        {"m.title": "The Matrix", "m.released": 1999}
+      ],
+      "expected": {
+        "exact_exec_match": false,
+        "exact_jaccard": 0.0,
+        "soft_exec_match": false,
+        "soft_jaccard": 0.0,
+        "soft_f1": 0.0,
+        "has_entity_jaccard": false
+      }
+    },
+    {
+      "id": "entity_id_overlap",
+      "description": "Optional entity_jaccard computed when primary-key / node ID columns are present on both sides.",
+      "pred_rows": [
+        {"movie_id": 101, "title": "The Matrix", "extra_col": "A"},
+        {"movie_id": 102, "title": "Speed", "extra_col": "B"}
+      ],
+      "gold_rows": [
+        {"m.id": 101, "m.title": "The Matrix"},
+        {"m.id": 103, "m.title": "John Wick"}
+      ],
+      "expected": {
+        "exact_exec_match": false,
+        "exact_jaccard": 0.0,
+        "soft_exec_match": false,
+        "soft_jaccard": 0.0,
+        "soft_f1": 0.0,
+        "has_entity_jaccard": true,
+        "entity_jaccard": 0.3333
+      }
+    }
+  ]
+}

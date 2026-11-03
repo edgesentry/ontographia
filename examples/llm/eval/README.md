@@ -104,7 +104,7 @@ source scripts/litellm/use-provider.sh gemini-3.7   # or gemini-3.8
 uv run --with datasets --with neo4j python examples/llm/eval/run_track_b_exec.py --record
 ```
 
-Runs Intent → emit → `demo.neo4jlabs.com` vs gold Cypher row Jaccard on movies (+ recommendations). Baseline: [`baselines/track_b_exec_spot.md`](baselines/track_b_exec_spot.md). v0.1.6 re-runs: [`track_b_exec_spot_v0.1.6.md`](baselines/track_b_exec_spot_v0.1.6.md) (Gemini 3.7), [`track_b_exec_spot_v0.1.6_gemini-3.8.md`](baselines/track_b_exec_spot_v0.1.6_gemini-3.8.md) (Gemini 3.8). Comparison: [`gemini_3.7_vs_3.8_v0.1.6.md`](baselines/gemini_3.7_vs_3.8_v0.1.6.md).
+Runs Intent → emit → `demo.neo4jlabs.com` vs gold Cypher row Jaccard on movies (+ recommendations). Also scores secondary Soft Exec Match (`soft_exec_match`, `soft_jaccard`, `soft_f1`, and optional `entity_jaccard` via [`soft_exec_match.py`](soft_exec_match.py), issue [#73](https://github.com/edgesentry/ontographia/issues/73)) by dropping column aliases and comparing normalized value multisets while keeping exact `exec_match` / `jaccard` unchanged. Baseline: [`baselines/track_b_exec_spot.md`](baselines/track_b_exec_spot.md). v0.1.6 re-runs: [`track_b_exec_spot_v0.1.6.md`](baselines/track_b_exec_spot_v0.1.6.md) (Gemini 3.7), [`track_b_exec_spot_v0.1.6_gemini-3.8.md`](baselines/track_b_exec_spot_v0.1.6_gemini-3.8.md) (Gemini 3.8). Comparison: [`gemini_3.7_vs_3.8_v0.1.6.md`](baselines/gemini_3.7_vs_3.8_v0.1.6.md).
 
 ## Gold Intent field match (Issue #96 steps 1–2)
 
@@ -150,7 +150,7 @@ Manufacturing heuristics live in [`../mappings/manufacturing.repair.yaml`](../ma
 - Subset prompts: [#45](https://github.com/edgesentry/ontographia/issues/45)
 - H2 exec feedback: [#46](https://github.com/edgesentry/ontographia/issues/46), [#55](https://github.com/edgesentry/ontographia/issues/55)
 - H3 adaptive spend: [#47](https://github.com/edgesentry/ontographia/issues/47), [#54](https://github.com/edgesentry/ontographia/issues/54)
-- Track B: [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53)
+- Track B: [#52](https://github.com/edgesentry/ontographia/issues/52), [#53](https://github.com/edgesentry/ontographia/issues/53), [#73](https://github.com/edgesentry/ontographia/issues/73)
 - Gold Intent field match: [#96](https://github.com/edgesentry/ontographia/issues/96) (steps 1–2; step 3 judges/gate out of scope)
 - Repair mapping: [#48](https://github.com/edgesentry/ontographia/issues/48)
 - Gemini 3.7 vs 3.8 v0.1.6 live: [#106](https://github.com/edgesentry/ontographia/issues/106)
