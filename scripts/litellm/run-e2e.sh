@@ -7,8 +7,8 @@
 #   ./scripts/litellm/run-e2e.sh cursor "Which defect codes affect quarantined lots?"
 #
 # Start the proxy first: ./scripts/litellm/start.sh
-# Env is loaded via dotenvx from scripts/litellm/.env.encrypted
-# (keys: ~/.config/ontographia/dotenv.keys).
+# Env is resolved via 1Password (`op run`) from scripts/litellm/.env.op
+# (override: LITELLM_OP_ENV_FILE). NEO4J_PASSWORD comes from the same template.
 
 set -euo pipefail
 
@@ -30,4 +30,4 @@ cd "$ROOT"
 exec uv run python examples/run_llm_e2e.py \
   --question "$QUESTION" \
   --backend openai \
-  "${EXTRA_ARGS[@]}"
+  ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"}

@@ -4,8 +4,8 @@
 # Usage:
 #   ./scripts/litellm/healthcheck.sh
 #
-# Loads LITELLM_MASTER_KEY from scripts/litellm/.env.encrypted via dotenvx
-# when available; otherwise falls back to the local-dev default virtual key.
+# Resolves LITELLM_MASTER_KEY from scripts/litellm/.env.op via `op run`
+# (1Password CLI, signed in). Hard-fails otherwise; no plaintext fallback.
 
 set -euo pipefail
 
@@ -14,15 +14,11 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
 source "$DIR/_lib.sh"
 
-if command -v dotenvx >/dev/null 2>&1 \
-  && [[ -f "$(litellm_env_file)" ]] \
-  && [[ -f "$(litellm_keys_file)" ]]; then
-  # shellcheck disable=SC1090
-  eval "$(litellm_dotenvx_eval_export)"
-fi
+# shellcheck disable=SC1090
+eval "$(litellm_op_eval_export)"
 
 PORT="${LITELLM_PORT:-4000}"
-MASTER_KEY="${LITELLM_MASTER_KEY:-sk-litellm-local-dev}"
+MASTER_KEY="${LITELLM_MASTER_KEY:?LITELLM_MASTER_KEY is empty; check vault ontographia-dev}"
 BASE="http://127.0.0.1:${PORT}"
 
 echo "GET ${BASE}/health/liveliness"
