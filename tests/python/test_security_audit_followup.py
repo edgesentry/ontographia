@@ -28,18 +28,6 @@ def _job_source(workflow: str, job_name: str) -> str:
     return "\n".join(lines[start:end])
 
 
-def test_pull_request_workflow_does_not_bind_dotenv_private_key() -> None:
-    text = (ROOT / ".github/workflows/ci.yml").read_text(encoding="utf-8")
-    assert "\n  pull_request:\n" in text or text.startswith("on:\n  pull_request:\n") or "pull_request:" in text
-    plaintext = _job_source(text, "litellm-dotenvx")
-    decrypt = _job_source(text, "litellm-dotenvx-decrypt")
-    assert "DOTENV_PRIVATE_KEY" not in plaintext
-    assert "secrets.DOTENV_PRIVATE_KEY" in decrypt
-    header = decrypt.split("steps:", 1)[0]
-    if_lines = [line.strip() for line in header.splitlines() if line.strip().startswith("if:")]
-    assert if_lines == ["if: github.event_name == 'push' && github.ref == 'refs/heads/main'"]
-
-
 def test_go_module_tag_uses_release_tag_commit_not_github_sha() -> None:
     workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8")
     job = _job_source(workflow, "tag-go-module")

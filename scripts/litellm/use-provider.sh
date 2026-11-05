@@ -7,8 +7,8 @@
 #   source scripts/litellm/use-provider.sh gemini-3.8
 #   source scripts/litellm/use-provider.sh cursor
 #
-# Loads scripts/litellm/.env.encrypted via dotenvx (private key at
-# ~/.config/ontographia/dotenv.keys), then sets OPENAI_MODEL to the LiteLLM alias.
+# Resolves scripts/litellm/.env.op via `op run` (1Password CLI, signed in),
+# then sets OPENAI_MODEL to the LiteLLM alias.
 
 use_provider() {
   local provider="${1:-}"
@@ -19,14 +19,18 @@ use_provider() {
   # shellcheck disable=SC1091
   source "$dir/_lib.sh"
 
-  # Inject decrypted env into this shell (sourced script; not a child process).
+  # Inject resolved env into this shell (sourced script; not a child process).
   local exports
-  exports="$(litellm_dotenvx_eval_export)" || return 1
+  exports="$(litellm_op_eval_export)" || return 1
   # shellcheck disable=SC1090
   eval "$exports"
 
   port="${LITELLM_PORT:-4000}"
-  master_key="${LITELLM_MASTER_KEY:-sk-litellm-local-dev}"
+  master_key="${LITELLM_MASTER_KEY:-}"
+  if [[ -z "$master_key" ]]; then
+    echo "error: LITELLM_MASTER_KEY is empty; check item litellm-upstream in vault ontographia-dev" >&2
+    return 1
+  fi
 
   export ONTOGRAPHIA_LLM_BACKEND=openai
   export OPENAI_BASE_URL="http://127.0.0.1:${port}/v1"
