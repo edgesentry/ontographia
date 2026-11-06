@@ -15,6 +15,7 @@ Sample ontologies, Neo4j artifacts, and runnable demos. Manufacturing files shar
 | [`manufacturing.obo`](manufacturing.obo) | OBO |
 | [`movies.native.yaml`](movies.native.yaml) | Movies subset for the [`otg`](../docs/otg.md) quickstart |
 | [`movies_matrix.json`](movies_matrix.json) | Intent: actors in The Matrix |
+| [`plm/`](plm/) | Thin PLM COM + desk-fan EOL fixture, 5 fixed Intents, chips ([#154](https://github.com/edgesentry/ontographia/issues/154)) |
 
 ## Neo4j
 

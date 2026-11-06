@@ -1,0 +1,42 @@
+{
+  "start": { "class": "ECO", "alias": "eco" },
+  "traverse": [
+    {
+      "relationship": "AFFECTS",
+      "direction": "out",
+      "to": { "class": "Item", "alias": "item" }
+    }
+  ],
+  "filter": [
+    {
+      "alias": "eco",
+      "property": "eco_id",
+      "op": "eq",
+      "value": "DEMO-ECO-FAN-01"
+    },
+    {
+      "alias": "eco",
+      "property": "status",
+      "op": "eq",
+      "value": "open"
+    }
+  ],
+  "return": [
+    {
+      "alias": "eco",
+      "property": "eco_id",
+      "as_name": "eco_id"
+    },
+    {
+      "alias": "eco",
+      "property": "status",
+      "as_name": "eco_status"
+    },
+    {
+      "alias": "item",
+      "as_name": "affected_item"
+    }
+  ],
+  "limit": 20,
+  "optional": false
+}

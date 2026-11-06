@@ -1,0 +1,266 @@
+{
+  "scenario": "deskfan-eol",
+  "description": "Fictional desk-fan bracket EOL/ECO ripple fixture for Ontographia PLM demo. No real customers, CAS numbers, or secrets.",
+  "ontology": "examples/plm/plm.native.yaml",
+  "lanes": ["ebom", "bop", "sbom"],
+  "nodes": [
+    {
+      "id": "DEMO-BRKT-01",
+      "labels": ["Part"],
+      "properties": {
+        "part_number": "DEMO-BRKT-01",
+        "name": "Desk-fan mount bracket (EOL)",
+        "lane": "ebom"
+      }
+    },
+    {
+      "id": "DEMO-BRKT-02",
+      "labels": ["Part"],
+      "properties": {
+        "part_number": "DEMO-BRKT-02",
+        "name": "Desk-fan mount bracket (alternate)",
+        "lane": "ebom"
+      }
+    },
+    {
+      "id": "DEMO-FAN-100",
+      "labels": ["Assembly"],
+      "properties": {
+        "part_number": "DEMO-FAN-100",
+        "name": "Desk fan 100 mm (EU SKU)",
+        "lane": "ebom"
+      }
+    },
+    {
+      "id": "DEMO-FAN-200",
+      "labels": ["Assembly"],
+      "properties": {
+        "part_number": "DEMO-FAN-200",
+        "name": "Desk fan 120 mm (NA SKU)",
+        "lane": "ebom"
+      }
+    },
+    {
+      "id": "DEMO-FAN-300",
+      "labels": ["Assembly"],
+      "properties": {
+        "part_number": "DEMO-FAN-300",
+        "name": "Desk fan 150 mm (APAC SKU)",
+        "lane": "ebom"
+      }
+    },
+    {
+      "id": "REV-BRKT-01-A",
+      "labels": ["Revision"],
+      "properties": {
+        "revision_id": "REV-BRKT-01-A",
+        "lane": "ebom"
+      }
+    },
+    {
+      "id": "REV-BRKT-02-A",
+      "labels": ["Revision"],
+      "properties": {
+        "revision_id": "REV-BRKT-02-A",
+        "lane": "ebom"
+      }
+    },
+    {
+      "id": "REV-FAN-100-A",
+      "labels": ["Revision"],
+      "properties": {
+        "revision_id": "REV-FAN-100-A",
+        "lane": "ebom"
+      }
+    },
+    {
+      "id": "OP-BRKT-MOUNT",
+      "labels": ["Operation"],
+      "properties": {
+        "name": "OP-BRKT-MOUNT",
+        "lane": "bop"
+      }
+    },
+    {
+      "id": "OP-BRKT-ALT",
+      "labels": ["Operation"],
+      "properties": {
+        "name": "OP-BRKT-ALT",
+        "lane": "bop"
+      }
+    },
+    {
+      "id": "OP-FAN-ASSY",
+      "labels": ["Operation"],
+      "properties": {
+        "name": "OP-FAN-ASSY",
+        "lane": "bop"
+      }
+    },
+    {
+      "id": "WC-LINE-A",
+      "labels": ["WorkCenter"],
+      "properties": {
+        "name": "Assembly line A",
+        "lane": "bop"
+      }
+    },
+    {
+      "id": "WC-LINE-B",
+      "labels": ["WorkCenter"],
+      "properties": {
+        "name": "Assembly line B",
+        "lane": "bop"
+      }
+    },
+    {
+      "id": "CUST-EU-01",
+      "labels": ["Customer"],
+      "properties": {
+        "name": "Fictional EU distributor",
+        "lane": "sbom"
+      }
+    },
+    {
+      "id": "CUST-NA-01",
+      "labels": ["Customer"],
+      "properties": {
+        "name": "Fictional NA retailer",
+        "lane": "sbom"
+      }
+    },
+    {
+      "id": "CUST-APAC-01",
+      "labels": ["Customer"],
+      "properties": {
+        "name": "Fictional APAC partner",
+        "lane": "sbom"
+      }
+    },
+    {
+      "id": "DEMO-ECO-FAN-01",
+      "labels": ["ECO"],
+      "properties": {
+        "eco_id": "DEMO-ECO-FAN-01",
+        "status": "open",
+        "lane": "ebom"
+      }
+    },
+    {
+      "id": "DEMO-ECO-FAN-02",
+      "labels": ["ECO"],
+      "properties": {
+        "eco_id": "DEMO-ECO-FAN-02",
+        "status": "closed",
+        "lane": "ebom"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "DEMO-FAN-100",
+      "to": "DEMO-BRKT-01",
+      "type": "CONTAINS"
+    },
+    {
+      "from": "DEMO-FAN-200",
+      "to": "DEMO-BRKT-01",
+      "type": "CONTAINS"
+    },
+    {
+      "from": "DEMO-FAN-300",
+      "to": "DEMO-BRKT-01",
+      "type": "CONTAINS"
+    },
+    {
+      "from": "DEMO-BRKT-01",
+      "to": "DEMO-BRKT-02",
+      "type": "ALTERNATE_OF"
+    },
+    {
+      "from": "DEMO-BRKT-01",
+      "to": "REV-BRKT-01-A",
+      "type": "HAS_REVISION"
+    },
+    {
+      "from": "DEMO-BRKT-02",
+      "to": "REV-BRKT-02-A",
+      "type": "HAS_REVISION"
+    },
+    {
+      "from": "DEMO-FAN-100",
+      "to": "REV-FAN-100-A",
+      "type": "HAS_REVISION"
+    },
+    {
+      "from": "OP-BRKT-MOUNT",
+      "to": "DEMO-BRKT-01",
+      "type": "CONSUMES"
+    },
+    {
+      "from": "OP-BRKT-ALT",
+      "to": "DEMO-BRKT-02",
+      "type": "CONSUMES"
+    },
+    {
+      "from": "OP-BRKT-MOUNT",
+      "to": "WC-LINE-A",
+      "type": "PERFORMED_AT"
+    },
+    {
+      "from": "OP-BRKT-ALT",
+      "to": "WC-LINE-B",
+      "type": "PERFORMED_AT"
+    },
+    {
+      "from": "OP-FAN-ASSY",
+      "to": "DEMO-FAN-100",
+      "type": "PRODUCES"
+    },
+    {
+      "from": "OP-FAN-ASSY",
+      "to": "WC-LINE-A",
+      "type": "PERFORMED_AT"
+    },
+    {
+      "from": "DEMO-FAN-100",
+      "to": "CUST-EU-01",
+      "type": "ORDERED_BY"
+    },
+    {
+      "from": "DEMO-FAN-200",
+      "to": "CUST-NA-01",
+      "type": "ORDERED_BY"
+    },
+    {
+      "from": "DEMO-FAN-300",
+      "to": "CUST-APAC-01",
+      "type": "ORDERED_BY"
+    },
+    {
+      "from": "DEMO-ECO-FAN-01",
+      "to": "DEMO-BRKT-01",
+      "type": "AFFECTS"
+    },
+    {
+      "from": "DEMO-ECO-FAN-01",
+      "to": "DEMO-FAN-100",
+      "type": "AFFECTS"
+    },
+    {
+      "from": "DEMO-ECO-FAN-01",
+      "to": "DEMO-FAN-200",
+      "type": "AFFECTS"
+    },
+    {
+      "from": "DEMO-ECO-FAN-01",
+      "to": "DEMO-FAN-300",
+      "type": "AFFECTS"
+    },
+    {
+      "from": "DEMO-ECO-FAN-02",
+      "to": "DEMO-BRKT-02",
+      "type": "AFFECTS"
+    }
+  ]
+}

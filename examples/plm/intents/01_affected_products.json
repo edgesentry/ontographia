@@ -1,0 +1,32 @@
+{
+  "start": { "class": "Part", "alias": "bracket" },
+  "traverse": [
+    {
+      "relationship": "CONTAINS",
+      "direction": "in",
+      "to": { "class": "Assembly", "alias": "assembly" }
+    }
+  ],
+  "filter": [
+    {
+      "alias": "bracket",
+      "property": "part_number",
+      "op": "eq",
+      "value": "DEMO-BRKT-01"
+    }
+  ],
+  "return": [
+    {
+      "alias": "assembly",
+      "property": "part_number",
+      "as_name": "part_number"
+    },
+    {
+      "alias": "assembly",
+      "property": "name",
+      "as_name": "name"
+    }
+  ],
+  "limit": 20,
+  "optional": false
+}

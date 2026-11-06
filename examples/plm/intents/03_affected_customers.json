@@ -1,0 +1,37 @@
+{
+  "start": { "class": "Part", "alias": "bracket" },
+  "traverse": [
+    {
+      "relationship": "CONTAINS",
+      "direction": "in",
+      "to": { "class": "Assembly", "alias": "assembly" }
+    },
+    {
+      "relationship": "ORDERED_BY",
+      "direction": "out",
+      "to": { "class": "Customer", "alias": "customer" }
+    }
+  ],
+  "filter": [
+    {
+      "alias": "bracket",
+      "property": "part_number",
+      "op": "eq",
+      "value": "DEMO-BRKT-01"
+    }
+  ],
+  "return": [
+    {
+      "alias": "assembly",
+      "property": "part_number",
+      "as_name": "part_number"
+    },
+    {
+      "alias": "customer",
+      "property": "name",
+      "as_name": "customer_name"
+    }
+  ],
+  "limit": 20,
+  "optional": false
+}

@@ -1,0 +1,32 @@
+{
+  "start": { "class": "Part", "alias": "bracket" },
+  "traverse": [
+    {
+      "relationship": "ALTERNATE_OF",
+      "direction": "out",
+      "to": { "class": "Part", "alias": "alternate" }
+    }
+  ],
+  "filter": [
+    {
+      "alias": "bracket",
+      "property": "part_number",
+      "op": "eq",
+      "value": "DEMO-BRKT-01"
+    }
+  ],
+  "return": [
+    {
+      "alias": "alternate",
+      "property": "part_number",
+      "as_name": "alternate_part_number"
+    },
+    {
+      "alias": "alternate",
+      "property": "name",
+      "as_name": "alternate_name"
+    }
+  ],
+  "limit": 20,
+  "optional": false
+}
