@@ -2,36 +2,46 @@
   {
     "chip_id": "affected_products",
     "label_ja": "影響を受ける製品は？",
+    "label_en": "Which products are affected?",
     "intent_path": "examples/plm/intents/01_affected_products.json",
     "lane_hints": ["ebom"],
-    "description_ja": "DEMO-BRKT-01 を直接含むデスクファン組立を返す"
+    "description_ja": "DEMO-BRKT-01 を直接含むデスクファン組立を返す",
+    "description_en": "Return desk-fan assemblies that directly contain DEMO-BRKT-01"
   },
   {
     "chip_id": "affected_bop",
     "label_ja": "影響を受ける製造工程・設備は？",
+    "label_en": "Which manufacturing operations and work centers are affected?",
     "intent_path": "examples/plm/intents/02_affected_bop.json",
     "lane_hints": ["bop"],
-    "description_ja": "OP-BRKT-MOUNT を実行するワークセンターを返す（現行 core の逆方向検証制約により工程起点）"
+    "description_ja": "OP-BRKT-MOUNT を実行するワークセンターを返す（現行 core の逆方向検証制約により工程起点）",
+    "description_en": "Return work centers that perform OP-BRKT-MOUNT (operation-start due to current core reverse-direction limits)"
   },
   {
     "chip_id": "affected_customers",
     "label_ja": "影響を受ける顧客は？",
+    "label_en": "Which customers are affected?",
     "intent_path": "examples/plm/intents/03_affected_customers.json",
     "lane_hints": ["ebom", "sbom"],
-    "description_ja": "DEMO-BRKT-01 を含む組立の出荷先顧客を返す"
+    "description_ja": "DEMO-BRKT-01 を含む組立の出荷先顧客を返す",
+    "description_en": "Return customers of assemblies that contain DEMO-BRKT-01"
   },
   {
     "chip_id": "alternatives",
     "label_ja": "代替部品は？",
+    "label_en": "What are the alternate parts?",
     "intent_path": "examples/plm/intents/04_alternatives.json",
     "lane_hints": ["ebom"],
-    "description_ja": "DEMO-BRKT-01 の代替部品 DEMO-BRKT-02 を返す"
+    "description_ja": "DEMO-BRKT-01 の代替部品 DEMO-BRKT-02 を返す",
+    "description_en": "Return alternate part DEMO-BRKT-02 for DEMO-BRKT-01"
   },
   {
     "chip_id": "residual_risk",
     "label_ja": "変更後の残存リスクは？",
+    "label_en": "What residual risk remains after the change?",
     "intent_path": "examples/plm/intents/05_residual_risk.json",
     "lane_hints": ["ebom", "bop", "sbom"],
-    "description_ja": "open の DEMO-ECO-FAN-01 が影響する Item を返す"
+    "description_ja": "open の DEMO-ECO-FAN-01 が影響する Item を返す",
+    "description_en": "Return Items affected by open DEMO-ECO-FAN-01"
   }
 ]
