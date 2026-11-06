@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Ontographia browser spike</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <div>
+        <h1 data-i18n="title"></h1>
+        <p class="muted" data-i18n="subtitle"></p>
+      </div>
+      <button id="lang" class="lang-toggle" type="button"></button>
+    </header>
+
+    <main>
+      <section class="card" aria-labelledby="questions-heading">
+        <h2 id="questions-heading" data-i18n="questions"></h2>
+        <div id="chip-list" class="chip-list" role="group" aria-labelledby="questions-heading"></div>
+      </section>
+
+      <section class="card" aria-labelledby="output-heading">
+        <div class="card-head">
+          <h2 id="output-heading" data-i18n="output"></h2>
+          <span id="timing" class="muted" aria-live="polite"></span>
+        </div>
+
+        <p id="error" class="error" role="alert" hidden></p>
+
+        <h3 data-i18n="cypher"></h3>
+        <pre id="query" class="code" aria-live="polite"><code>—</code></pre>
+
+        <h3 data-i18n="params"></h3>
+        <pre id="params" class="code"><code>—</code></pre>
+
+        <p id="source-note" class="muted source-note"></p>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <span id="engine" class="muted"></span>
+    </footer>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -16,6 +16,7 @@ Issue #154 is titled “PFAS/EOL fixtures”, but the scenario was locked on 202
 | [`fixtures/deskfan_eol.graph.json`](fixtures/deskfan_eol.graph.json) | 18-node embedded graph, lane-tagged `ebom` / `bop` / `sbom` |
 | [`intents/`](intents/) | Five fixed Intents, one per chip question |
 | [`chips.json`](chips.json) | Five UI chips (Japanese + English labels), 1:1 with the Intent files |
+| [`browser-spike/`](browser-spike/) | WASM build of the same core for browser-side Intent → Cypher (#155) |
 
 ## Fixture
 
