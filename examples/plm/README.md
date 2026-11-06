@@ -6,8 +6,9 @@
 
 ## Contents
 
-- Classes: `Part`, `Assembly`, `Revision`, `ECO`, `Operation`, `WorkCenter`, `Substance`, `Customer`
-- Relationships: `CONTAINS`, `CONSUMES`, `AFFECTS`, `ALTERNATE_OF`
+- Classes: `Item`, `Part`, `Assembly`, `Revision`, `ECO`, `Operation`, `WorkCenter`, `Substance`, `Customer`
+  - `Item` is a thin shared superclass of `Part`, `Assembly`, `Revision`, and `Substance`, so polymorphic relationships can be declared once.
+- Relationships: `CONTAINS`, `CONSUMES`, `AFFECTS`, `ALTERNATE_OF`, `PERFORMED_AT`, `PRODUCES`, `HAS_REVISION`, `ORDERED_BY`
 - Properties are kept minimal (e.g. `part_number`, `revision_id`, `eco_id`, `cas_number`).
 
 ## Sources of inspiration
