@@ -1,0 +1,122 @@
+# Ontographia native ontology — thin PLM subset (demo-sized)
+# Engineering BOM / manufacturing BOP / ECO / substances. Subset only; see README.md.
+#
+# `Item` is a thin shared superclass so each polymorphic relationship name is
+# declared exactly once (core resolves relationships 1:1 by name):
+#   - CONTAINS      (Item -> Item)   covers Assembly->Part, Assembly->Assembly, Part->Part
+#   - CONSUMES      (Operation -> Item) covers Part and Substance
+#   - AFFECTS       (ECO -> Item)    covers Part, Assembly and Revision
+#   - ALTERNATE_OF  (Item -> Item)   alternate items
+#   - HAS_REVISION  (Item -> Revision) covers Part and Assembly
+
+namespaces:
+  plm: http://example.org/ontographia/plm#
+
+classes:
+  - name: Item
+    description: Thin shared superclass for BOM/BOP items (parts, assemblies, revisions, substances)
+  - name: Part
+    super_classes: [Item]
+    description: Component item in a bill of materials
+  - name: Assembly
+    super_classes: [Item]
+    description: Item composed of parts and/or sub-assemblies
+  - name: Revision
+    super_classes: [Item]
+    description: Released revision of a part or assembly
+  - name: ECO
+    description: Engineering change order
+  - name: Operation
+    description: Manufacturing operation in a bill of process
+  - name: WorkCenter
+    description: Resource where operations are performed
+  - name: Substance
+    super_classes: [Item]
+    description: Chemical substance referenced by materials
+  - name: Customer
+    description: Customer of the product
+
+relationships:
+  - name: CONTAINS
+    from_class: Item
+    to_class: Item
+    direction: out
+  - name: CONSUMES
+    from_class: Operation
+    to_class: Item
+    direction: out
+  - name: AFFECTS
+    from_class: ECO
+    to_class: Item
+    direction: out
+  - name: ALTERNATE_OF
+    from_class: Item
+    to_class: Item
+    direction: out
+  - name: PERFORMED_AT
+    from_class: Operation
+    to_class: WorkCenter
+    direction: out
+  - name: PRODUCES
+    from_class: Operation
+    to_class: Item
+    direction: out
+  - name: HAS_REVISION
+    from_class: Item
+    to_class: Revision
+    direction: out
+  - name: ORDERED_BY
+    from_class: Assembly
+    to_class: Customer
+    direction: out
+
+properties:
+  - name: part_number
+    owner_class: Part
+    datatype: string
+    required: true
+    unique: true
+  - name: name
+    owner_class: Part
+    datatype: string
+  - name: part_number
+    owner_class: Assembly
+    datatype: string
+    required: true
+    unique: true
+  - name: name
+    owner_class: Assembly
+    datatype: string
+  - name: revision_id
+    owner_class: Revision
+    datatype: string
+    required: true
+    unique: true
+  - name: eco_id
+    owner_class: ECO
+    datatype: string
+    required: true
+    unique: true
+  - name: status
+    owner_class: ECO
+    datatype: string
+  - name: name
+    owner_class: Operation
+    datatype: string
+    required: true
+  - name: name
+    owner_class: WorkCenter
+    datatype: string
+    required: true
+  - name: name
+    owner_class: Substance
+    datatype: string
+  - name: cas_number
+    owner_class: Substance
+    datatype: string
+    required: true
+    unique: true
+  - name: name
+    owner_class: Customer
+    datatype: string
+    required: true
