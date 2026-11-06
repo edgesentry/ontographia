@@ -68,8 +68,11 @@ litellm = [
 
 [tool.uv]
 # dnspython is transitive via email-validator (>=2.0.0); keep it on the GHSA-45c3-73f7-pv4m fix.
+# oauthlib is transitive via fastapi-sso (litellm[proxy]); keep it on the
+# GHSA-3jp2-3mrg-2vxc fix (fixed in 4.0.1).
 constraint-dependencies = [
     "dnspython>=2.9.0",
+    "oauthlib>=4.0.1",
 ]
 # litellm>=1.104 caps filelock<4, but the three open filelock GHSAs are fixed only
 # in 4.2.1+. LiteLLM calls FileLock(path, timeout=, mode=) and Timeout, which 4.2
