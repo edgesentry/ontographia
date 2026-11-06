@@ -1,0 +1,37 @@
+[
+  {
+    "chip_id": "affected_products",
+    "label_ja": "影響を受ける製品は？",
+    "intent_path": "examples/plm/intents/01_affected_products.json",
+    "lane_hints": ["ebom"],
+    "description_ja": "DEMO-BRKT-01 を直接含むデスクファン組立を返す"
+  },
+  {
+    "chip_id": "affected_bop",
+    "label_ja": "影響を受ける製造工程・設備は？",
+    "intent_path": "examples/plm/intents/02_affected_bop.json",
+    "lane_hints": ["bop"],
+    "description_ja": "OP-BRKT-MOUNT を実行するワークセンターを返す（現行 core の逆方向検証制約により工程起点）"
+  },
+  {
+    "chip_id": "affected_customers",
+    "label_ja": "影響を受ける顧客は？",
+    "intent_path": "examples/plm/intents/03_affected_customers.json",
+    "lane_hints": ["ebom", "sbom"],
+    "description_ja": "DEMO-BRKT-01 を含む組立の出荷先顧客を返す"
+  },
+  {
+    "chip_id": "alternatives",
+    "label_ja": "代替部品は？",
+    "intent_path": "examples/plm/intents/04_alternatives.json",
+    "lane_hints": ["ebom"],
+    "description_ja": "DEMO-BRKT-01 の代替部品 DEMO-BRKT-02 を返す"
+  },
+  {
+    "chip_id": "residual_risk",
+    "label_ja": "変更後の残存リスクは？",
+    "intent_path": "examples/plm/intents/05_residual_risk.json",
+    "lane_hints": ["ebom", "bop", "sbom"],
+    "description_ja": "open の DEMO-ECO-FAN-01 が影響する Item を返す"
+  }
+]

@@ -1,0 +1,32 @@
+{
+  "start": { "class": "Operation", "alias": "operation" },
+  "traverse": [
+    {
+      "relationship": "PERFORMED_AT",
+      "direction": "out",
+      "to": { "class": "WorkCenter", "alias": "work_center" }
+    }
+  ],
+  "filter": [
+    {
+      "alias": "operation",
+      "property": "name",
+      "op": "eq",
+      "value": "OP-BRKT-MOUNT"
+    }
+  ],
+  "return": [
+    {
+      "alias": "operation",
+      "property": "name",
+      "as_name": "operation_name"
+    },
+    {
+      "alias": "work_center",
+      "property": "name",
+      "as_name": "work_center_name"
+    }
+  ],
+  "limit": 20,
+  "optional": false
+}
