@@ -1,0 +1,18 @@
+[package]
+name = "ontographia-wasm"
+description = "Minimal wasm32 ABI for compiling Ontographia Intents without Node or a native library"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "ontographia_wasm"
+
+[dependencies]
+ontographia-core = { workspace = true }
+ontographia-adapters = { workspace = true }
+serde_json = { workspace = true }

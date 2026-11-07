@@ -8,6 +8,7 @@ members = [
     "crates/ontographia-cli",
     "crates/ontographia-integration-tests",
     "bindings/python",
+    "examples/plm/browser-spike/wasm",
 ]
 default-members = [
     "crates/ontographia-core",
