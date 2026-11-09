@@ -90,12 +90,18 @@ export async function loadOntographia(
     const hintBytes = hint === null ? null : encoder.encode(hint);
     const dialectBytes = encoder.encode(options.dialect ?? "cypher25");
 
-    const ontologyInput = writeInput(ontologyBytes);
-    const intentInput = writeInput(intentBytes);
-    const hintInput = hintBytes === null ? null : writeInput(hintBytes);
-    const dialectInput = writeInput(dialectBytes);
+    let ontologyInput = null;
+    let intentInput = null;
+    let hintInput = null;
+    let dialectInput = null;
 
     try {
+      // Allocate inside the try so a later failure still frees earlier buffers.
+      ontologyInput = writeInput(ontologyBytes);
+      intentInput = writeInput(intentBytes);
+      if (hintBytes !== null) hintInput = writeInput(hintBytes);
+      dialectInput = writeInput(dialectBytes);
+
       const pointer =
         api.otg_build(
           ontologyInput.pointer,
@@ -125,10 +131,10 @@ export async function loadOntographia(
       }
       return { query: parsed.query, params: parsed.params };
     } finally {
-      releaseInput(ontologyInput);
-      releaseInput(intentInput);
+      if (ontologyInput !== null) releaseInput(ontologyInput);
+      if (intentInput !== null) releaseInput(intentInput);
       if (hintInput !== null) releaseInput(hintInput);
-      releaseInput(dialectInput);
+      if (dialectInput !== null) releaseInput(dialectInput);
     }
   }
 
