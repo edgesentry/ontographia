@@ -33,6 +33,7 @@ Intent JSON is produced outside the core (LLM or hand-authored), constrained by 
 | Python | `pip install ontographia` (wheels for 3.11–3.13 on Linux, macOS arm64, Windows); optional Intent layer: `pip install "ontographia[llm]"` ([docs](llm.md)); optional MCP server: `pip install "ontographia[mcp]"` ([docs](mcp.md)) |
 | Go | `go get github.com/edgesentry/ontographia/bindings/go@v0.1.8` (+ FFI lib from Releases). Link with `LIBRARY_PATH` / `CGO_LDFLAGS`; see [Go](go.md). The published `v0.1.8` module still hardcodes a checkout `target/release` path; this tree does not |
 | TypeScript / JavaScript | `npm install @edgesentry/ontographia` (Node.js 22+). Installs one prebuilt `libontographia_ffi` (Linux x64, Linux arm64, macOS arm64, Windows x64). Published at 0.1.8, including `@edgesentry/ontographia-darwin-arm64`. User guide deferred. |
+| Browser / WASM | `npm install @edgesentry/ontographia-wasm`. Same core crates compiled to `wasm32-unknown-unknown`; Intent → Cypher inside the browser, no Node addon or server. [WASM](wasm.md) |
 
 Release process, including what to run on GitHub Actions and on a Mac before the next Release: [Pre-release checks](release.md#pre-release-checks).
 
@@ -42,7 +43,7 @@ otg build --ontology examples/manufacturing.native.yaml \
 otg schema examples/manufacturing.native.yaml --json-out schema.json
 ```
 
-**Quickstart:** language guides ([Rust](rust.md) / [Python](python.md) / [Go](go.md)) → [Neo4j walkthrough](end-to-end-neo4j.md).
+**Quickstart:** language guides ([Rust](rust.md) / [Python](python.md) / [Go](go.md) / [Browser WASM](wasm.md)) → [Neo4j walkthrough](end-to-end-neo4j.md).
 
 ## Supported ontology formats
 
@@ -74,6 +75,7 @@ Detection and routing: `crates/ontographia-adapters/src/registry.rs`.
 | Python bindings (PyO3) | [Python](python.md) |
 | Go bindings (cgo / FFI) | [Go](go.md) |
 | TypeScript / JavaScript bindings | `bindings/typescript` (registry upload is the Release workflow only; user guide deferred) |
+| Browser WASM (`@edgesentry/ontographia-wasm`) | [WASM](wasm.md) |
 | Pipeline, COM, validation, emitters | [Architecture](architecture.md) |
 | Related Text2Cypher / adaptive-decoding work | [Related work](related-work.md) |
 | Intent layer (`ontographia[llm]`, experimental) | [Intent layer (LLM)](llm.md) |

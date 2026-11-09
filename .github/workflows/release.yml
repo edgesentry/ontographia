@@ -343,9 +343,49 @@ jobs:
           name: npm-tarballs
           path: dist/npm/*.tgz
 
+  package-wasm-npm:
+    name: Package WASM npm
+    needs: [resolve-version, verify]
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+      - name: Install pinned Rust toolchain
+        run: |
+          TOOLCHAIN="$(tr -d '[:space:]' < bindings/wasm/rust-toolchain.version)"
+          rustup toolchain install "$TOOLCHAIN" --profile minimal --no-self-update --target wasm32-unknown-unknown
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-wasm-
+            ${{ runner.os }}-cargo-
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: "22"
+      - name: Build, pack, and smoke-test
+        env:
+          WASM_NPM_OUT: ${{ runner.temp }}/wasm-npm
+        run: |
+          bash bindings/wasm/scripts/build-package.sh --pack --out "$WASM_NPM_OUT"
+          node bindings/wasm/scripts/smoke-packed.mjs \
+            --tarball "${WASM_NPM_OUT}/edgesentry-ontographia-wasm-${RELEASE_TAG#v}.tgz"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: wasm-npm-tarball
+          path: ${{ runner.temp }}/wasm-npm/*.tgz
+
   upload-assets:
     name: Upload GitHub Release assets
-    needs: [resolve-version, build-cli, build-ffi, build-wheels, package-npm]
+    needs: [resolve-version, build-cli, build-ffi, build-wheels, package-npm, package-wasm-npm]
     runs-on: ubuntu-latest
     env:
       RELEASE_TAG: ${{ needs.resolve-version.outputs.release_tag }}
@@ -501,3 +541,40 @@ jobs:
         # (this job id). Do not rename the job id without updating that guard.
         # Do not set NODE_AUTH_TOKEN or NPM_TOKEN. Provenance is automatic.
         run: bash scripts/publish-npm.sh dist/npm
+
+  publish-wasm-npm:
+    name: Publish WASM npm
+    needs: [resolve-version, package-wasm-npm]
+    runs-on: ubuntu-latest
+    if: vars.PUBLISH_TO_REGISTRIES == 'true'
+    # Matches publish-npm: a job permissions block replaces workflow
+    # inheritance, so id-token: write is set here for npm Trusted Publishing.
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ needs.resolve-version.outputs.release_tag }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: "22"
+          registry-url: https://registry.npmjs.org
+      - name: Install npm CLI for Trusted Publishing
+        # registry-url makes setup-node export a placeholder NODE_AUTH_TOKEN.
+        # This install uses a token-free npmrc. publish-wasm-npm.sh rejects a real token.
+        env:
+          NODE_AUTH_TOKEN: ""
+        run: |
+          npmrc="${RUNNER_TEMP}/npmrc-install"
+          printf 'registry=https://registry.npmjs.org/\n' > "$npmrc"
+          NPM_CONFIG_USERCONFIG="$npmrc" npm install -g npm@11
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333  # v8.0.2
+        with:
+          name: wasm-npm-tarball
+          path: dist/wasm-npm
+      - name: Publish to npm
+        # publish-wasm-npm.sh refuses to run unless GITHUB_JOB is
+        # publish-wasm-npm (this job id). Do not rename the job id without
+        # updating that guard. Do not set NODE_AUTH_TOKEN or NPM_TOKEN.
+        run: bash scripts/publish-wasm-npm.sh dist/wasm-npm

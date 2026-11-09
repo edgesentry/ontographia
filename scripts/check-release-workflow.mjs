@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Release workflow invariants for npm Trusted Publishing and gh release upload.
 // Reads .github/workflows/release.yml. Does not run the workflow.
+// publish-wasm-npm, when present, must also grant id-token: write.
 //
 //   node scripts/check-release-workflow.mjs
 //   node scripts/check-release-workflow.mjs --file path/to/copy.yml
@@ -85,6 +86,19 @@ export function workflowProblems(text) {
     if (/^    environment\s*:/m.test(body)) {
       problems.push(
         "job publish-npm sets a GitHub environment. The trusted publisher environment name must stay empty, and Release is started with Run workflow on release.yml.",
+      );
+    }
+  }
+  if (jobs.has("publish-wasm-npm")) {
+    const body = jobBody(jobs, "publish-wasm-npm");
+    if (!/^[ \t]*id-token:\s*write\s*(?:#.*)?$/m.test(body)) {
+      problems.push(
+        "job publish-wasm-npm must set permissions id-token: write. A job permissions block replaces the workflow permissions, and npm Trusted Publishing needs that OIDC token.",
+      );
+    }
+    if (/^    environment\s*:/m.test(body)) {
+      problems.push(
+        "job publish-wasm-npm sets a GitHub environment. The trusted publisher environment name must stay empty.",
       );
     }
   }

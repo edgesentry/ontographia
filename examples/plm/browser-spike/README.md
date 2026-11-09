@@ -2,6 +2,8 @@
 
 Path **A**: Intent JSON + ontology bytes → validate/build → **Cypher 25 + params inside the browser**, with no Node addon, no native library, and no server-side engine. The module is a thin `wasm32-unknown-unknown` build of the same `ontographia-core` + `ontographia-adapters` crates that power `otg`, so it cannot drift from the CLI.
 
+> Packaged build: [`bindings/wasm`](../../../bindings/wasm/README.md) produces npm package **`@edgesentry/ontographia-wasm`** (guide: [docs/wasm.md](../../../docs/wasm.md)). This spike remains the demo harness and shares the same loader.
+
 ```text
 examples/plm/browser-spike/
 ├── wasm/            # ontographia-wasm crate: hand-written C ABI over core/adapters
@@ -55,7 +57,7 @@ The ABI is deliberately plain so it works on any static host without a JS toolch
 - `hint_ptr`/`dialect_ptr` may be null. The dialect defaults to `cypher25`; the hint is used only for adapter detection (pass `plm.native.yaml`).
 - Memory can grow during `otg_alloc`, so the wrapper re-reads `memory.buffer` after every allocation.
 
-[`web/ontographia-wasm.js`](web/ontographia-wasm.js) is the entire JavaScript binding — about 160 lines, no dependencies:
+[`web/ontographia-wasm.js`](web/ontographia-wasm.js) re-exports the canonical binding from [`bindings/wasm/index.js`](../../../bindings/wasm/index.js) and defaults the source to the demo's `.wasm`. The binding is about 160 lines, no dependencies:
 
 ```js
 import { loadOntographia } from "./ontographia-wasm.js";
@@ -114,5 +116,5 @@ The dumped DOM must contain the same `CYPHER 25 …` text as `otg build`. Use a 
 - **In scope:** ontology bytes + Intent → Cypher 25/5/GQL + params, executed in a real browser `WebAssembly` instance.
 - **Out of scope (unchanged):** Neo4j connectivity/execution, graph seeding, LLM/Intent extraction, prompt subsetting, schema DDL/diff, 3D UI, and any deploy. The fixture is still demo seed data consumed by the app, not by this module.
 - Generated `.wasm` and `web/bundle-size.json` are gitignored; run the build script first.
-- The ABI is a spike surface, not a published package. If a real browser product needs typed arrays, streaming, or multiple simultaneous engines, revisit `wasm-bindgen` and a JS facade rather than extending this hand-written ABI ad hoc.
+- The ABI stays at version `1`. The npm package wraps this same surface; a real browser product that needs typed arrays, streaming, or multiple simultaneous engines should revisit `wasm-bindgen` rather than extending the ABI ad hoc.
 - The wasm build uses the workspace `ontographia-core`/`ontographia-adapters` crates; do not fork their logic here.
