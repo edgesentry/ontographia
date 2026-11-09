@@ -1,6 +1,6 @@
 # Release workflow
 
-Ontographia ships **Rust crates + CLI**, a **Python wheel** (PyPI), **Go bindings** (cgo + FFI), and **TypeScript bindings** (npm, with a prebuilt `libontographia_ffi`). Releases are cut from `main` only.
+Ontographia ships **Rust crates + CLI**, a **Python wheel** (PyPI), **Go bindings** (cgo + FFI), **TypeScript bindings** (npm, with a prebuilt `libontographia_ffi`), and a **browser WASM package** (npm, `.wasm` + JS + types). Releases are cut from `main` only.
 
 **Changelog:** [GitHub Releases](https://github.com/edgesentry/ontographia/releases) are the source of truth. The Release workflow creates each release with `gh release create … --generate-notes`.
 
@@ -57,15 +57,15 @@ The job is `scripts/preflight-release.sh`. It does not create a tag, a GitHub Re
 
 | Check | Green means |
 |-------|-------------|
-| Version | `Cargo.toml` `[workspace.package] version` and `bindings/typescript/package.json` `version` are the same `X.Y.Z` (`scripts/verify-release-version.sh`) |
+| Version | `Cargo.toml` `[workspace.package] version`, `bindings/typescript/package.json`, and `bindings/wasm/package.json` are the same `X.Y.Z` (`scripts/verify-release-version.sh`) |
 | Workflow file | `.github/workflows/release.yml` is named **Release**, the publish job id is `publish-npm`, and `upload-assets` checks out the repo and sets `GH_REPO` |
 | Registries | Read-only ping of npm, crates.io, and PyPI (`scripts/check-registry-reachability.sh`) |
 | npm packages | `@edgesentry/ontographia` and the four platform packages are on the public registry. The job reads that public document. It does not call `GET /-/package/{package}/trust` |
-| npm pack | `scripts/package-npm-dry-run.mjs` packs stub FFI archives. The main tarball lists four `optionalDependencies`. Nothing is uploaded |
+| npm pack | `scripts/package-npm-dry-run.mjs` packs stub FFI archives. The main tarball lists four `optionalDependencies`. `scripts/package-wasm-npm-dry-run.mjs` builds and packs the browser WASM tarball with wasm + JS + types. Nothing is uploaded |
 | Tags | `vX.Y.Z`, `release-processed/vX.Y.Z`, and `bindings/go/vX.Y.Z` are absent on the remote |
 | Build | `scripts/release-check.sh`: `cargo test --workspace`, CLI smoke, `cargo publish --dry-run` for `ontographia-core` only, a release build of the CLI, and maturin wheels for Python 3.11, 3.12, and 3.13 |
 
-Release check does not read `NPM_TRUST_TOKEN`. Do not add `NPM_TRUST_TOKEN`, a Bypass-2fa token, or `NPM_TOKEN` to GitHub Actions. `publish-npm` stays on Trusted Publishing (OIDC). Confirm the five publishers on a maintainer machine with `npm trust list` (commands in [Release check (dry-run)](#release-check-dry-run)). A missing trust token does not fail this job.
+Release check does not read `NPM_TRUST_TOKEN`. Do not add `NPM_TRUST_TOKEN`, a Bypass-2fa token, or `NPM_TOKEN` to GitHub Actions. `publish-npm` and `publish-wasm-npm` stay on Trusted Publishing (OIDC). Confirm the six publishers on a maintainer machine with `npm trust list` (commands in [Release check (dry-run)](#release-check-dry-run)). A missing trust token does not fail this job.
 
 A local `bash scripts/preflight-release.sh` runs the same script. The required signal is the Release check workflow on `main`.
 
@@ -163,15 +163,16 @@ go test ./...
    - `registry reachability ok` (read-only npm, crates.io, and PyPI)
    - each of `@edgesentry/ontographia` and the four platform packages `is on the registry`, then `npm packages on registry; trusted publisher settings were not read`
    - `npm pack dry-run ok` (stub FFI archives; four platform `optionalDependencies`; no publish)
+   - `wasm npm pack dry-run ok` (browser WASM tarball; wasm + JS + types; no publish)
    - `tag vX.Y.Z is available`
    - `release check ok` (tests, `cargo publish --dry-run` for `ontographia-core`, wheels)
    - `preflight ok for vX.Y.Z`
 
 No tag or GitHub Release is created. Nothing is published.
 
-The npm package check runs **before** the immutable-tag check. A version whose tag already exists still confirms the five packages are on the registry and packs the npm tarballs, then stops with `tag already exists` and does not build wheels. A green run waits until `Cargo.toml` is a version whose tag is free.
+The npm package check runs **before** the immutable-tag check. A version whose tag already exists still confirms the five Node-native packages are on the registry and packs the npm tarballs, then stops with `tag already exists` and does not build wheels. A green run waits until `Cargo.toml` is a version whose tag is free.
 
-Release check confirms those five packages from the **public** registry document. It does not call `GET /-/package/{package}/trust` and it does not read `NPM_TRUST_TOKEN`. That GET needs a granular token with write access and, when the account has 2FA, an `npm-otp` header. npm warns against Bypass-2fa and publish-and-stage tokens and prefers Trusted Publishing. Do not add `NPM_TRUST_TOKEN`, a Bypass-2fa token, or `NPM_TOKEN` to GitHub Actions. `publish-npm` stays on Trusted Publishing (OIDC) only.
+Release check confirms those five Node-native packages from the **public** registry document. It does not call `GET /-/package/{package}/trust` and it does not read `NPM_TRUST_TOKEN`. That GET needs a granular token with write access and, when the account has 2FA, an `npm-otp` header. npm warns against Bypass-2fa and publish-and-stage tokens and prefers Trusted Publishing. Do not add `NPM_TRUST_TOKEN`, a Bypass-2fa token, or `NPM_TOKEN` to GitHub Actions. `publish-npm` stays on Trusted Publishing (OIDC) only.
 
 Confirm the publishers yourself after `npm login`:
 
@@ -181,6 +182,7 @@ npm trust list @edgesentry/ontographia-linux-x64 --json
 npm trust list @edgesentry/ontographia-linux-arm64 --json
 npm trust list @edgesentry/ontographia-darwin-arm64 --json
 npm trust list @edgesentry/ontographia-win32-x64 --json
+npm trust list @edgesentry/ontographia-wasm --json
 ```
 
 Each record should be GitHub Actions on `edgesentry/ontographia`, workflow filename `release.yml`, an empty environment, and `createPackage` (**Allow npm publish** on). Do this before the next Release if win32 or the main package might still be missing that publisher. Release check prints the same commands as a warning. A missing trust token does not fail the job.
@@ -264,6 +266,7 @@ gh workflow run Release --ref main
 | Python wheel | `pyproject.toml` `dynamic = ["version"]` → `bindings/python/Cargo.toml` via maturin |
 | Go | No file; `bindings/go/vX.Y.Z` tag created by the release workflow |
 | TypeScript / npm | `bindings/typescript/package.json` `version`, kept equal to the workspace version by `scripts/bump-version.sh`. Preflight fails if they differ. Platform-package versions are not stored in git; `scripts/package-npm.mjs` stamps the workspace version when it packs them |
+| Browser WASM / npm | `bindings/wasm/package.json` `version`, kept equal to the workspace version by `scripts/bump-version.sh`. Preflight fails if they differ. The wasm tarball version is stamped from that manifest |
 
 ```bash
 scripts/bump-version.sh 0.1.8 --commit
@@ -293,17 +296,18 @@ Without registry settings, the workflow still uploads **GitHub Release assets**,
 The scope `@edgesentry` is an npm organization. Creating the GitHub org does not create it. Package names are immutable after the first publish. Do this on npmjs.com as an owner of that org. Laptops and agents do not upload the Release tarballs.
 
 1. Create the npm organization **`edgesentry`** at [npmjs.com/org/create](https://www.npmjs.com/org/create).
-2. Create these five package names under that org. The Trusted Publisher form is on a package that already exists ([`npm trust` requires the package on the registry](https://docs.npmjs.com/cli/v11/commands/npm-trust/)). A placeholder version such as `0.0.0`, published by you with an interactive login, is enough for the settings page. Use a version other than the workspace version in `Cargo.toml`, so the Release job still publishes the real tarball. Do not upload the Release `.tgz` files and do not run `scripts/publish-npm.sh`.
+2. Create these six package names under that org. The Trusted Publisher form is on a package that already exists ([`npm trust` requires the package on the registry](https://docs.npmjs.com/cli/v11/commands/npm-trust/)). A placeholder version such as `0.0.0`, published by you with an interactive login, is enough for the settings page. Use a version other than the workspace version in `Cargo.toml`, so the Release job still publishes the real tarball. Do not upload the Release `.tgz` files and do not run `scripts/publish-npm.sh` or `scripts/publish-wasm-npm.sh`.
    - `@edgesentry/ontographia`
    - `@edgesentry/ontographia-linux-x64`
    - `@edgesentry/ontographia-linux-arm64`
    - `@edgesentry/ontographia-darwin-arm64`
    - `@edgesentry/ontographia-win32-x64`
+   - `@edgesentry/ontographia-wasm`
 3. On each package, open **Packages → the package → Settings → Trusted publishing** ([docs](https://docs.npmjs.com/trusted-publishers/)). Choose **GitHub Actions** and save one connection with the fields below. The same screen is `https://www.npmjs.com/package/<name>/access`.
 4. On each package, open **Settings → Publishing access**, choose **Require two-factor authentication and disallow tokens**, and save. Trusted Publishing still publishes. An npm token does not.
 5. Set the repository variable `PUBLISH_TO_REGISTRIES` to `true`.
 
-Trusted Publisher fields, same on all five packages:
+Trusted Publisher fields, same on all six packages:
 
 | Field | Value |
 |-------|--------|
@@ -319,11 +323,11 @@ A trusted publisher created after 2026-09-03 allows `npm stage publish` until yo
 
 `os` and `cpu` on a platform `package.json` (`scripts/package-npm.mjs`) choose which optional dependency npm installs. They do not decide whether `npm publish` is allowed. The v0.1.7 Release runner was Linux and still published `@edgesentry/ontographia-darwin-arm64@0.1.7` (`"os": ["darwin"]`) with provenance. Leave those fields in place, including on `@edgesentry/ontographia-win32-x64` (`"os": ["win32"]`, `"cpu": ["x64"]`, no `libc`).
 
-**Win32 uses the same Trusted Publisher as the other four packages.** Release run [41265294898](https://github.com/edgesentry/ontographia/actions/runs/41265294898) published `@edgesentry/ontographia-darwin-arm64`, `@edgesentry/ontographia-linux-arm64`, and `@edgesentry/ontographia-linux-x64` at `0.1.7` via OIDC. `@edgesentry/ontographia-win32-x64@0.1.7` then returned `ENEEDAUTH` (`need auth`). The package already exists (`0.0.0` and `0.0.0-stage`); `0.1.7` was not published, and neither was `@edgesentry/ontographia@0.1.7`, because the script stopped at the first failure. That is a missing, expired, or publish-disallowed Trusted Publisher on the win32 package alone. Re-check [its access page](https://www.npmjs.com/package/@edgesentry/ontographia-win32-x64/access) against the table above before re-running Release. Do the same for [`@edgesentry/ontographia`](https://www.npmjs.com/package/@edgesentry/ontographia/access) if the main package has not been published at this version yet.
+**Win32 uses the same Trusted Publisher as the other five packages.** Release run [41265294898](https://github.com/edgesentry/ontographia/actions/runs/41265294898) published `@edgesentry/ontographia-darwin-arm64`, `@edgesentry/ontographia-linux-arm64`, and `@edgesentry/ontographia-linux-x64` at `0.1.7` via OIDC. `@edgesentry/ontographia-win32-x64@0.1.7` then returned `ENEEDAUTH` (`need auth`). The package already exists (`0.0.0` and `0.0.0-stage`); `0.1.7` was not published, and neither was `@edgesentry/ontographia@0.1.7`, because the script stopped at the first failure. That is a missing, expired, or publish-disallowed Trusted Publisher on the win32 package alone. Re-check [its access page](https://www.npmjs.com/package/@edgesentry/ontographia-win32-x64/access) against the table above before re-running Release. Do the same for [`@edgesentry/ontographia`](https://www.npmjs.com/package/@edgesentry/ontographia/access) if the main package has not been published at this version yet.
 
 A new connection must complete its first successful publish within **2 days** or it expires. Save it when you are about to run Release, and run Release inside that window. An expired connection is deleted and created again; it cannot be edited.
 
-**npm publish is allowed only in the Release job `publish-npm`.** `scripts/publish-npm.sh` exits before it talks to the registry unless `GITHUB_ACTIONS=true`, `GITHUB_WORKFLOW=Release`, and `GITHUB_JOB=publish-npm`, and unless the OIDC request variables from `id-token: write` are present. `bindings/typescript` sets `prepublishOnly` so `npm publish` in that directory fails. Packing (`scripts/package-npm.mjs` / `npm pack`, including `scripts/package-npm-dry-run.mjs` in preflight) does not upload. Preflight also refuses a `release.yml` whose name is not **Release**, whose publish job id is not `publish-npm`, or whose `upload-assets` job has no checkout and no `GH_REPO`. Those are the OIDC and `gh release upload` invariants. `scripts/check-npm-trusted-publishers.mjs` confirms the five packages exist before any publish job. In GitHub Actions it does not call the authenticated trust API and it does not publish. Confirm publishers locally with `npm trust list`.
+**npm publish is allowed only in the Release jobs `publish-npm` (Node-native) and `publish-wasm-npm` (browser WASM).** `scripts/publish-npm.sh` exits before it talks to the registry unless `GITHUB_ACTIONS=true`, `GITHUB_WORKFLOW=Release`, and `GITHUB_JOB=publish-npm`, and unless the OIDC request variables from `id-token: write` are present. `scripts/publish-wasm-npm.sh` applies the same guard with `GITHUB_JOB=publish-wasm-npm`. `bindings/typescript` and `bindings/wasm` set `prepublishOnly` so `npm publish` in those directories fails. Packing (`scripts/package-npm.mjs`, `bindings/wasm/scripts/build-package.sh`, any `npm pack`, including the preflight dry-runs) does not upload. Preflight also refuses a `release.yml` whose name is not **Release**, whose publish job id is not `publish-npm`, or whose `upload-assets` job has no checkout and no `GH_REPO`. It also requires `publish-wasm-npm`, when present, to set `id-token: write`. `scripts/check-npm-trusted-publishers.mjs` confirms the five Node-native packages exist before any publish job; `@edgesentry/ontographia-wasm` is created manually with its own publisher (see above). In GitHub Actions the check does not call the authenticated trust API and it does not publish. Confirm publishers locally with `npm trust list`.
 
 ### Re-running a failed Release
 
@@ -336,7 +340,7 @@ If a Release run fails partway through (for example after `ontographia-core` was
 
 **Re-run uses the workflow file from that run's commit**, not a later commit on `main`. For [run 41265294898](https://github.com/edgesentry/ontographia/actions/runs/41265294898) (`c6ca92a`, tag `v0.1.7`):
 
-1. On npm, open [@edgesentry/ontographia-win32-x64 access](https://www.npmjs.com/package/@edgesentry/ontographia-win32-x64/access) and save the same Trusted Publisher as the other four packages (table above, **Allow npm publish** on). Also confirm [@edgesentry/ontographia access](https://www.npmjs.com/package/@edgesentry/ontographia/access) before the main package is published.
+1. On npm, open [@edgesentry/ontographia-win32-x64 access](https://www.npmjs.com/package/@edgesentry/ontographia-win32-x64/access) and save the same Trusted Publisher as the other five packages (table above, **Allow npm publish** on). Also confirm [@edgesentry/ontographia access](https://www.npmjs.com/package/@edgesentry/ontographia/access) before the main package is published.
 2. **Re-run failed jobs** on that run. `publish-npm` checks out tag `v0.1.7`. The script on that tag already skips `@edgesentry/ontographia-darwin-arm64@0.1.7`, `@edgesentry/ontographia-linux-arm64@0.1.7`, and `@edgesentry/ontographia-linux-x64@0.1.7`, then publishes win32 and `@edgesentry/ontographia`. Do this only after step 1. The continue-on-failure behavior in this document is on `main` after the fix is merged; the tag does not move.
 3. Do not expect that same re-run to fix `upload-assets`. It still executes the workflow from `c6ca92a`, which does not check out the repo. Do not start a new Release for `0.1.7`: preflight refuses because `v0.1.7` and `release-processed/v0.1.7` already exist. Do not delete those tags. Attach the assets from the run with `gh release upload v0.1.7 <files> --clobber` (the run's artifacts are the CLI, FFI, wheel, and npm tarballs). The checkout fix applies to the next Release, which is a new `Cargo.toml` version.
 
@@ -448,6 +452,7 @@ User guide (`docs/typescript.md`) is still deferred. Package notes: [bindings/ty
 | `ontographia-{version}-*.whl` | Python package (Linux x86_64/arm64, macOS arm64, Windows x86_64 × Python 3.11–3.13) |
 | `edgesentry-ontographia-{version}.tgz` | npm package `@edgesentry/ontographia` (loader + `optionalDependencies` on the platform packages) |
 | `edgesentry-ontographia-<platform>-{version}.tgz` | Prebuilt `libontographia_ffi` for `linux-x64`, `linux-arm64`, `darwin-arm64`, `win32-x64` |
+| `edgesentry-ontographia-wasm-{version}.tgz` | Browser npm package `@edgesentry/ontographia-wasm` (`.wasm` + JS loader + `.d.ts`). [WASM](wasm.md) |
 
 ## Related
 

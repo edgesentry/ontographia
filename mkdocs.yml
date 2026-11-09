@@ -60,6 +60,7 @@ nav:
     - Rust: rust.md
     - Python: python.md
     - Go: go.md
+    - Browser WASM: wasm.md
     - otg CLI: otg.md
   - Architecture: architecture.md
   - Related work: related-work.md

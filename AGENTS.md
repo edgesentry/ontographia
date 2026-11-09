@@ -19,6 +19,7 @@ Ontographia converts **ontology definitions** + **Intent JSON** into **determini
 | Overview, install, formats, dialects | [docs/index.md](docs/index.md) |
 | Repository directories | [docs/repository-layout.md](docs/repository-layout.md) |
 | Rust / Python / Go usage | [docs/rust.md](docs/rust.md), [docs/python.md](docs/python.md), [docs/go.md](docs/go.md) |
+| Browser WASM npm package | [docs/wasm.md](docs/wasm.md), [bindings/wasm/README.md](bindings/wasm/README.md) |
 | Architecture (pipeline, COM, Intent, AST, emitters) | [docs/architecture.md](docs/architecture.md) |
 | Related work (Text2Cypher / adaptive decoding) | [docs/related-work.md](docs/related-work.md) |
 | Intent-layer evaluation baselines | [docs/evaluation.md](docs/evaluation.md) |

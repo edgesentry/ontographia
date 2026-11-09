@@ -3,8 +3,9 @@
 # Used by Release check, Release preflight, and local CLI. See docs/release.md.
 #
 # Order: version, release.yml invariants, registry reachability, public npm
-# package presence, npm pack dry-run, then tag availability, then
-# scripts/release-check.sh (tests, cargo publish --dry-run, wheels).
+# package presence, npm pack dry-runs (Node-native and browser wasm), then tag
+# availability, then scripts/release-check.sh (tests, cargo publish --dry-run,
+# wheels).
 # The package check runs before the immutable-tag check so a run on a
 # version that already shipped still reports whether the five packages exist.
 # Nothing here publishes. GitHub Actions does not read NPM_TRUST_TOKEN.
@@ -28,6 +29,7 @@ node scripts/check-release-workflow.mjs
 bash scripts/check-registry-reachability.sh
 node scripts/check-npm-trusted-publishers.mjs
 node scripts/package-npm-dry-run.mjs
+node scripts/package-wasm-npm-dry-run.mjs
 bash scripts/verify-tag-not-exists.sh "${RELEASE_TAG}"
 bash scripts/release-check.sh
 

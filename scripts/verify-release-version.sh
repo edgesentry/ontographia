@@ -32,4 +32,12 @@ if [[ "$NPM_VERSION" != "$CARGO" ]]; then
   exit 1
 fi
 
-echo "release version ok: ${CARGO} (npm ${NPM_VERSION})"
+WASM_JSON="bindings/wasm/package.json"
+WASM_VERSION="$(awk -F'"' '/"version":/ { print $4; exit }' "$WASM_JSON")"
+if [[ "$WASM_VERSION" != "$CARGO" ]]; then
+  echo "version mismatch: ${WASM_JSON} ${WASM_VERSION:-<missing>} != Cargo.toml workspace version ${CARGO}" >&2
+  echo "Run scripts/bump-version.sh ${CARGO} so the wasm npm package stays on the workspace version." >&2
+  exit 1
+fi
+
+echo "release version ok: ${CARGO} (npm ${NPM_VERSION}, wasm ${WASM_VERSION})"

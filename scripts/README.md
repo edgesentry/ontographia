@@ -41,17 +41,20 @@ Full setup: [docs/litellm-local.md](../docs/litellm-local.md)
 |--------|---------|
 | [`workspace-version.sh`](workspace-version.sh) | Print `[workspace.package] version` from `Cargo.toml` |
 | [`bump-version.sh`](bump-version.sh) | Bump workspace version; optional commit (release via Release workflow, not git tag push) |
-| [`preflight-release.sh`](preflight-release.sh) | Version, tag, workflow, registry, npm package presence, npm pack dry-run, then `release-check.sh` |
+| [`preflight-release.sh`](preflight-release.sh) | Version, tag, workflow, registry, npm package presence, npm pack dry-runs (Node-native and browser wasm), then `release-check.sh` |
 | [`trigger-release.sh`](trigger-release.sh) | Read `Cargo.toml` version, preflight, then `gh workflow run Release` |
 | [`release-check.sh`](release-check.sh) | Tests, `cargo publish --dry-run` (core only), wheel build (called by preflight) |
 | [`check-release-workflow.mjs`](check-release-workflow.mjs) | Assert `release.yml` name Release, job id `publish-npm`, and `upload-assets` checkout + `GH_REPO` |
 | [`check-npm-trusted-publishers.mjs`](check-npm-trusted-publishers.mjs) | Confirm the five npm packages exist. Does not publish. Actions skips the trust API. Local `NPM_TRUST_TOKEN` opts into `evaluatePublishers`. Operators use `npm trust list` |
 | [`check-registry-reachability.sh`](check-registry-reachability.sh) | Read-only ping of npm, crates.io, and PyPI |
 | [`package-npm-dry-run.mjs`](package-npm-dry-run.mjs) | `npm pack` metadata check with stub FFI archives. Does not publish |
-| [`verify-release-version.sh`](verify-release-version.sh) | Ensure `vX.Y.Z` matches `Cargo.toml` and `bindings/typescript/package.json` |
+| [`package-wasm-npm-dry-run.mjs`](package-wasm-npm-dry-run.mjs) | Build and `npm pack` the browser WASM tarball; assert wasm + JS + types. Does not publish |
+| [`verify-release-version.sh`](verify-release-version.sh) | Ensure `vX.Y.Z` matches `Cargo.toml`, `bindings/typescript/package.json`, and `bindings/wasm/package.json` |
 | [`package-npm.mjs`](package-npm.mjs) | Pack `@edgesentry/ontographia` plus prebuilt FFI platform tarballs |
 | [`publish-npm.sh`](publish-npm.sh) | Upload those tarballs. **Release workflow only** (`PUBLISH_TO_REGISTRIES`, npm Trusted Publishing / OIDC). Skips versions already on npm, keeps going after one package fails, then exits non-zero with the failed names. Refuses laptops, agents, and `NPM_TOKEN` |
+| [`publish-wasm-npm.sh`](publish-wasm-npm.sh) | Upload the browser WASM tarball from Release job `publish-wasm-npm`. Same OIDC / no-token rules |
 | [`refuse-npm-publish.mjs`](refuse-npm-publish.mjs) | Block `npm publish` of the unpackaged TypeScript directory |
+| [`refuse-wasm-npm-publish.mjs`](refuse-wasm-npm-publish.mjs) | Block `npm publish` of the unpackaged browser WASM directory |
 | [`verify-tag-not-exists.sh`](verify-tag-not-exists.sh) | Fail if `vX.Y.Z` (or related sentinels) already exists on origin |
 | [`verify-release-not-processed.sh`](verify-release-not-processed.sh) | Fail if a release version was already claimed or has assets |
 | [`claim-release-processed.sh`](claim-release-processed.sh) | Push `release-processed/vX.Y.Z` sentinel at release start |

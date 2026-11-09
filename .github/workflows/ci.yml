@@ -218,3 +218,35 @@ jobs:
       - name: Pack npm tarball for this platform
         if: matrix.node-version == '22'
         run: node scripts/package-npm.mjs --local --skip-build --out "${{ runner.temp }}/ontographia-npm"
+
+  # Browser WASM npm package: build with the pinned toolchain, pack, install the
+  # tarball in a clean directory, and compile the fixed PLM Intents.
+  wasm-npm:
+    name: wasm npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - name: Install pinned Rust toolchain
+        run: |
+          TOOLCHAIN="$(tr -d '[:space:]' < bindings/wasm/rust-toolchain.version)"
+          rustup toolchain install "$TOOLCHAIN" --profile minimal --no-self-update --target wasm32-unknown-unknown
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-wasm-
+            ${{ runner.os }}-cargo-
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: "22"
+      - name: Rust ABI tests
+        run: |
+          TOOLCHAIN="$(tr -d '[:space:]' < bindings/wasm/rust-toolchain.version)"
+          cargo "+$TOOLCHAIN" test -p ontographia-wasm
+      - name: Build, pack, install, smoke
+        run: node bindings/wasm/scripts/smoke-packed.mjs
