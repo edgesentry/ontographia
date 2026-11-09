@@ -5,9 +5,12 @@ export interface BuildResult {
   params: Record<string, unknown>;
 }
 
+/** Emitted dialect. Known values stay autocompleted; other strings still type-check. */
+export type Dialect = "cypher25" | "cypher5" | "gql" | (string & {});
+
 export interface BuildOptions {
   /** `cypher25` (default), `cypher5`, or `gql`. */
-  dialect?: string;
+  dialect?: Dialect;
   /** Adapter detection hint, for example `plm.native.yaml`. */
   ontologyPathHint?: string | null;
 }
