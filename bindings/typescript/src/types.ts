@@ -57,7 +57,7 @@ export interface FilterExpr {
  */
 export interface SubPattern {
   start: NodeRef;
-  traverse?: TraverseStep[];
+  traverse: TraverseStep[];
   filter?: FilterExpr[];
 }
 

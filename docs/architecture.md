@@ -124,7 +124,7 @@ Intent extraction (LLM prompts, retries, repair) lives in the **application laye
 | Field | Role |
 |-------|------|
 | `start` | `{ class, alias }` — anchor node of the pattern |
-| `traverse` | Ordered relationship hops (`relationship`, `direction`, `to`, optional `min_hops` / `max_hops`). Read-only execute allows only one hop: both bounds omitted, or both exactly `1`. See [MCP server](mcp.md). |
+| `traverse` | Ordered relationship hops (`relationship`, `direction`, `to`, optional `min_hops` / `max_hops`). Read-only execute allows only one hop: both bounds omitted, or both exactly `1`, including every step inside `not_exists[].traverse`. See [MCP server](mcp.md). |
 | `filter` | Property predicates on bound aliases |
 | `not_exists` | Correlated `NOT EXISTS { MATCH … }` sub-patterns (anti-join), joined with `AND` |
 | `return` | Projections (property, whole node, or aggregate) |

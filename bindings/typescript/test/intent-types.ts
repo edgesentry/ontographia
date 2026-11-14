@@ -67,3 +67,13 @@ const antiJoinIntent: Intent = {
 };
 
 void antiJoinIntent;
+
+// A sub-pattern without a traverse step is rejected at compile time.
+const missingSubTraverse: Intent = {
+  start: { class: "Part", alias: "part" },
+  // @ts-expect-error - SubPattern.traverse is required.
+  not_exists: [{ start: { class: "Part", alias: "part" } }],
+  return: [{ alias: "part" }],
+};
+
+void missingSubTraverse;
