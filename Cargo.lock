@@ -828,7 +828,7 @@ checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
 name = "ontographia"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "ontographia-adapters",
  "ontographia-core",
@@ -838,7 +838,7 @@ dependencies = [
 
 [[package]]
 name = "ontographia-adapters"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "indexmap",
  "ontographia-core",
@@ -853,7 +853,7 @@ dependencies = [
 
 [[package]]
 name = "ontographia-cli"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "clap",
  "neo4rs",
@@ -868,7 +868,7 @@ dependencies = [
 
 [[package]]
 name = "ontographia-core"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "indexmap",
  "schemars",
@@ -880,7 +880,7 @@ dependencies = [
 
 [[package]]
 name = "ontographia-ffi"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "ontographia-adapters",
  "ontographia-core",
@@ -889,7 +889,7 @@ dependencies = [
 
 [[package]]
 name = "ontographia-integration-tests"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "ontographia-adapters",
  "ontographia-schema",
@@ -897,7 +897,7 @@ dependencies = [
 
 [[package]]
 name = "ontographia-schema"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "indexmap",
  "ontographia-core",
@@ -908,7 +908,7 @@ dependencies = [
 
 [[package]]
 name = "ontographia-wasm"
-version = "0.1.9"
+version = "0.1.10"
 dependencies = [
  "ontographia-adapters",
  "ontographia-core",
