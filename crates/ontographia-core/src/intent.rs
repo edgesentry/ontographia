@@ -9,6 +9,9 @@ pub struct Intent {
     pub traverse: Vec<TraverseStep>,
     #[serde(default)]
     pub filter: Vec<FilterExpr>,
+    /// Correlated `NOT EXISTS { MATCH … }` sub-patterns, joined with `AND`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub not_exists: Vec<SubPattern>,
     pub r#return: Vec<ReturnItem>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub order_by: Option<OrderBy>,
@@ -25,6 +28,21 @@ pub struct Intent {
 pub struct NodeRef {
     pub class: String,
     pub alias: String,
+}
+
+/// One correlated `NOT EXISTS { MATCH … }` sub-pattern.
+///
+/// Same shape as the main pattern. At least one alias must be bound in the main
+/// pattern (the correlated alias); every other alias is new and unique across
+/// the whole Intent. At least one traverse step is required.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(deny_unknown_fields)]
+pub struct SubPattern {
+    pub start: NodeRef,
+    #[serde(default)]
+    pub traverse: Vec<TraverseStep>,
+    #[serde(default)]
+    pub filter: Vec<FilterExpr>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
@@ -121,6 +139,56 @@ mod tests {
     }
 
     #[test]
+    fn accepts_not_exists_sub_pattern() {
+        let intent = parse(serde_json::json!({
+            "start": {"class": "Part", "alias": "part"},
+            "filter": [{"alias": "part", "property": "category_slug", "op": "eq",
+                        "value": "fasteners-and-hardware"}],
+            "not_exists": [{
+                "start": {"class": "Usage", "alias": "u"},
+                "traverse": [{"relationship": "USES_ITEM", "direction": "out",
+                              "to": {"class": "Part", "alias": "part"}}],
+                "filter": [{"alias": "u", "property": "match_method", "op": "eq", "value": "exact"}]
+            }],
+            "return": [{"alias": "part", "property": "name", "as_name": "part"}],
+            "limit": 200
+        }));
+        assert!(intent.is_ok(), "{intent:?}");
+        let intent = intent.unwrap();
+        assert_eq!(intent.not_exists.len(), 1);
+        assert_eq!(intent.not_exists[0].traverse.len(), 1);
+        assert_eq!(intent.not_exists[0].filter.len(), 1);
+    }
+
+    #[test]
+    fn omits_not_exists_when_serializing_an_intent_without_one() {
+        let intent = parse(serde_json::json!({
+            "start": {"class": "Part", "alias": "part"},
+            "return": [{"alias": "part"}]
+        }))
+        .unwrap();
+        let value = serde_json::to_value(&intent).unwrap();
+        assert!(value.get("not_exists").is_none(), "{value}");
+    }
+
+    #[test]
+    fn rejects_unknown_key_inside_not_exists_entry() {
+        let err = parse(serde_json::json!({
+            "start": {"class": "Part", "alias": "part"},
+            "not_exists": [{
+                "start": {"class": "Usage", "alias": "u"},
+                "traverse": [{"relationship": "USES_ITEM", "direction": "out",
+                              "to": {"class": "Part", "alias": "part"}}],
+                "filters": [{"alias": "u", "property": "match_method", "op": "eq", "value": "x"}]
+            }],
+            "return": [{"alias": "part"}]
+        }))
+        .unwrap_err()
+        .to_string();
+        assert!(err.contains("unknown field `filters`"), "{err}");
+    }
+
+    #[test]
     fn rejects_unknown_top_level_key() {
         // Regression for #81: `filters` used to be silently ignored, dropping the filter.
         let err = parse(serde_json::json!({
@@ -136,29 +204,47 @@ mod tests {
     #[test]
     fn rejects_unknown_nested_keys() {
         let cases = [
-            ("as", serde_json::json!({
+            (
+                "as",
+                serde_json::json!({
                 "start": {"class": "P", "alias": "p"},
-                "return": [{"alias": "p", "as": "x"}]})),
-            ("label", serde_json::json!({
+                "return": [{"alias": "p", "as": "x"}]}),
+            ),
+            (
+                "label",
+                serde_json::json!({
                 "start": {"class": "P", "alias": "p", "label": "x"},
-                "return": [{"alias": "p"}]})),
-            ("dir", serde_json::json!({
+                "return": [{"alias": "p"}]}),
+            ),
+            (
+                "dir",
+                serde_json::json!({
                 "start": {"class": "P", "alias": "p"},
                 "traverse": [{"relationship": "r", "direction": "out", "dir": "out",
                               "to": {"class": "Q", "alias": "q"}}],
-                "return": [{"alias": "p"}]})),
-            ("operator", serde_json::json!({
+                "return": [{"alias": "p"}]}),
+            ),
+            (
+                "operator",
+                serde_json::json!({
                 "start": {"class": "P", "alias": "p"},
                 "filter": [{"alias": "p", "property": "a", "op": "eq", "value": 1, "operator": "="}],
-                "return": [{"alias": "p"}]})),
-            ("desc", serde_json::json!({
+                "return": [{"alias": "p"}]}),
+            ),
+            (
+                "desc",
+                serde_json::json!({
                 "start": {"class": "P", "alias": "p"},
                 "return": [{"alias": "p"}],
-                "order_by": {"alias": "p", "desc": true}})),
+                "order_by": {"alias": "p", "desc": true}}),
+            ),
         ];
         for (key, v) in cases {
             let err = parse(v).unwrap_err().to_string();
-            assert!(err.contains(&format!("unknown field `{key}`")), "{key}: {err}");
+            assert!(
+                err.contains(&format!("unknown field `{key}`")),
+                "{key}: {err}"
+            );
         }
     }
 }

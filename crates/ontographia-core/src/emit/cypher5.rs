@@ -7,7 +7,11 @@ use indexmap::IndexMap;
 pub struct Cypher5Emitter;
 
 impl QueryEmitter for Cypher5Emitter {
-    fn emit(&self, ast: &crate::ast::QueryAst, params: &IndexMap<String, serde_json::Value>) -> Result<EmittedQuery> {
+    fn emit(
+        &self,
+        ast: &crate::ast::QueryAst,
+        params: &IndexMap<String, serde_json::Value>,
+    ) -> Result<EmittedQuery> {
         let mut emitted = Cypher25Emitter.emit(ast, params)?;
         emitted.query = emitted
             .query
@@ -41,10 +45,9 @@ mod tests {
                 op: crate::intent::FilterOp::Gt,
                 param_name: "param_0".into(),
             }],
+            not_exists: vec![],
             returns: vec![ReturnNode {
-                expr: ReturnExpr::Node {
-                    alias: "p".into(),
-                },
+                expr: ReturnExpr::Node { alias: "p".into() },
                 alias: None,
             }],
             order_by: None,

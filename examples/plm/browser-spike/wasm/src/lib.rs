@@ -184,6 +184,31 @@ mod tests {
     }
 
     #[test]
+    fn not_exists_intent_builds_correlated_cypher25() {
+        const PART_USAGE_ONTOLOGY: &[u8] = include_bytes!("../../../../part_usage.native.yaml");
+        const NOT_EXISTS_INTENT: &[u8] = include_bytes!("../../../../part_usage_not_exists.json");
+
+        let json = build_json(
+            PART_USAGE_ONTOLOGY,
+            NOT_EXISTS_INTENT,
+            Some("part_usage.native.yaml"),
+            Some("cypher25"),
+        );
+        let out: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(
+            out["query"],
+            "CYPHER 25\n\
+             MATCH (part:Part)\n\
+             FILTER part.category_slug = $param_0 AND NOT EXISTS { MATCH (u:Usage)-[:USES_ITEM]->(part) FILTER u.match_method = $param_1 }\n\
+             RETURN part.name AS part\n\
+             LIMIT 200"
+        );
+        assert_eq!(out["params"]["param_0"], "fasteners-and-hardware");
+        assert_eq!(out["params"]["param_1"], "exact");
+        assert_eq!(out["params"].as_object().unwrap().len(), 2);
+    }
+
+    #[test]
     fn dialect_is_honoured() {
         let out = build(INTENT, Some("cypher5"));
         assert!(out["query"].as_str().unwrap().starts_with("CYPHER 5"));

@@ -35,3 +35,35 @@ const intent: Intent = {
 };
 
 void intent;
+
+// Correlated NOT EXISTS sub-pattern, as emitted for the anti-join example.
+const antiJoinIntent: Intent = {
+  start: { class: "Part", alias: "part" },
+  filter: [
+    {
+      alias: "part",
+      property: "category_slug",
+      op: "eq",
+      value: "fasteners-and-hardware",
+    },
+  ],
+  not_exists: [
+    {
+      start: { class: "Usage", alias: "u" },
+      traverse: [
+        {
+          relationship: "USES_ITEM",
+          direction: "out",
+          to: { class: "Part", alias: "part" },
+        },
+      ],
+      filter: [
+        { alias: "u", property: "match_method", op: "eq", value: "exact" },
+      ],
+    },
+  ],
+  return: [{ alias: "part", property: "name", as_name: "part" }],
+  limit: 200,
+};
+
+void antiJoinIntent;

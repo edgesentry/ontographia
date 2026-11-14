@@ -28,7 +28,10 @@ fn enrich_with_ontology(schema: &mut serde_json::Value, ontology: &CanonicalOnto
             if let Some(props) = step.get_mut("properties").and_then(|p| p.as_object_mut()) {
                 if let Some(rel) = props.get_mut("relationship") {
                     if let Some(obj) = rel.as_object_mut() {
-                        obj.insert("enum".into(), serde_json::Value::Array(relationships.clone()));
+                        obj.insert(
+                            "enum".into(),
+                            serde_json::Value::Array(relationships.clone()),
+                        );
                     }
                 }
             }
@@ -47,7 +50,10 @@ fn enrich_with_ontology(schema: &mut serde_json::Value, ontology: &CanonicalOnto
             {
                 if let Some(rel) = items.get_mut("relationship") {
                     rel.as_object_mut().map(|o| {
-                        o.insert("enum".into(), serde_json::Value::Array(relationships.clone()))
+                        o.insert(
+                            "enum".into(),
+                            serde_json::Value::Array(relationships.clone()),
+                        )
                     });
                 }
                 if let Some(to) = items.get_mut("to") {
@@ -119,10 +125,34 @@ mod tests {
     }
 
     #[test]
+    fn schema_includes_not_exists() {
+        let schema = intent_json_schema(&sample_ontology());
+        assert!(
+            schema["properties"]["not_exists"].is_object(),
+            "not_exists property: {schema}"
+        );
+        assert!(
+            schema["$defs"]["SubPattern"].is_object(),
+            "SubPattern definition: {schema}"
+        );
+    }
+
+    #[test]
     fn schema_disallows_additional_properties() {
         let schema = intent_json_schema(&sample_ontology());
-        assert_eq!(schema["additionalProperties"], serde_json::json!(false), "Intent");
-        for def in ["NodeRef", "TraverseStep", "FilterExpr", "ReturnItem", "OrderBy"] {
+        assert_eq!(
+            schema["additionalProperties"],
+            serde_json::json!(false),
+            "Intent"
+        );
+        for def in [
+            "NodeRef",
+            "SubPattern",
+            "TraverseStep",
+            "FilterExpr",
+            "ReturnItem",
+            "OrderBy",
+        ] {
             assert_eq!(
                 schema["$defs"][def]["additionalProperties"],
                 serde_json::json!(false),

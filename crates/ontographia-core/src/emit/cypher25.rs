@@ -1,4 +1,7 @@
-use crate::ast::{EmittedQuery, FilterNode, MatchClause, NodePattern, PatternNode, QueryAst, RelPattern, ReturnExpr, ReturnNode};
+use crate::ast::{
+    EmittedQuery, FilterNode, MatchClause, NodePattern, PatternNode, QueryAst, RelPattern,
+    ReturnExpr, ReturnNode,
+};
 use crate::emit::QueryEmitter;
 use crate::error::Result;
 use crate::intent::Direction;
@@ -27,7 +30,11 @@ pub(crate) fn render_ident(name: &str) -> String {
 }
 
 impl QueryEmitter for Cypher25Emitter {
-    fn emit(&self, ast: &QueryAst, params: &IndexMap<String, serde_json::Value>) -> Result<EmittedQuery> {
+    fn emit(
+        &self,
+        ast: &QueryAst,
+        params: &IndexMap<String, serde_json::Value>,
+    ) -> Result<EmittedQuery> {
         let mut parts = vec!["CYPHER 25".to_string()];
 
         let match_kw = if ast.match_clause.optional {
@@ -35,10 +42,15 @@ impl QueryEmitter for Cypher25Emitter {
         } else {
             "MATCH"
         };
-        parts.push(format!("{} {}", match_kw, render_patterns(&ast.match_clause)));
+        parts.push(format!(
+            "{} {}",
+            match_kw,
+            render_patterns(&ast.match_clause)
+        ));
 
-        if !ast.filters.is_empty() {
-            parts.push(format!("FILTER {}", render_filters(&ast.filters)));
+        let predicates = render_predicates(ast);
+        if !predicates.is_empty() {
+            parts.push(format!("FILTER {}", predicates.join(" AND ")));
         }
 
         parts.push(format!("RETURN {}", render_returns(&ast.returns)));
@@ -71,6 +83,23 @@ impl QueryEmitter for Cypher25Emitter {
             params: params.clone(),
         })
     }
+}
+
+/// Main filters followed by one `NOT EXISTS { MATCH … }` predicate per
+/// `not_exists` entry, in Intent order.
+fn render_predicates(ast: &QueryAst) -> Vec<String> {
+    let mut predicates = Vec::new();
+    if !ast.filters.is_empty() {
+        predicates.push(render_filters(&ast.filters));
+    }
+    for sub in &ast.not_exists {
+        let mut inner = format!("MATCH {}", render_pattern(&sub.pattern));
+        if !sub.filters.is_empty() {
+            inner.push_str(&format!(" FILTER {}", render_filters(&sub.filters)));
+        }
+        predicates.push(format!("NOT EXISTS {{ {inner} }}"));
+    }
+    predicates
 }
 
 fn render_patterns(match_clause: &MatchClause) -> String {
@@ -229,6 +258,7 @@ mod tests {
                 op: FilterOp::Gte,
                 param_name: "param_0".into(),
             }],
+            not_exists: vec![],
             returns: vec![ReturnNode {
                 expr: ReturnExpr::Property {
                     alias: "friend".into(),
@@ -245,6 +275,14 @@ mod tests {
         params.insert("param_0".into(), serde_json::json!(30));
 
         let emitted = Cypher25Emitter.emit(&ast, &params).unwrap();
+        assert_eq!(
+            emitted.query,
+            "CYPHER 25\n\
+             MATCH (p:Person)-[:knows]->(friend:Person)\n\
+             FILTER p.age >= $param_0\n\
+             RETURN friend.name AS name\n\
+             LIMIT 10"
+        );
         assert!(emitted.query.starts_with("CYPHER 25"));
         assert!(emitted.query.contains("FILTER p.age >= $param_0"));
         assert!(emitted.query.contains("LIMIT 10"));
@@ -276,10 +314,9 @@ mod tests {
                 }],
             },
             filters: vec![],
+            not_exists: vec![],
             returns: vec![ReturnNode {
-                expr: ReturnExpr::Node {
-                    alias: "b".into(),
-                },
+                expr: ReturnExpr::Node { alias: "b".into() },
                 alias: None,
             }],
             order_by: None,
@@ -305,6 +342,7 @@ mod tests {
                 }],
             },
             filters: vec![],
+            not_exists: vec![],
             returns: vec![ReturnNode {
                 expr: ReturnExpr::Aggregate {
                     func: AggregateFn::Count,
@@ -341,6 +379,7 @@ mod tests {
                 }],
             },
             filters: vec![],
+            not_exists: vec![],
             returns: vec![ReturnNode {
                 expr: ReturnExpr::Property {
                     alias: hostile_alias.into(),

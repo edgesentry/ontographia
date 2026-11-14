@@ -41,6 +41,7 @@ fn sample_intent() -> Intent {
             op: FilterOp::Eq,
             value: serde_json::json!("SPX-100"),
         }],
+        not_exists: vec![],
         r#return: vec![ReturnItem {
             alias: "supplier".into(),
             property: Some("name".into()),
@@ -73,6 +74,31 @@ fn end_to_end_native_yaml_cypher25() {
     );
 }
 
+/// An Intent without `not_exists` keeps the exact 0.1.9 output (line layout,
+/// clause order, parameter names).
+#[test]
+fn intent_without_not_exists_is_byte_identical_to_0_1_9() {
+    let ontology = load_ontology_from_path(example_path("manufacturing.native.yaml")).unwrap();
+    let engine = Engine::new(ontology);
+    let emitted = engine.build(sample_intent(), Dialect::Cypher25).unwrap();
+    assert_eq!(
+        emitted.query,
+        "CYPHER 25\n\
+         MATCH (product:Product)-[:has_part]->(part:Part)-[:supplied_by]->(supplier:Supplier)\n\
+         FILTER product.sku = $param_0\n\
+         RETURN supplier.name AS supplier_name\n\
+         LIMIT 20"
+    );
+    assert_eq!(
+        emitted.params.keys().cloned().collect::<Vec<_>>(),
+        vec!["param_0".to_string()]
+    );
+    assert_eq!(
+        emitted.params.get("param_0"),
+        Some(&serde_json::json!("SPX-100"))
+    );
+}
+
 #[test]
 fn end_to_end_turtle_owl() {
     let ontology = load_ontology_from_path(example_path("manufacturing.owl.ttl")).unwrap();
@@ -96,6 +122,57 @@ fn end_to_end_linkml() {
     let engine = Engine::new(ontology);
     let emitted = engine.build(sample_intent(), Dialect::Cypher25).unwrap();
     assert!(emitted.query.contains("LIMIT 20"));
+}
+
+fn not_exists_intent() -> serde_json::Value {
+    let bytes = std::fs::read(example_path("part_usage_not_exists.json")).unwrap();
+    serde_json::from_slice(&bytes).unwrap()
+}
+
+#[test]
+fn not_exists_cypher25_end_to_end() {
+    let ontology = load_ontology_from_path(example_path("part_usage.native.yaml")).unwrap();
+    let engine = Engine::new(ontology);
+    let emitted = engine
+        .build_from_json(&not_exists_intent(), Dialect::Cypher25)
+        .unwrap();
+
+    assert_eq!(
+        emitted.query,
+        "CYPHER 25\n\
+         MATCH (part:Part)\n\
+         FILTER part.category_slug = $param_0 AND NOT EXISTS { MATCH (u:Usage)-[:USES_ITEM]->(part) FILTER u.match_method = $param_1 }\n\
+         RETURN part.name AS part\n\
+         LIMIT 200"
+    );
+    assert_eq!(emitted.params.len(), 2);
+    assert_eq!(
+        emitted.params.get("param_0"),
+        Some(&serde_json::json!("fasteners-and-hardware"))
+    );
+    assert_eq!(
+        emitted.params.get("param_1"),
+        Some(&serde_json::json!("exact"))
+    );
+}
+
+#[test]
+fn not_exists_cypher5_end_to_end() {
+    let ontology = load_ontology_from_path(example_path("part_usage.native.yaml")).unwrap();
+    let engine = Engine::new(ontology);
+    let emitted = engine
+        .build_from_json(&not_exists_intent(), Dialect::Cypher5)
+        .unwrap();
+
+    assert_eq!(
+        emitted.query,
+        "CYPHER 5\n\
+         MATCH (part:Part)\n\
+         WHERE part.category_slug = $param_0 AND NOT EXISTS { MATCH (u:Usage)-[:USES_ITEM]->(part) WHERE u.match_method = $param_1 }\n\
+         RETURN part.name AS part\n\
+         LIMIT 200"
+    );
+    assert!(!emitted.query.contains("FILTER"), "{}", emitted.query);
 }
 
 #[test]
