@@ -337,7 +337,7 @@ function run() {
   const source = JSON.parse(readFileSync(join(tsRoot, "package.json"), "utf8"));
   if (source.version !== version) {
     throw new Error(
-      `bindings/typescript/package.json version ${source.version} != Cargo.toml ${version}. Run scripts/bump-version.sh ${version}.`,
+      `bindings/typescript/package.json version ${source.version} != Cargo.toml ${version}. Run scripts/sync-version.sh.`,
     );
   }
   const platforms = readCatalog();

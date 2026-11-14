@@ -55,7 +55,7 @@ version="$(bash scripts/workspace-version.sh)"
 manifest_version="$(node -p 'require("./bindings/wasm/package.json").version')"
 if [[ "$version" != "$manifest_version" ]]; then
   echo "error: bindings/wasm/package.json ${manifest_version} != workspace version ${version}" >&2
-  echo "Run scripts/bump-version.sh ${version} so both npm packages stay in lockstep." >&2
+  echo "Run scripts/sync-version.sh so both npm packages stay in lockstep." >&2
   exit 1
 fi
 

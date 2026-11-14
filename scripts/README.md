@@ -16,6 +16,7 @@ Walkthrough: [docs/end-to-end-neo4j.md](../docs/end-to-end-neo4j.md)
 | Script | Purpose |
 |--------|---------|
 | [`python_smoke_test.py`](python_smoke_test.py) | Python binding smoke test |
+| [`test-version-sync.sh`](test-version-sync.sh) | Bump, sync, and verify the five version files on a temp copy; asserts idempotency and stale-lockfile failures (CI) |
 | [`docs_check.sh`](docs_check.sh) | MkDocs lint, strict build, and HTML assertions (CI) |
 | [`neo4j_integration_test.py`](neo4j_integration_test.py) | Mock LLM Intent → Cypher → Neo4j (CI) |
 | [`remeasure/run_all.sh`](remeasure/run_all.sh) | Verify every evaluation arm (offline by default; `--live` adds H1 live + Track B Exec Match); see [`remeasure/README.md`](remeasure/README.md) |
@@ -40,7 +41,8 @@ Full setup: [docs/litellm-local.md](../docs/litellm-local.md)
 | Script | Purpose |
 |--------|---------|
 | [`workspace-version.sh`](workspace-version.sh) | Print `[workspace.package] version` from `Cargo.toml` |
-| [`bump-version.sh`](bump-version.sh) | Bump workspace version; optional commit (release via Release workflow, not git tag push) |
+| [`sync-version.sh`](sync-version.sh) | Copy the workspace version into Cargo.toml internal dependencies, both npm manifests, `Cargo.lock` workspace packages, and the TypeScript lockfile |
+| [`bump-version.sh`](bump-version.sh) | Set `[workspace.package] version` and run `sync-version.sh`; optional commit (release via Release workflow, not git tag push) |
 | [`preflight-release.sh`](preflight-release.sh) | Version, tag, workflow, registry, npm package presence, npm pack dry-runs (Node-native and browser wasm), then `release-check.sh` |
 | [`trigger-release.sh`](trigger-release.sh) | Read `Cargo.toml` version, preflight, then `gh workflow run Release` |
 | [`release-check.sh`](release-check.sh) | Tests, `cargo publish --dry-run` (core only), wheel build (called by preflight) |
@@ -49,7 +51,7 @@ Full setup: [docs/litellm-local.md](../docs/litellm-local.md)
 | [`check-registry-reachability.sh`](check-registry-reachability.sh) | Read-only ping of npm, crates.io, and PyPI |
 | [`package-npm-dry-run.mjs`](package-npm-dry-run.mjs) | `npm pack` metadata check with stub FFI archives. Does not publish |
 | [`package-wasm-npm-dry-run.mjs`](package-wasm-npm-dry-run.mjs) | Build and `npm pack` the browser WASM tarball; assert wasm + JS + types. Does not publish |
-| [`verify-release-version.sh`](verify-release-version.sh) | Ensure `vX.Y.Z` matches `Cargo.toml`, `bindings/typescript/package.json`, and `bindings/wasm/package.json` |
+| [`verify-release-version.sh`](verify-release-version.sh) | Ensure `vX.Y.Z` matches `Cargo.toml`, both npm manifests, `Cargo.lock` workspace packages, and the TypeScript lockfile |
 | [`package-npm.mjs`](package-npm.mjs) | Pack `@edgesentry/ontographia` plus prebuilt FFI platform tarballs |
 | [`publish-npm.sh`](publish-npm.sh) | Upload those tarballs. **Release workflow only** (`PUBLISH_TO_REGISTRIES`, npm Trusted Publishing / OIDC). Skips versions already on npm, keeps going after one package fails, then exits non-zero with the failed names. Refuses laptops, agents, and `NPM_TOKEN` |
 | [`publish-wasm-npm.sh`](publish-wasm-npm.sh) | Upload the browser WASM tarball from Release job `publish-wasm-npm`. Same OIDC / no-token rules |

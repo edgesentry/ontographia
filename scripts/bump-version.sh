@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# Bump the single source of truth: Cargo.toml [workspace.package].version
+# Bump the single source of truth: Cargo.toml [workspace.package].version,
+# then derive the other manifests and lockfiles with scripts/sync-version.sh.
 # Python reads the same version via maturin (pyproject.toml dynamic = ["version"]).
-# bindings/typescript/package.json and bindings/wasm/package.json are kept equal
-# so npm packs match the workspace.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -12,11 +11,12 @@ usage() {
   cat <<'EOF'
 Usage: scripts/bump-version.sh <X.Y.Z> [options]
 
-Updates [workspace.package].version in Cargo.toml, bindings/typescript/package.json,
-and bindings/wasm/package.json.
+Sets [workspace.package].version in Cargo.toml, then runs
+scripts/sync-version.sh to update the internal dependencies, both npm
+manifests, Cargo.lock, and bindings/typescript/package-lock.json.
 
 Options:
-  --commit    Stage Cargo.toml and create commit "chore: release vX.Y.Z"
+  --commit    Stage the five version files and create commit "chore: release vX.Y.Z"
   --tag       Create annotated tag vX.Y.Z locally (avoid — use Release workflow instead)
   --push      Push current branch and tag to origin (avoid for releases)
   --no-test   Skip cargo test --workspace
@@ -67,63 +67,38 @@ if [[ ! "$NEW" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$ 
   exit 1
 fi
 
-sync_npm_package_version() {
-  local file="$1"
-  local tmp
-  tmp="$(mktemp)"
-  if ! awk -v new="$NEW" '
-    !done && /^  "version": "/ {
-      comma = ($0 ~ /,$/) ? "," : ""
-      print "  \"version\": \"" new "\"" comma
-      done = 1
-      next
-    }
-    { print }
-    END { if (!done) exit 2 }
-  ' "$file" > "$tmp"; then
-    echo "failed to update ${file}" >&2
-    rm -f "$tmp"
-    exit 1
-  fi
-  if ! cmp -s "$file" "$tmp"; then
-    mv "$tmp" "$file"
-    echo "bumped ${file} -> ${NEW}"
-  else
-    rm -f "$tmp"
-    echo "${file} already ${NEW}"
-  fi
-}
-
 CURRENT="$(bash scripts/workspace-version.sh)"
 if [[ "$CURRENT" == "$NEW" ]]; then
   echo "workspace version already $NEW"
 else
-  awk -v new="$NEW" '
-    /^\[workspace\.package\]/ { in_pkg = 1; in_deps = 0 }
-    /^\[workspace\.dependencies\]/ { in_deps = 1; in_pkg = 0 }
-    /^\[/ && !/^\[workspace\.package\]/ && !/^\[workspace\.dependencies\]/ { in_pkg = 0; in_deps = 0 }
+  if ! awk -v new="$NEW" '
+    /^\[workspace\.package\]/ { in_pkg = 1 }
+    /^\[/ && !/^\[workspace\.package\]/ { in_pkg = 0 }
     in_pkg && /^version = "/ {
       print "version = \"" new "\""
+      found = 1
       next
     }
-    in_deps && /^ontographia-/ {
-      gsub(/version = "[^"]+"/, "version = \"" new "\"")
-    }
     { print }
-  ' Cargo.toml > Cargo.toml.tmp
-  mv Cargo.toml.tmp Cargo.toml
+    END { if (!found) exit 2 }
+  ' Cargo.toml > Cargo.toml.tmp; then
+    rm -f Cargo.toml.tmp
+    echo "failed to update [workspace.package] version in Cargo.toml" >&2
+    exit 1
+  fi
+  cat Cargo.toml.tmp > Cargo.toml
+  rm -f Cargo.toml.tmp
   echo "bumped workspace version: $CURRENT -> $NEW"
 fi
 
-sync_npm_package_version bindings/typescript/package.json
-sync_npm_package_version bindings/wasm/package.json
+bash scripts/sync-version.sh
 
 if [[ "$DO_TEST" -eq 1 ]]; then
   cargo test --workspace
 fi
 
 if [[ "$DO_COMMIT" -eq 1 ]]; then
-  git add Cargo.toml bindings/typescript/package.json bindings/wasm/package.json
+  git add Cargo.toml Cargo.lock bindings/typescript/package.json bindings/typescript/package-lock.json bindings/wasm/package.json
   if git diff --cached --quiet; then
     echo "nothing to commit"
   else
