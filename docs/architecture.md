@@ -124,13 +124,56 @@ Intent extraction (LLM prompts, retries, repair) lives in the **application laye
 | Field | Role |
 |-------|------|
 | `start` | `{ class, alias }` — anchor node of the pattern |
-| `traverse` | Ordered relationship hops (`relationship`, `direction`, `to`, optional `min_hops` / `max_hops`). Read-only execute allows only one hop: both bounds omitted, or both exactly `1`. See [MCP server](mcp.md). |
+| `traverse` | Ordered relationship hops (`relationship`, `direction`, `to`, optional `min_hops` / `max_hops`). Read-only execute allows only one hop: both bounds omitted, or both exactly `1`, including every step inside `not_exists[].traverse`. See [MCP server](mcp.md). |
 | `filter` | Property predicates on bound aliases |
+| `not_exists` | Correlated `NOT EXISTS { MATCH … }` sub-patterns (anti-join), joined with `AND` |
 | `return` | Projections (property, whole node, or aggregate) |
 | `order_by`, `limit`, `skip` | Result shaping |
 | `optional` | When true, `OPTIONAL MATCH` instead of `MATCH` |
 
 Types: [`crates/ontographia-core/src/intent.rs`](https://github.com/edgesentry/ontographia/blob/main/crates/ontographia-core/src/intent.rs)
+
+### Correlated `not_exists`
+
+Each `not_exists` entry is a sub-pattern with the same shape as the main pattern
+(`start`, `traverse`, optional `filter`). It compiles to an anti-join:
+
+```json
+{
+  "start": { "class": "Part", "alias": "part" },
+  "filter": [{ "alias": "part", "property": "category_slug", "op": "eq", "value": "fasteners-and-hardware" }],
+  "not_exists": [
+    {
+      "start": { "class": "Usage", "alias": "u" },
+      "traverse": [
+        { "relationship": "USES_ITEM", "direction": "out", "to": { "class": "Part", "alias": "part" } }
+      ],
+      "filter": [{ "alias": "u", "property": "match_method", "op": "eq", "value": "exact" }]
+    }
+  ],
+  "return": [{ "alias": "part", "property": "name", "as_name": "part" }],
+  "limit": 200
+}
+```
+
+```cypher
+CYPHER 25
+MATCH (part:Part)
+FILTER part.category_slug = $param_0 AND NOT EXISTS { MATCH (u:Usage)-[:USES_ITEM]->(part) FILTER u.match_method = $param_1 }
+RETURN part.name AS part
+LIMIT 200
+```
+
+Rules:
+
+- **Correlation.** Every entry must reuse at least one alias already bound in the main pattern. The correlated node is emitted as a bare variable (`(part)`), without a label, and its declared class must equal the class bound in the main pattern. An entry with no correlated alias is rejected.
+- **New aliases.** Every other alias is new and unique across the whole Intent (main pattern and all entries). An alias may not appear twice inside one entry.
+- **At least one step.** An entry that is only the correlated node is rejected; each entry needs at least one `traverse` step.
+- **Own filters only.** A sub-pattern `filter` may refer only to that entry's aliases (new or correlated). Sub-pattern-only aliases cannot appear in `return`, `order_by`, or the main `filter`.
+- **Ontology checks.** Classes, relationships, relationship origin/target, and properties are validated exactly like the main pattern.
+- **Parameters.** Main filter values are `param_0..param_{n-1}`; sub-pattern filter values follow in Intent order (entry 0's filters, then entry 1's, …), continuing the same counter. Values are never interpolated.
+- **Dialects.** Cypher 25 emits `FILTER … NOT EXISTS { MATCH … FILTER … }`; Cypher 5 rewrites both levels to `WHERE … NOT EXISTS { MATCH … WHERE … }`; GQL keeps the Cypher 25 body.
+- **Combination.** `not_exists` with `optional: true` is rejected. Positive `EXISTS`, `COUNT` subqueries, `OR` between entries, and nested sub-patterns are not supported.
 
 ## Stage 3 — Validation
 
@@ -141,8 +184,9 @@ Types: [`crates/ontographia-core/src/intent.rs`](https://github.com/edgesentry/o
 3. **Aliases** — unique across the pattern; filter/return aliases must refer to nodes in the pattern.
 4. **Properties** — filter and return properties must exist on the resolved class (inheritance-aware).
 5. **Return** — at least one `return` item required.
+6. **`not_exists`** — each entry is validated as a correlated sub-pattern: at least one main alias reused with the same class, new aliases unique across the Intent, at least one traverse step, relationship origin/target checks, and filters restricted to that entry's aliases. See [Correlated `not_exists`](#correlated-not_exists).
 
-On success, filter literal values are copied into `ValidatedIntent.params` as `param_0`, `param_1`, … — never embedded in query strings.
+On success, filter literal values are copied into `ValidatedIntent.params` as `param_0`, `param_1`, … (main filters first, then `not_exists` filters in Intent order) — never embedded in query strings.
 
 Implementation: [`crates/ontographia-core/src/validate.rs`](https://github.com/edgesentry/ontographia/blob/main/crates/ontographia-core/src/validate.rs)
 
@@ -152,6 +196,7 @@ Implementation: [`crates/ontographia-core/src/validate.rs`](https://github.com/e
 
 - `MatchClause` — linear node/relationship chain (one `PatternNode` today)
 - `FilterNode` — references `$param_N` by name, not inline values
+- `SubPatternNode` — a `PatternNode` plus filters for one `not_exists` entry; the correlated node carries no labels
 - `ReturnNode` — property, node, or aggregate expressions
 - `order_by`, `limit`, `skip`
 
@@ -165,9 +210,9 @@ Types: [`crates/ontographia-core/src/ast/mod.rs`](https://github.com/edgesentry/
 
 | Dialect | Emitter | Notes |
 |---------|---------|-------|
-| `cypher25` (default) | `Cypher25Emitter` | `CYPHER 25` prefix, `FILTER` clause — Neo4j 2025.06+ |
-| `cypher5` | `Cypher5Emitter` | Legacy `WHERE` for older Neo4j |
-| `gql` | `GqlEmitter` | GQL-oriented prototype |
+| `cypher25` (default) | `Cypher25Emitter` | `CYPHER 25` prefix, `FILTER` clause — Neo4j 2025.06+; `not_exists` renders inline as `NOT EXISTS { MATCH … FILTER … }` |
+| `cypher5` | `Cypher5Emitter` | Legacy `WHERE` for older Neo4j (including the inner `not_exists` clause) |
+| `gql` | `GqlEmitter` | GQL-oriented prototype (keeps the Cypher 25 body) |
 
 Output is always `EmittedQuery { query, params }`. Filter values appear only in `params`; the query string contains `$param_N` placeholders.
 

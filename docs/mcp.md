@@ -130,6 +130,7 @@ Defense in depth — all three layers are covered by CI tests:
    traverse step: omit `min_hops` and `max_hops`, or set both to the integer
    `1`. Any other range (one side set, `0`, `min != max`, `max > 1`,
    non-integers) is rejected with `hop_range_rejected` before Neo4j is called.
+   The same rule applies to every step inside `not_exists[].traverse`.
    A variable-length quantifier is not bounded by `row_limit`. `build_cypher`
    can still emit those patterns for offline inspection; it does not run them.
 

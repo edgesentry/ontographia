@@ -49,6 +49,18 @@ export interface FilterExpr {
   value: JsonValue;
 }
 
+/**
+ * Correlated `NOT EXISTS { MATCH … }` sub-pattern. At least one alias must be
+ * bound in the main pattern (correlation), and at least one traverse step is
+ * required. Sub-pattern-only aliases cannot be used in `return`, `order_by`, or
+ * the main `filter`.
+ */
+export interface SubPattern {
+  start: NodeRef;
+  traverse: TraverseStep[];
+  filter?: FilterExpr[];
+}
+
 export interface ReturnItem {
   alias: string;
   property?: string;
@@ -66,6 +78,7 @@ export interface Intent {
   start: NodeRef;
   traverse?: TraverseStep[];
   filter?: FilterExpr[];
+  not_exists?: SubPattern[];
   return: ReturnItem[];
   order_by?: OrderBy;
   limit?: number;

@@ -140,7 +140,37 @@ for (const chip of chips) {
   console.log("- " + chip.chip_id + ": " + result.query.split("\\n")[0] + " (" + Object.keys(result.params).length + " params)");
 }
 
-console.log("packed smoke ok: @edgesentry/ontographia-wasm@" + expectedVersion + ", " + chips.length + " Intents, ABI v" + engine.abiVersion);
+const notExistsOntology = readFileSync(join(repoRoot, "examples/part_usage.native.yaml"));
+const notExistsIntent = JSON.parse(readFileSync(join(repoRoot, "examples/part_usage_not_exists.json"), "utf8"));
+const notExists = engine.buildCypher(notExistsOntology, notExistsIntent, {
+  dialect: "cypher25",
+  ontologyPathHint: "part_usage.native.yaml",
+});
+const expectedQuery = [
+  "CYPHER 25",
+  "MATCH (part:Part)",
+  "FILTER part.category_slug = \\$param_0 AND NOT EXISTS { MATCH (u:Usage)-[:USES_ITEM]->(part) FILTER u.match_method = \\$param_1 }",
+  "RETURN part.name AS part",
+  "LIMIT 200",
+].join("\\n");
+if (notExists.query !== expectedQuery) {
+  throw new Error("not_exists: unexpected query " + JSON.stringify(notExists.query));
+}
+const expectedNotExistsParams = { param_0: "fasteners-and-hardware", param_1: "exact" };
+const actualNotExistsParams = notExists.params ?? {};
+const actualKeys = Object.keys(actualNotExistsParams).sort();
+const expectedKeys = Object.keys(expectedNotExistsParams).sort();
+if (JSON.stringify(actualKeys) !== JSON.stringify(expectedKeys)) {
+  throw new Error("not_exists: unexpected params " + JSON.stringify(actualNotExistsParams));
+}
+for (const key of expectedKeys) {
+  if (actualNotExistsParams[key] !== expectedNotExistsParams[key]) {
+    throw new Error("not_exists: param " + key + " is " + JSON.stringify(actualNotExistsParams[key]));
+  }
+}
+console.log("- not_exists: CYPHER 25 (" + actualKeys.length + " params)");
+
+console.log("packed smoke ok: @edgesentry/ontographia-wasm@" + expectedVersion + ", " + chips.length + " Intents + not_exists fixture, ABI v" + engine.abiVersion);
 `,
   );
 

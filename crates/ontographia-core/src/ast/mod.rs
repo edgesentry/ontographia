@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 pub struct QueryAst {
     pub match_clause: MatchClause,
     pub filters: Vec<FilterNode>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub not_exists: Vec<SubPatternNode>,
     pub returns: Vec<ReturnNode>,
     pub order_by: Option<OrderByNode>,
     pub limit: Option<u32>,
@@ -39,6 +41,14 @@ pub struct RelPattern {
     pub max_hops: Option<u32>,
 }
 
+/// Negated correlated sub-pattern. The correlated node has empty `labels`
+/// (rendered as a bare variable such as `(part)`).
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SubPatternNode {
+    pub pattern: PatternNode,
+    pub filters: Vec<FilterNode>,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct FilterNode {
     pub alias: String,
@@ -55,8 +65,13 @@ pub struct ReturnNode {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ReturnExpr {
-    Property { alias: String, property: String },
-    Node { alias: String },
+    Property {
+        alias: String,
+        property: String,
+    },
+    Node {
+        alias: String,
+    },
     Aggregate {
         func: AggregateFn,
         alias: String,

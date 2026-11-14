@@ -20,14 +20,28 @@ const EXECUTE_HOP: i64 = 1;
 ///
 /// Allowed on each traverse step: both bounds omitted or JSON null, or both
 /// exactly the integer `1`. Floats, booleans, one-sided bounds, and any other
-/// pair are rejected.
+/// pair are rejected. The same rule applies to every step of every
+/// `not_exists[i].traverse` entry.
 pub fn assert_execute_hop_policy(intent: &Value) -> Result<(), GuardError> {
-    let Some(traverse) = intent.get("traverse") else {
+    if let Some(steps) = intent.get("traverse").and_then(Value::as_array) {
+        assert_traverse_hop_policy(steps, "")?;
+    }
+    let Some(entries) = intent.get("not_exists").and_then(Value::as_array) else {
         return Ok(());
     };
-    let Some(steps) = traverse.as_array() else {
-        return Ok(());
-    };
+    for (entry_index, entry) in entries.iter().enumerate() {
+        let Some(entry) = entry.as_object() else {
+            continue;
+        };
+        let Some(steps) = entry.get("traverse").and_then(Value::as_array) else {
+            continue;
+        };
+        assert_traverse_hop_policy(steps, &format!("not_exists[{entry_index}] "))?;
+    }
+    Ok(())
+}
+
+fn assert_traverse_hop_policy(steps: &[Value], location: &str) -> Result<(), GuardError> {
     for (index, step) in steps.iter().enumerate() {
         let Some(step) = step.as_object() else {
             continue;
@@ -45,7 +59,7 @@ pub fn assert_execute_hop_policy(intent: &Value) -> Result<(), GuardError> {
         return Err(GuardError {
             code: "hop_range_rejected",
             message: format!(
-                "traverse step {index} hop range {}..{} is not allowed on execute. \
+                "{location}traverse step {index} hop range {}..{} is not allowed on execute. \
 Only a single hop may be submitted to Neo4j: omit min_hops and max_hops, or set both to 1. \
 Variable-length patterns are not executed (use build_cypher to inspect them offline).",
                 py_repr(min_hops),
@@ -183,6 +197,91 @@ mod tests {
         let err = assert_execute_hop_policy(&intent).unwrap_err();
         assert!(err.message.contains("traverse step 1"));
         assert!(err.message.contains("hop range 1..3"));
+    }
+
+    fn not_exists_intent(entries: serde_json::Value) -> serde_json::Value {
+        json!({
+            "start": {"class": "Product", "alias": "product"},
+            "not_exists": entries,
+            "return": [{"alias": "product"}],
+        })
+    }
+
+    #[test]
+    fn rejects_wide_not_exists_step_and_names_its_location() {
+        let intent = not_exists_intent(json!([{
+            "start": {"class": "Part", "alias": "part"},
+            "traverse": [step(json!({"min_hops": 1, "max_hops": 5}))],
+        }]));
+        let err = assert_execute_hop_policy(&intent).unwrap_err();
+        assert_eq!(err.code, "hop_range_rejected");
+        assert!(
+            err.message.starts_with(
+                "not_exists[0] traverse step 0 hop range 1..5 is not allowed on execute."
+            ),
+            "{}",
+            err.message
+        );
+        assert!(err.message.contains("single hop"), "{}", err.message);
+    }
+
+    #[test]
+    fn rejects_one_sided_not_exists_step_bound() {
+        let intent = not_exists_intent(json!([{
+            "start": {"class": "Part", "alias": "part"},
+            "traverse": [step(json!({"max_hops": 2}))],
+        }]));
+        let err = assert_execute_hop_policy(&intent).unwrap_err();
+        assert_eq!(err.code, "hop_range_rejected");
+        assert!(
+            err.message
+                .starts_with("not_exists[0] traverse step 0 hop range None..2"),
+            "{}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn rejects_not_exists_step_in_second_entry() {
+        let intent = not_exists_intent(json!([
+            {
+                "start": {"class": "Part", "alias": "part"},
+                "traverse": [step(json!({"min_hops": 1, "max_hops": 1}))],
+            },
+            {
+                "start": {"class": "Supplier", "alias": "supplier"},
+                "traverse": [step(json!({"min_hops": 1, "max_hops": 3}))],
+            },
+        ]));
+        let err = assert_execute_hop_policy(&intent).unwrap_err();
+        assert!(
+            err.message.starts_with("not_exists[1] traverse step 0"),
+            "{}",
+            err.message
+        );
+    }
+
+    #[test]
+    fn allows_not_exists_steps_that_are_a_single_hop() {
+        let intent = not_exists_intent(json!([{
+            "start": {"class": "Part", "alias": "part"},
+            "traverse": [
+                step(json!({"min_hops": 1, "max_hops": 1})),
+                step(json!({})),
+                step(json!({"min_hops": null, "max_hops": null})),
+            ],
+        }]));
+        assert_execute_hop_policy(&intent).unwrap();
+    }
+
+    #[test]
+    fn skips_malformed_not_exists_entries_and_steps() {
+        let intent = not_exists_intent(json!([
+            "not-an-object",
+            {"start": {"class": "Part", "alias": "part"}, "traverse": "not-a-list"},
+            {"start": {"class": "Part", "alias": "part"}, "traverse": [null, 7]},
+        ]));
+        assert_execute_hop_policy(&intent).unwrap();
     }
 
     #[test]

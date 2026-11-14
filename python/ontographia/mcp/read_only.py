@@ -39,10 +39,23 @@ def assert_execute_hop_policy(intent: dict[str, Any]) -> None:
     * both exactly the integer ``1``
 
     Rejected: one side set, ``0``, ``min != max``, ``max > 1``, booleans, and
-    non-integers. ``build_cypher`` may still emit variable-length patterns for
-    offline inspection; this policy applies only when a query would be run.
+    non-integers. The same rule applies to every step of every
+    ``not_exists[i].traverse`` entry. ``build_cypher`` may still emit
+    variable-length patterns for offline inspection; this policy applies only
+    when a query would be run.
     """
-    traverse = intent.get("traverse") or []
+    _assert_traverse_hop_policy(intent.get("traverse"), "")
+    not_exists = intent.get("not_exists")
+    if not isinstance(not_exists, list):
+        return
+    for entry_index, entry in enumerate(not_exists):
+        if not isinstance(entry, dict):
+            continue
+        _assert_traverse_hop_policy(entry.get("traverse"), f"not_exists[{entry_index}] ")
+
+
+def _assert_traverse_hop_policy(traverse: Any, location: str) -> None:
+    """Apply the single-hop rule to one traverse list; ``location`` names it."""
     if not isinstance(traverse, list):
         return
     for index, step in enumerate(traverse):
@@ -60,8 +73,8 @@ def assert_execute_hop_policy(intent: dict[str, Any]) -> None:
         ):
             continue
         raise HopRangeRejected(
-            f"traverse step {index} hop range {min_hops!r}..{max_hops!r} is not allowed "
-            "on execute. Only a single hop may be submitted to Neo4j: omit min_hops and "
+            f"{location}traverse step {index} hop range {min_hops!r}..{max_hops!r} is not "
+            "allowed on execute. Only a single hop may be submitted to Neo4j: omit min_hops and "
             "max_hops, or set both to 1. Variable-length patterns are not executed "
             "(use build_cypher to inspect them offline)."
         )

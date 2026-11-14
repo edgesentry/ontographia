@@ -1,0 +1,29 @@
+# Ontographia native ontology — minimal part/usage fixture
+# Used by the correlated NOT EXISTS integration, WASM ABI, and Python smoke
+# tests: Part (name, category_slug), Usage (match_method), USES_ITEM Usage->Part.
+
+namespaces:
+  ex: http://example.org/ontographia/part-usage#
+
+classes:
+  - name: Part
+    description: Component that may be referenced by usage lines
+  - name: Usage
+    description: Usage line (assembly chapter, pre-assembly, kit) referencing a part
+
+relationships:
+  - name: USES_ITEM
+    from_class: Usage
+    to_class: Part
+    direction: out
+
+properties:
+  - name: name
+    owner_class: Part
+    datatype: string
+  - name: category_slug
+    owner_class: Part
+    datatype: string
+  - name: match_method
+    owner_class: Usage
+    datatype: string

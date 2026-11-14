@@ -46,6 +46,30 @@ def main() -> int:
     if schema.get("additionalProperties") is not False:
         print("Intent JSON Schema must set additionalProperties: false", file=sys.stderr)
         return 1
+    if "not_exists" not in schema.get("properties", {}):
+        print("Intent JSON Schema must include not_exists", file=sys.stderr)
+        return 1
+
+    # Correlated NOT EXISTS sub-pattern: emitted and parameter-bound.
+    not_exists_engine = ontographia.Engine.load("examples/part_usage.native.yaml")
+    with open("examples/part_usage_not_exists.json") as f:
+        not_exists_intent = json.load(f)
+    not_exists_result = not_exists_engine.build(not_exists_intent)
+    if "NOT EXISTS { MATCH" not in not_exists_result["query"]:
+        print(
+            f"not_exists query missing subquery: {not_exists_result['query']!r}",
+            file=sys.stderr,
+        )
+        return 1
+    if not_exists_result["params"] != {
+        "param_0": "fasteners-and-hardware",
+        "param_1": "exact",
+    }:
+        print(
+            f"unexpected not_exists params: {not_exists_result['params']!r}",
+            file=sys.stderr,
+        )
+        return 1
 
     print("ok")
     return 0

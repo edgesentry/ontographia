@@ -47,6 +47,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             op: FilterOp::Eq,
             value: serde_json::json!("SPX-100"),
         }],
+        not_exists: vec![],
         r#return: vec![ReturnItem {
             alias: "supplier".into(),
             property: Some("name".into()),
