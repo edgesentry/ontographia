@@ -1,6 +1,6 @@
 {
   "name": "@edgesentry/ontographia-wasm",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Browser WebAssembly build of Ontographia. Compiles ontology bytes plus Intent JSON into parameter-bound Cypher 25. No Node addon, no server call, no LLM.",
   "license": "Apache-2.0",
   "type": "module",
