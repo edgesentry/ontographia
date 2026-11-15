@@ -29,6 +29,8 @@ jobs:
             ${{ runner.os }}-cargo-
       - name: cargo test
         run: cargo test --workspace
+      - name: version sync test
+        run: bash scripts/test-version-sync.sh
       - name: cargo clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
       - name: CLI smoke test

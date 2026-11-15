@@ -11,7 +11,7 @@ Ontographia ships **Rust crates + CLI**, a **Python wheel** (PyPI), **Go binding
 ```mermaid
 flowchart LR
   A[PR merge to main] --> B[CI green on main]
-  B --> C[Bump version in Cargo.toml]
+  B --> C[Bump version in Cargo.toml + sync]
   C --> D[Release check green]
   D --> M[Mac smoke]
   M --> E[Release]
@@ -23,7 +23,7 @@ flowchart LR
 ```
 
 1. Merge feature work to `main` and confirm [CI](https://github.com/edgesentry/ontographia/actions/workflows/ci.yml) passes.
-2. Bump the workspace version on `main` (see [Version bumps](#version-bumps)) — **no local git tag**.
+2. Bump the workspace version on `main` by editing `[workspace.package] version` in `Cargo.toml` and running `scripts/sync-version.sh` (or run `scripts/bump-version.sh X.Y.Z`) — see [Version bumps](#version-bumps). **No local git tag**.
 3. Run **[Release check](https://github.com/edgesentry/ontographia/actions/workflows/release-check.yml)** on `main` and wait until it is green. Detail: [GitHub Actions (Release check)](#github-actions-release-check).
 4. Run the [Mac workstation](#mac-workstation) smoke (Cursor Agent CLI, checkout under `~/agent-work`).
 5. Run **[Release](https://github.com/edgesentry/ontographia/actions/workflows/release.yml)** — reads `Cargo.toml`, creates `vX.Y.Z`, uploads artifacts.
@@ -57,7 +57,7 @@ The job is `scripts/preflight-release.sh`. It does not create a tag, a GitHub Re
 
 | Check | Green means |
 |-------|-------------|
-| Version | `Cargo.toml` `[workspace.package] version`, `bindings/typescript/package.json`, and `bindings/wasm/package.json` are the same `X.Y.Z` (`scripts/verify-release-version.sh`) |
+| Version | `Cargo.toml` `[workspace.package] version`, both npm manifests, `Cargo.lock` workspace packages, and both version fields in `bindings/typescript/package-lock.json` are the same `X.Y.Z` (`scripts/verify-release-version.sh`) |
 | Workflow file | `.github/workflows/release.yml` is named **Release**, the publish job id is `publish-npm`, and `upload-assets` checks out the repo and sets `GH_REPO` |
 | Registries | Read-only ping of npm, crates.io, and PyPI (`scripts/check-registry-reachability.sh`) |
 | npm packages | `@edgesentry/ontographia` and the four platform packages are on the public registry. The job reads that public document. It does not call `GET /-/package/{package}/trust` |
@@ -216,7 +216,9 @@ bash scripts/preflight-release.sh
 
 ```bash
 # 1. Bump version on main (via PR or locally)
-scripts/bump-version.sh 0.1.9 --commit
+#    Edit [workspace.package] version in Cargo.toml, then:
+scripts/sync-version.sh
+#    (or in one step: scripts/bump-version.sh 0.1.10 --commit)
 git push origin main
 
 # 2. Required: Release check workflow on main (see Pre-release checks)
@@ -258,21 +260,32 @@ gh workflow run Release --ref main
 
 ## Version bumps
 
-**Single source of truth:** root `Cargo.toml` → `[workspace.package] version`.
+**Single source of truth:** root `Cargo.toml` → `[workspace.package] version`. Edit only that value, then run `scripts/sync-version.sh` (idempotent, no network):
+
+```bash
+# edit [workspace.package] version in Cargo.toml
+scripts/sync-version.sh
+scripts/verify-release-version.sh "v$(bash scripts/workspace-version.sh)"
+```
+
+Or set and sync in one step:
+
+```bash
+scripts/bump-version.sh 0.1.10 --commit
+```
 
 | Component | Where version lives |
 |-----------|---------------------|
 | Rust (all crates) | `version.workspace = true` → workspace version |
+| Rust dependencies | Internal `ontographia-*` entries in `[workspace.dependencies]`, rewritten by `scripts/sync-version.sh` |
+| `Cargo.lock` | Workspace packages (blocks without `source`), rewritten by `scripts/sync-version.sh`. Registry packages are untouched |
 | Python wheel | `pyproject.toml` `dynamic = ["version"]` → `bindings/python/Cargo.toml` via maturin |
 | Go | No file; `bindings/go/vX.Y.Z` tag created by the release workflow |
-| TypeScript / npm | `bindings/typescript/package.json` `version`, kept equal to the workspace version by `scripts/bump-version.sh`. Preflight fails if they differ. Platform-package versions are not stored in git; `scripts/package-npm.mjs` stamps the workspace version when it packs them |
-| Browser WASM / npm | `bindings/wasm/package.json` `version`, kept equal to the workspace version by `scripts/bump-version.sh`. Preflight fails if they differ. The wasm tarball version is stamped from that manifest |
+| TypeScript / npm | `bindings/typescript/package.json` `version`, rewritten by `scripts/sync-version.sh`. Platform-package versions are not stored in git; `scripts/package-npm.mjs` stamps the workspace version when it packs them |
+| TypeScript lockfile | `bindings/typescript/package-lock.json` top-level `version` and `packages[""].version`, rewritten by `scripts/sync-version.sh` |
+| Browser WASM / npm | `bindings/wasm/package.json` `version`, rewritten by `scripts/sync-version.sh`. The wasm tarball version is stamped from that manifest |
 
-```bash
-scripts/bump-version.sh 0.1.8 --commit
-```
-
-The release workflow rejects versions that do not match `Cargo.toml` (`scripts/verify-release-version.sh`).
+The release workflow rejects versions that do not match `Cargo.toml` (`scripts/verify-release-version.sh` checks both lockfiles too).
 
 ## GitHub secrets (optional registry publish)
 
@@ -335,7 +348,7 @@ If a Release run fails partway through (for example after `ontographia-core` was
 
 - **crates.io:** publish jobs skip crates that already exist at the workspace version.
 - **Go:** the workflow fails fast if `bindings/go/vX.Y.Z` already exists — do not delete that tag; bump the version instead.
-- **npm:** platform tarballs publish first (lexical filename order: `darwin-arm64`, `linux-arm64`, `linux-x64`, `win32-x64`), then `@edgesentry/ontographia`. Versions already on npm are skipped, so a re-run is safe when some packages are already at this version (for `0.1.7`, the three platform packages above). A missing trusted publisher, a workflow filename other than `release.yml`, or a publisher that does not allow `npm publish` makes that one package return `ENEEDAUTH`. The script still attempts the remaining tarballs, then exits non-zero and lists the names that are not on the registry. npm versions are immutable; replace a bad native by bumping `Cargo.toml` (and the TypeScript `package.json` via `scripts/bump-version.sh`). Do not delete tag `v0.1.7` to retry this publish.
+- **npm:** platform tarballs publish first (lexical filename order: `darwin-arm64`, `linux-arm64`, `linux-x64`, `win32-x64`), then `@edgesentry/ontographia`. Versions already on npm are skipped, so a re-run is safe when some packages are already at this version (for `0.1.7`, the three platform packages above). A missing trusted publisher, a workflow filename other than `release.yml`, or a publisher that does not allow `npm publish` makes that one package return `ENEEDAUTH`. The script still attempts the remaining tarballs, then exits non-zero and lists the names that are not on the registry. npm versions are immutable; replace a bad native by bumping `Cargo.toml` and running `scripts/sync-version.sh`. Do not delete tag `v0.1.7` to retry this publish.
 - **GitHub Release assets:** `upload-assets` checks out the release tag and sets `GH_REPO`. `gh release upload` needs a git checkout or `GH_REPO`; without either it exits `fatal: not a git repository`. The upload overwrites files of the same name (`--clobber`).
 
 **Re-run uses the workflow file from that run's commit**, not a later commit on `main`. For [run 41265294898](https://github.com/edgesentry/ontographia/actions/runs/41265294898) (`c6ca92a`, tag `v0.1.7`):

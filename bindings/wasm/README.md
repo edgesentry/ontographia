@@ -120,7 +120,7 @@ bindings/wasm/dist/
 └── edgesentry-ontographia-wasm-<version>.tgz  # --pack
 ```
 
-The version is read from [`Cargo.toml`](../../Cargo.toml) `[workspace.package] version` and must match this package's `package.json`. `scripts/bump-version.sh` updates both npm manifests.
+The version is read from [`Cargo.toml`](../../Cargo.toml) `[workspace.package] version` and must match this package's `package.json`. `scripts/sync-version.sh` copies the workspace version to both npm manifests and their lockfiles.
 
 ## Scope
 
