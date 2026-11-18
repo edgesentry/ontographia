@@ -9,3 +9,13 @@ id = "RUSTSEC-2024-0436"
 # `paste`. `Graph::execute_read` stays on that driver. The maintained fork is
 # `pastey`, which neo4rs itself already uses; simba does not.
 reason = "Unmaintained paste via neo4rs routing (nav-types/nalgebra/simba); no fixed version. Routing and execute_read stay on neo4rs 0.9.0-rc.11."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0543"
+ignoreUntil = 2026-12-18
+reason = "Unmaintained-only advisory (not a vulnerability); no patched chrono release; pulled in via neo4rs 0.9.0-rc.11. Revisit by 2026-12-18 (migrate to jiff/time or upstream fix)."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0555"
+ignoreUntil = 2026-12-18
+reason = "Unmaintained-only advisory (not a vulnerability); no patched chrono-tz release; pulled in via neo4rs 0.9.0-rc.11. Revisit by 2026-12-18 (migrate to jiff/time or upstream fix)."
