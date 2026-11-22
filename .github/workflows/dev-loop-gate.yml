@@ -1,0 +1,44 @@
+name: Dev-loop gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dev-loop-gate:
+    name: dev-loop-gate (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      # Check out THIS repository with full history so origin/main exists for
+      # the gate's merge-base (the gate uses DEV_LOOP_BASE=origin/main by
+      # default).
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          fetch-depth: 0
+
+      # Check out agent-ops-kit pinned by its full commit SHA only (not a
+      # branch or tag).
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          repository: yohei1126/agent-ops-kit
+          ref: 0c70fe9111c95a80d3ba224dbac7bc9e9dafcde9  # full-SHA pin
+          path: .agent-ops-kit
+          persist-credentials: false
+
+      # The gate fails closed on uncommitted or untracked files, so hide the
+      # kit checkout from git status.
+      - name: Hide kit checkout from git status
+        run: echo '.agent-ops-kit/' >> .git/info/exclude
+
+      # Run the gate with the runner's default bash (macOS system bash 3.2);
+      # do not install another bash.
+      - name: Run dev-loop gate
+        run: bash .agent-ops-kit/scripts/dev-loop-gate.sh --repo "$GITHUB_WORKSPACE" --strict --check model-check-required
